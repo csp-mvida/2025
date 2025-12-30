@@ -10,9 +10,10 @@ import { Stepper } from './components/Stepper';
 import { Button } from './components/ui/Button';
 import { Input, Select, Textarea } from './components/ui/Input';
 import { UrgencyAlert } from './components/UrgencyAlert';
-import { Save, Trash2, CheckCircle, UploadCloud, FileText, ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, Clock, Home, Lock, Download, Copy } from './components/ui/Icons';
+import { Save, Trash2, CheckCircle, UploadCloud, FileText, ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, Home, Lock, Download, Copy } from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
+import { BackgroundAnimation } from './components/BackgroundAnimation';
 
 function App() {
   // State
@@ -51,12 +52,7 @@ function App() {
 
   // Auto-Save Draft Logic
   useEffect(() => {
-    // Only save if:
-    // 1. Not currently submitting/success
-    // 2. Draft has been loaded or discarded (user made a choice or started fresh)
-    // 3. There is some data (prevent saving empty initial state over a draft if logic fails)
     if (!isSuccess && draftLoaded) {
-      // Don't save the full file object to local storage, it causes issues
       const { invoiceFile, ...dataToSave } = formData;
       localStorage.setItem('csp_draft', JSON.stringify(dataToSave));
     }
@@ -69,15 +65,14 @@ function App() {
       try {
         const parsed = JSON.parse(savedDraft);
         setFormData(parsed);
-        // Clean errors on restore
         setErrors({});
       } catch (e) {
         console.error("Failed to parse draft", e);
       }
     }
-    setHasSavedDraft(false); // Hide banner
-    setDraftLoaded(true);    // Enable auto-save
-    setView('form');   // Go directly to form if restoring
+    setHasSavedDraft(false); 
+    setDraftLoaded(true);    
+    setView('form');   
   };
 
   const handleDiscardDraft = () => {
@@ -90,7 +85,6 @@ function App() {
   const handleManualSave = () => {
     const { invoiceFile, ...dataToSave } = formData;
     localStorage.setItem('csp_draft', JSON.stringify(dataToSave));
-    // Simple visual feedback
     const btn = document.getElementById('btn-save-draft');
     if (btn) {
       const originalText = btn.innerHTML;
@@ -107,7 +101,6 @@ function App() {
   // Handlers
   const handleChange = (field: keyof CSPFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error for this field
     if (errors[field]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -123,22 +116,18 @@ function App() {
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Allows user to type, format applies on render/change
     handleChange('whatsapp', formatPhone(e.target.value));
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
-      // Update local state for immediate feedback
       setFormData(prev => ({
         ...prev,
         invoiceFile: file, 
         invoiceFileMeta: { name: file.name, size: file.size }
       }));
 
-      // Trigger Upload immediately
       setIsUploading(true);
       try {
         const publicUrl = await uploadInvoice(file);
@@ -146,8 +135,6 @@ function App() {
           ...prev,
           invoiceUrl: publicUrl
         }));
-        
-        // Clear error if any
         if (errors.invoiceFile) {
           setErrors(prev => {
             const newErrors = {...prev};
@@ -158,7 +145,6 @@ function App() {
       } catch (error) {
         console.error("Upload failed", error);
         alert("Erro ao fazer upload do arquivo. Verifique sua conexão ou tente novamente.");
-        // Reset file input on failure
         setFormData(prev => ({
           ...prev,
           invoiceFile: null,
@@ -198,7 +184,6 @@ function App() {
       `📝 Descrição: ${formData.description}`;
     
     navigator.clipboard.writeText(text);
-    // Visual feedback handled by button text momentarily or simple alert
     const btn = document.getElementById('btn-copy-resume');
     if (btn) {
       const originalText = btn.innerText;
@@ -212,22 +197,19 @@ function App() {
     const newErrors: ValidationErrors = {};
     let isValid = true;
 
-    if (currentStep === 0) { // Identification
+    if (currentStep === 0) { 
       if (!formData.requesterName) newErrors.requesterName = "Nome é obrigatório";
-      
-      // WhatsApp Validation
       if (!formData.whatsapp) {
         newErrors.whatsapp = "WhatsApp inválido";
       } else if (!isValidPhone(formData.whatsapp)) {
         newErrors.whatsapp = "Número inválido. Digite 10 ou 11 dígitos com DDD.";
       }
-
       if (!formData.departmentId) newErrors.departmentId = "Departamento obrigatório";
       if (!formData.authorizer) newErrors.authorizer = "Autorizador obrigatório";
       if (!formData.dueDate) newErrors.dueDate = "Data de vencimento obrigatória";
     }
 
-    if (currentStep === 1) { // Payment
+    if (currentStep === 1) { 
       if (!formData.paymentAccount) newErrors.paymentAccount = "Conta obrigatória";
       if (formData.isSpecificBudget === 'yes' && !formData.specificBudgetName) newErrors.specificBudgetName = "Nome da verba obrigatório";
       if (!formData.supplierName) newErrors.supplierName = "Fornecedor obrigatório";
@@ -237,21 +219,18 @@ function App() {
       if (formData.paymentMethod === 'Boleto' && !formData.boletoCode && !formData.hasInvoice) newErrors.boletoCode = "Código de barras necessário se não houver anexo";
     }
 
-    if (currentStep === 2) { // Proof
-      // Check if file is selected AND upload is complete (URL present)
+    if (currentStep === 2) { 
       if (formData.hasInvoice === 'yes') {
          if (!formData.invoiceFileMeta) {
            newErrors.invoiceFile = "Anexo da nota fiscal é obrigatório";
          } else if (!formData.invoiceUrl && !isUploading) {
-           // Allow proceeding if uploading? No, better wait.
-           // Actually, if we are not uploading and have meta but no URL, upload likely failed.
            newErrors.invoiceFile = "Falha no upload. Tente anexar novamente.";
          }
       }
       if (formData.hasInvoice === 'no' && !formData.invoiceSentViaWhatsapp) newErrors.invoiceSentViaWhatsapp = "Confirmação de envio via WhatsApp necessária";
     }
 
-    if (currentStep === 3) { // Description
+    if (currentStep === 3) { 
       if (!formData.description) newErrors.description = "Descrição obrigatória";
       if (!formData.termsAccepted) newErrors.termsAccepted = "Você deve concordar com os prazos";
     }
@@ -286,7 +265,6 @@ function App() {
     setIsSubmitting(true);
     const newId = generateId();
     
-    // Submit with ID
     const success = await submitRequest(formData, newId);
     
     if (success) {
@@ -306,13 +284,16 @@ function App() {
     setStep(0);
     setGeneratedId('');
     setHasSavedDraft(false);
-    setView('welcome'); // Return to welcome screen on reset
+    setView('welcome'); 
   };
 
   // --- RENDER WELCOME SCREEN ---
   const renderWelcome = () => (
     <div className="min-h-screen relative flex flex-col items-center justify-center p-6 md:p-12 overflow-hidden bg-slate-50 selection:bg-primary/20">
       
+      {/* Dynamic Animated Background */}
+      <BackgroundAnimation />
+
       {/* Premium Background Decor */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/5 via-slate-50 to-transparent rounded-[100%] blur-3xl pointer-events-none opacity-60"></div>
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-accent/5 to-transparent rounded-full blur-3xl pointer-events-none"></div>
@@ -389,7 +370,7 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
           
           {/* Card 1: Dados Essenciais */}
-          <div className="group relative bg-white p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
+          <div className="group relative bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-100 overflow-hidden text-left">
             <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-emerald-500 transition-all duration-700 ease-out"></div>
             <div className="relative w-12 h-12 rounded-full bg-emerald-50/50 flex items-center justify-center mb-4 group-hover:bg-emerald-50 transition-colors duration-500">
               <FileText className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-emerald-600 transition-colors" />
@@ -401,7 +382,7 @@ function App() {
           </div>
 
           {/* Card 2: Prazos e Regras */}
-          <div className="group relative bg-white p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
+          <div className="group relative bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-100 overflow-hidden text-left">
             <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-amber-500 transition-all duration-700 ease-out"></div>
             <div className="relative w-12 h-12 rounded-full bg-amber-50/50 flex items-center justify-center mb-4 group-hover:bg-amber-50 transition-colors duration-500">
               <Clock className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-amber-600 transition-colors" />
@@ -413,7 +394,7 @@ function App() {
           </div>
 
           {/* Card 3: Urgências */}
-          <div className="group relative bg-white p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
+          <div className="group relative bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-100 overflow-hidden text-left">
             <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-rose-500 transition-all duration-700 ease-out"></div>
             <div className="relative w-12 h-12 rounded-full bg-rose-50/50 flex items-center justify-center mb-4 group-hover:bg-rose-50 transition-colors duration-500">
               <AlertTriangle className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-rose-600 transition-colors" />
@@ -436,7 +417,6 @@ function App() {
   );
 
   // --- RENDER STEPS ---
-
   const renderStep1 = () => (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -482,7 +462,6 @@ function App() {
           ))}
         </Select>
         
-        {/* Split Date/Time Input Logic */}
         <div className="md:col-span-2">
            <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5">
              Vencimento do Pagamento <span className="text-accent">*</span>
@@ -510,7 +489,6 @@ function App() {
                  onChange={e => {
                    const newTime = e.target.value;
                    const currentDate = getDateValue();
-                   // Only update if date is present, otherwise wait for date
                    if (currentDate) {
                      handleChange('dueDate', `${currentDate}T${newTime || '00:00'}`);
                    }
@@ -810,7 +788,6 @@ function App() {
       <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Solicitação Enviada!</h2>
       <p className="text-slate-500 mb-8 text-lg">Sua solicitação foi processada com sucesso.</p>
       
-      {/* Central Card with Protocol ID */}
       <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 mb-8 shadow-lg relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primaryDark"></div>
         <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">ID do Protocolo</p>
@@ -824,8 +801,6 @@ function App() {
              {isIdCopied ? <CheckCircle className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
            </button>
         </div>
-        
-        {/* Visual feedback for copied state */}
         <div className={`mt-2 text-sm font-medium text-green-600 transition-opacity duration-300 ${isIdCopied ? 'opacity-100' : 'opacity-0'}`}>
           Copiado!
         </div>
@@ -851,8 +826,6 @@ function App() {
     </div>
   );
 
-  // --- ROUTING LOGIC ---
-
   if (view === 'login') {
     return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
   }
@@ -865,14 +838,15 @@ function App() {
     return renderWelcome();
   }
 
-  // View === 'form'
   return (
     <div className="min-h-screen bg-background text-slate-800 selection:bg-primary/20">
       
-      <main className="min-h-screen flex flex-col">
-        {/* Header Unificado com Logo Centralizada (Igual ao Welcome) */}
+      {/* Background decoration even on form view, but more subtle */}
+      <BackgroundAnimation />
+
+      <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
-          <div className="p-6 md:p-10 border-b border-slate-100 bg-white/95 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
+          <div className="p-6 md:p-10 border-b border-slate-100 bg-white/80 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
             <div className="absolute right-6 top-1/2 -translate-y-1/2">
               <button
                 onClick={() => setView('welcome')}
@@ -885,9 +859,8 @@ function App() {
           </div>
         )}
 
-        {/* Restore Draft Banner */}
         {hasSavedDraft && !isSuccess && (
-          <div className="bg-white border-b border-primary/20 px-4 py-3 md:px-8 lg:px-12 flex items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-500 shadow-sm">
+          <div className="bg-white/90 backdrop-blur-sm border-b border-primary/20 px-4 py-3 md:px-8 lg:px-12 flex items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-500 shadow-sm relative z-10">
             <div className="flex items-center gap-3">
               <RefreshCw className="text-primary w-5 h-5 shrink-0" />
               <div>
@@ -912,11 +885,10 @@ function App() {
           </div>
         )}
 
-        <div className="w-full max-w-3xl mx-auto p-4 md:p-8 lg:p-12 flex-1 flex flex-col">
+        <div className="w-full max-w-3xl mx-auto p-4 md:p-8 lg:p-12 flex-1 flex flex-col relative z-10">
           
           {!isSuccess ? (
             <>
-              {/* Title Section */}
               <div className="mb-10 text-center">
                 <div className="mb-2 text-primary font-bold tracking-wider text-xs uppercase">Financeiro</div>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
@@ -925,9 +897,7 @@ function App() {
                 <p className="text-slate-500 md:text-lg">Preencha os dados abaixo para registrar um novo pagamento.</p>
               </div>
 
-              {/* Toolbar */}
               <div className="flex justify-end gap-3 mb-6">
-                 {/* Always show draft controls if data exists or draft loaded */}
                  {Object.values(formData).some(v => v !== '' && v !== 'no' && v !== false) && (
                    <>
                      <button onClick={clearDraft} className="text-xs text-danger hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
@@ -940,10 +910,8 @@ function App() {
                  )}
               </div>
 
-              {/* Progress */}
               <Stepper currentStep={step} />
 
-              {/* Form Content */}
               <div className="flex-1">
                 {step === 0 && renderStep1()}
                 {step === 1 && renderStep2()}
@@ -952,7 +920,6 @@ function App() {
                 {step === 4 && renderReview()}
               </div>
 
-              {/* Footer Actions */}
               <div className="mt-12 pt-6 border-t border-slate-200 flex justify-between items-center sticky bottom-0 bg-white/95 backdrop-blur py-4 -mx-4 px-4 md:mx-0 md:px-0 z-10">
                 <Button 
                   variant="ghost" 
@@ -980,7 +947,7 @@ function App() {
                       <Download className="w-4 h-4 mr-2" /> Baixar Resumo
                     </Button>
                     <Button 
-                      variant={isUrgent ? "accent" : "primary"} // Use amber if urgent
+                      variant={isUrgent ? "accent" : "primary"} 
                       onClick={handleSubmit} 
                       disabled={isSubmitting}
                       className="px-8 shadow-xl"
