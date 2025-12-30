@@ -1,4 +1,4 @@
-import { supabase } from '../integrations/supabase/client';
+import { supabase } from '../src/integrations/supabase/client';
 import { DEPARTMENTS_FALLBACK } from '../constants';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
