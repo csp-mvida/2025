@@ -8,12 +8,12 @@ import {
   Search, Filter, Eye, CheckCircle, AlertTriangle, X, 
   Clock, LayoutDashboard, RefreshCw, FileText 
 } from './ui/Icons';
+import { BackgroundAnimation } from './BackgroundAnimation';
 
 interface AdminDashboardProps {
   onBack: () => void;
 }
 
-// Updated to use strict palette colors defined in index.html
 const STATUS_CONFIG: Record<RequestStatus, { label: string; color: string; icon: React.ReactNode }> = {
   pending: { 
     label: 'Pendente', 
@@ -84,9 +84,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const pendingCount = requests.filter(r => r.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 pb-20">
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-20 relative overflow-x-hidden">
+      <BackgroundAnimation />
+      
       {/* Admin Header */}
-      <div className="bg-primaryDark text-white pt-10 pb-16 px-4 md:px-8 shadow-lg">
+      <div className="bg-primaryDark text-white pt-10 pb-16 px-4 md:px-8 shadow-lg relative z-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6 md:gap-4">
           
           {/* Left: Titles */}
@@ -121,22 +123,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-8 relative z-10">
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+           <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
              <p className="text-sm text-slate-500 font-medium mb-1">Total Filtrado</p>
              <h3 className="text-2xl font-bold text-primary">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValue)}</h3>
            </div>
-           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+           <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
              <p className="text-sm text-slate-500 font-medium mb-1">Solicitações Pendentes</p>
              <div className="flex items-center gap-2">
                <h3 className="text-2xl font-bold text-accent">{pendingCount}</h3>
                {pendingCount > 0 && <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-bold border border-accent/20">Ação necessária</span>}
              </div>
            </div>
-           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+           <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
              <p className="text-sm text-slate-500 font-medium mb-1">Total de Registros</p>
              <h3 className="text-2xl font-bold text-slate-900">{requests.length}</h3>
            </div>
@@ -149,7 +151,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
             <input 
               type="text" 
               placeholder="Buscar por ID, Nome ou Fornecedor..." 
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
@@ -164,24 +166,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                    px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors border
                    ${statusFilter === status 
                      ? 'bg-primary text-white border-primary shadow-md shadow-primary/20' 
-                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'}
+                     : 'bg-white/80 backdrop-blur-sm border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'}
                  `}
                >
                  {status === 'all' ? 'Todos' : STATUS_CONFIG[status].label}
                </button>
              ))}
-             <button onClick={loadData} className="p-2.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all ml-auto" title="Atualizar">
+             <button onClick={loadData} className="p-2.5 rounded-lg bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all ml-auto" title="Atualizar">
                 <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
              </button>
           </div>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
            <div className="overflow-x-auto">
              <table className="w-full text-left border-collapse">
                <thead>
-                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                 <tr className="bg-slate-50/50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                    <th className="px-6 py-4">Status</th>
                    <th className="px-6 py-4">ID / Data</th>
                    <th className="px-6 py-4">Solicitante</th>
