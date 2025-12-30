@@ -1,5 +1,5 @@
-export const SUPABASE_URL = "https://your-project.supabase.co";
-export const SUPABASE_ANON_KEY = "your-anon-key";
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const CSP_ENDPOINT_URL = "/api/csp";
 
 export const AUTHORIZERS = [

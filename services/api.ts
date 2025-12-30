@@ -1,15 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
-import { DEPARTMENTS_FALLBACK, CSP_ENDPOINT_URL, SUPABASE_URL, SUPABASE_ANON_KEY } from '../constants';
+import { supabase } from '../integrations/supabase/client';
+import { DEPARTMENTS_FALLBACK } from '../constants';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
-
-// Initialize Supabase Client
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const DB_KEY = 'csp_db_requests';
 const BUCKET_NAME = 'comprovantes';
 const TABLE_NAME = 'tb_solicitacoes_pagamento';
 
-// Mock Supabase fetch for Departments (kept as requested, or until backend table is ready)
+// Mock Supabase fetch for Departments
 export const fetchDepartments = async (): Promise<Department[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -41,14 +38,10 @@ export const uploadInvoice = async (file: File): Promise<string> => {
 };
 
 export const submitRequest = async (data: CSPFormData, requestId: string): Promise<boolean> => {
-  console.log(`Submitting to Supabase`, { ...data, requestId });
-
-  // 1. Prepare Payload for Database
   const url_anexo = data.hasInvoice === 'yes' && data.invoiceUrl 
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
-  // Map camelCase to snake_case for DB
   const dbPayload = {
     request_id: requestId,
     requester_name: data.requesterName,
@@ -67,26 +60,20 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
     boleto_due_date: data.boletoDueDate || null,
     description: data.description,
     auth_number: data.authNumber || null,
-    url_anexo: url_anexo, // Column requested
+    url_anexo: url_anexo,
     status: 'pending',
     created_at: new Date().toISOString()
   };
 
   try {
-    // 2. Insert into Supabase Table
     const { error } = await supabase
       .from(TABLE_NAME)
       .insert([dbPayload]);
 
     if (error) {
       console.error('Supabase DB Insert Error:', error);
-      // Fallback: If DB fails (e.g. table doesn't exist yet in dev), continue to LocalStorage
-      // so the user flow isn't completely broken during testing.
-    } else {
-      console.log('Successfully saved to Supabase DB');
     }
 
-    // 3. Save to LocalStorage (Legacy/Admin Panel Compatibility)
     const newRequest: CSPRequest = {
       ...data,
       id: requestId,
@@ -109,13 +96,11 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
   }
 };
 
-// Admin Services (Kept on LocalStorage for now to ensure dashboard works without full backend setup)
 export const getRequests = async (): Promise<CSPRequest[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const existing = localStorage.getItem(DB_KEY);
       const db: CSPRequest[] = existing ? JSON.parse(existing) : [];
-      // Sort by newest
       resolve(db.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     }, 600);
   });
