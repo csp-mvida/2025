@@ -3,10 +3,12 @@ export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const CSP_ENDPOINT_URL = "/api/csp";
 
 export const AUTHORIZERS = [
-  "Diretoria Financeira",
-  "Diretoria Executiva",
-  "Gerência de Operações",
-  "Coordenação de RH",
+  "Henrique dos Anjos (Presidente)",
+  "Douglas Moreira (Coord. Executivo)",
+  "Paula Siqueira (Coord. Administrativo)",
+  "Revalino Galvão (Coord. de RH e Contabilidade)",
+  "Saulo Júnior (Coord. Financeiro)",
+  "Ivanete Costa (Secretária da Presidência)",
 ];
 
 export const PAYMENT_ACCOUNTS = [
