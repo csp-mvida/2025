@@ -329,25 +329,25 @@ function App() {
 
       <div className="w-full max-w-6xl relative z-10 flex flex-col items-center">
         
-        {/* Institutional Logo (Reduced by 50%) */}
-        <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+        {/* Institutional Logo */}
+        <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-1000">
            <img src="/logo.png" alt="Missão Vida" className="h-12 md:h-16 object-contain" />
         </div>
 
         {/* Institutional Tag */}
-        <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-[11px] font-bold text-slate-600 uppercase tracking-widest">
              <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
              Sistema Financeiro Online
            </div>
         </div>
 
-        {/* Hero Section with Forced 2-Line Title on Desktop */}
-        <div className="text-center mb-16 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-8 tracking-tight leading-[1.15] md:leading-[1.1]">
+        {/* Hero Section */}
+        <div className="text-center mb-10 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-6 tracking-tight leading-[1.15] md:leading-[1.1]">
             Central de Solicitação
-            <br className="hidden lg:block" /> {/* Break forced only on desktop */}
-             <span className="lg:hidden"> </span> {/* Space on mobile */}
+            <br className="hidden lg:block" />
+             <span className="lg:hidden"> </span>
             <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-primary to-primaryDark pb-2">
               de Pagamento
               <svg className="absolute w-full h-3 -bottom-1 left-0 text-primary/10 hidden md:block" viewBox="0 0 100 10" preserveAspectRatio="none">
@@ -360,8 +360,8 @@ function App() {
           </p>
         </div>
 
-        {/* Action Button - Premium & Glowy */}
-        <div className="flex flex-col items-center gap-6 mb-24 w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+        {/* Action Button */}
+        <div className="flex flex-col items-center gap-6 mb-12 w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primaryDark rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
             <button 
@@ -384,61 +384,48 @@ function App() {
           )}
         </div>
 
-        {/* High-End Minimalist Cards - Start */}
+        {/* Optimized Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
           
           {/* Card 1: Dados Essenciais */}
-          <div className="group relative bg-white p-10 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
-             {/* Sliding Sidebar */}
+          <div className="group relative bg-white p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
             <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-emerald-500 transition-all duration-700 ease-out"></div>
-            
-            {/* Icon Wrapper */}
-            <div className="relative w-14 h-14 rounded-full bg-emerald-50/50 flex items-center justify-center mb-8 group-hover:bg-emerald-50 transition-colors duration-500">
-              <FileText className="w-6 h-6 text-slate-600 stroke-[1.5] group-hover:text-emerald-600 transition-colors" />
+            <div className="relative w-12 h-12 rounded-full bg-emerald-50/50 flex items-center justify-center mb-4 group-hover:bg-emerald-50 transition-colors duration-500">
+              <FileText className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-emerald-600 transition-colors" />
             </div>
-
-            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-4 group-hover:text-emerald-700 transition-colors">Dados Essenciais</h3>
-            <p className="text-[#666] text-sm leading-loose font-light">
+            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-3 group-hover:text-emerald-700 transition-colors">Dados Essenciais</h3>
+            <p className="text-[#666] text-sm leading-relaxed font-light">
               Tenha em mãos os dados do fornecedor, valor exato e a <span className="font-medium text-slate-800">Nota Fiscal</span> para agilizar a aprovação.
             </p>
           </div>
 
           {/* Card 2: Prazos e Regras */}
-          <div className="group relative bg-white p-10 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
-            {/* Sliding Sidebar */}
+          <div className="group relative bg-white p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
             <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-amber-500 transition-all duration-700 ease-out"></div>
-
-            {/* Icon Wrapper */}
-            <div className="relative w-14 h-14 rounded-full bg-amber-50/50 flex items-center justify-center mb-8 group-hover:bg-amber-50 transition-colors duration-500">
-              <Clock className="w-6 h-6 text-slate-600 stroke-[1.5] group-hover:text-amber-600 transition-colors" />
+            <div className="relative w-12 h-12 rounded-full bg-amber-50/50 flex items-center justify-center mb-4 group-hover:bg-amber-50 transition-colors duration-500">
+              <Clock className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-amber-600 transition-colors" />
             </div>
-
-            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-4 group-hover:text-amber-700 transition-colors">Prazos e Regras</h3>
-            <p className="text-[#666] text-sm leading-loose font-light">
+            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-3 group-hover:text-amber-700 transition-colors">Prazos e Regras</h3>
+            <p className="text-[#666] text-sm leading-relaxed font-light">
               Respeite o prazo mínimo de <strong className="text-slate-800 font-medium">2 horas</strong> para processamento. Planeje com antecedência.
             </p>
           </div>
 
           {/* Card 3: Urgências */}
-          <div className="group relative bg-white p-10 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
-            {/* Sliding Sidebar */}
+          <div className="group relative bg-white p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-50 overflow-hidden text-left">
             <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-rose-500 transition-all duration-700 ease-out"></div>
-
-            {/* Icon Wrapper */}
-            <div className="relative w-14 h-14 rounded-full bg-rose-50/50 flex items-center justify-center mb-8 group-hover:bg-rose-50 transition-colors duration-500">
-              <AlertTriangle className="w-6 h-6 text-slate-600 stroke-[1.5] group-hover:text-rose-600 transition-colors" />
+            <div className="relative w-12 h-12 rounded-full bg-rose-50/50 flex items-center justify-center mb-4 group-hover:bg-rose-50 transition-colors duration-500">
+              <AlertTriangle className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-rose-600 transition-colors" />
             </div>
-
-            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-4 group-hover:text-rose-700 transition-colors">Urgências</h3>
-            <p className="text-[#666] text-sm leading-loose font-light">
+            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-3 group-hover:text-rose-700 transition-colors">Urgências</h3>
+            <p className="text-[#666] text-sm leading-relaxed font-light">
               Emergências reais (menos de 2h) devem ser lançadas e comunicadas via <strong className="text-slate-900 font-bold">WhatsApp</strong>.
             </p>
           </div>
 
         </div>
-        {/* High-End Minimalist Cards - End */}
         
-        <div className="mt-20 text-center animate-in fade-in duration-1000 delay-500">
+        <div className="mt-16 text-center animate-in fade-in duration-1000 delay-500">
           <p className="text-[10px] md:text-xs text-slate-400 uppercase tracking-widest font-semibold hover:text-primary transition-colors cursor-default">
             CSP &copy; {new Date().getFullYear()} • Tecnologia & Finanças
           </p>
