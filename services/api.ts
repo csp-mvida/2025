@@ -1,18 +1,60 @@
 import { supabase } from '../src/integrations/supabase/client';
-import { DEPARTMENTS_FALLBACK } from '../constants';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
 const DB_KEY = 'csp_db_requests';
 const BUCKET_NAME = 'comprovantes';
-const TABLE_NAME = 'tb_solicitacoes_pagamento';
+const TABLE_NAME = 'payment_requests';
 
-// Mock Supabase fetch for Departments
+// Fetch Departments from Supabase
 export const fetchDepartments = async (): Promise<Department[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(DEPARTMENTS_FALLBACK.sort((a, b) => a.name.localeCompare(b.name)));
-    }, 500);
-  });
+  const { data, error } = await supabase
+    .from('departments')
+    .select('id, name, is_active')
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching departments:', error);
+    return [];
+  }
+
+  return data.map(d => ({
+    id: d.id,
+    name: d.name,
+    active: d.is_active
+  }));
+};
+
+// Fetch Authorizers from Supabase
+export const fetchAuthorizers = async () => {
+  const { data, error } = await supabase
+    .from('authorizers')
+    .select('name')
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching authorizers:', error);
+    return [];
+  }
+
+  return data.map(a => a.name);
+};
+
+// Fetch Payment Accounts from Supabase
+export const fetchPaymentAccounts = async () => {
+  const { data, error } = await supabase
+    .from('payment_accounts')
+    .select('label')
+    .eq('is_active', true)
+    .order('label');
+
+  if (error) {
+    console.error('Error fetching accounts:', error);
+    return [];
+  }
+
+  return data.map(a => a.label);
 };
 
 // Upload File to Supabase Storage
@@ -42,27 +84,23 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
+  // Note: Values are converted to cents for the amount_cents column if needed, 
+  // but here we follow the existing structure.
   const dbPayload = {
-    request_id: requestId,
+    protocol: requestId,
     requester_name: data.requesterName,
-    whatsapp: data.whatsapp,
+    requester_whatsapp: data.whatsapp,
     department_id: data.departmentId,
-    authorizer: data.authorizer,
+    description: data.description,
     due_date: data.dueDate,
-    payment_account: data.paymentAccount,
-    is_specific_budget: data.isSpecificBudget === 'yes',
-    specific_budget_name: data.specificBudgetName || null,
-    supplier_name: data.supplierName,
-    value: data.value,
+    vendor_name: data.supplierName,
+    amount_cents: parseInt(data.value), // Converting raw string to integer
     payment_method: data.paymentMethod,
     pix_key: data.pixKey || null,
-    boleto_code: data.boletoCode || null,
-    boleto_due_date: data.boletoDueDate || null,
-    description: data.description,
-    auth_number: data.authNumber || null,
-    url_anexo: url_anexo,
     status: 'pending',
-    created_at: new Date().toISOString()
+    invoice_attachment_path: url_anexo,
+    is_budget_specific: data.isSpecificBudget === 'yes',
+    authorization_number: data.authNumber || null
   };
 
   try {
@@ -72,8 +110,10 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
 
     if (error) {
       console.error('Supabase DB Insert Error:', error);
+      return false;
     }
 
+    // Local storage mirror for backward compatibility in dashboard
     const newRequest: CSPRequest = {
       ...data,
       id: requestId,
@@ -97,35 +137,48 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
 };
 
 export const getRequests = async (): Promise<CSPRequest[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const existing = localStorage.getItem(DB_KEY);
-      const db: CSPRequest[] = existing ? JSON.parse(existing) : [];
-      resolve(db.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    }, 600);
-  });
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching requests:', error);
+    return [];
+  }
+
+  return data.map(req => ({
+    id: req.protocol,
+    requesterName: req.requester_name,
+    whatsapp: req.requester_whatsapp,
+    departmentId: req.department_id,
+    authorizer: '', // Will be added to table later if needed
+    dueDate: req.due_date,
+    paymentAccount: '', // Will be added to table later if needed
+    isSpecificBudget: req.is_budget_specific ? 'yes' : 'no',
+    supplierName: req.vendor_name,
+    value: req.amount_cents.toString(),
+    paymentMethod: req.payment_method,
+    hasInvoice: req.invoice_attachment_path ? 'yes' : 'no',
+    invoiceSentViaWhatsapp: false,
+    description: req.description,
+    termsAccepted: true,
+    createdAt: req.created_at,
+    status: req.status as RequestStatus,
+    history: []
+  }));
 };
 
 export const updateRequestStatus = async (id: string, status: RequestStatus): Promise<boolean> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const existing = localStorage.getItem(DB_KEY);
-      if (!existing) { resolve(false); return; }
-      
-      let db: CSPRequest[] = JSON.parse(existing);
-      db = db.map(req => {
-        if (req.id === id) {
-          return { 
-            ...req, 
-            status,
-            history: [...req.history, { date: new Date().toISOString(), action: `Status alterado para ${status}`, user: 'Admin' }] 
-          };
-        }
-        return req;
-      });
-      
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
-      resolve(true);
-    }, 400);
-  });
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .update({ status })
+    .eq('protocol', id);
+
+  if (error) {
+    console.error('Error updating status:', error);
+    return false;
+  }
+
+  return true;
 };

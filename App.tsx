@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { INITIAL_DATA, CSPFormData, Department, ValidationErrors } from './types';
-import { AUTHORIZERS, PAYMENT_ACCOUNTS, URGENCY_THRESHOLD_HOURS } from './constants';
+import { URGENCY_THRESHOLD_HOURS } from './constants';
 import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency, generateId } from './utils/formatters';
-import { fetchDepartments, submitRequest, uploadInvoice } from './services/api';
+import { fetchDepartments, fetchAuthorizers, fetchPaymentAccounts, submitRequest, uploadInvoice } from './services/api';
 import { generatePDF } from './utils/pdfGenerator';
 
 // Components
@@ -25,12 +25,14 @@ function App() {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<CSPFormData>(INITIAL_DATA);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [authorizers, setAuthorizers] = useState<string[]>([]);
+  const [paymentAccounts, setPaymentAccounts] = useState<string[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false); // New state for file upload
+  const [isUploading, setIsUploading] = useState(false); 
   const [isSuccess, setIsSuccess] = useState(false);
   const [generatedId, setGeneratedId] = useState('');
-  const [isIdCopied, setIsIdCopied] = useState(false); // State for ID copy feedback
+  const [isIdCopied, setIsIdCopied] = useState(false); 
   
   // Draft Management State
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
@@ -45,12 +47,24 @@ function App() {
 
   // Load Initial Data & Check Draft
   useEffect(() => {
-    fetchDepartments().then(setDepartments);
+    const loadInitialData = async () => {
+      const [depts, auths, accounts] = await Promise.all([
+        fetchDepartments(),
+        fetchAuthorizers(),
+        fetchPaymentAccounts()
+      ]);
+      setDepartments(depts);
+      setAuthorizers(auths);
+      setPaymentAccounts(accounts);
+    };
+    
+    loadInitialData();
+
     const savedDraft = localStorage.getItem('csp_draft');
     if (savedDraft) {
       setHasSavedDraft(true);
     } else {
-      setDraftLoaded(true); // Ready to start new
+      setDraftLoaded(true); 
     }
   }, []);
 
@@ -461,7 +475,7 @@ function App() {
           error={errors.authorizer}
         >
           <option value="">Selecione...</option>
-          {AUTHORIZERS.map(auth => (
+          {authorizers.map(auth => (
             <option key={auth} value={auth}>{auth}</option>
           ))}
         </Select>
@@ -521,7 +535,7 @@ function App() {
           error={errors.paymentAccount}
         >
           <option value="">Selecione...</option>
-          {PAYMENT_ACCOUNTS.map(acc => (
+          {paymentAccounts.map(acc => (
             <option key={acc} value={acc}>{acc}</option>
           ))}
         </Select>
