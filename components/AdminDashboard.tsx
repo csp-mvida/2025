@@ -86,25 +86,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 pb-20">
       {/* Admin Header */}
-      <div className="bg-primaryDark text-white pt-8 pb-16 px-4 md:px-8 shadow-lg">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-             <div className="mb-4">
-               <img src="/logo.png" alt="Missão Vida" className="h-8 object-contain brightness-0 invert" />
-             </div>
-             <div className="flex items-center gap-2 text-primaryHover mb-1">
+      <div className="bg-primaryDark text-white pt-10 pb-16 px-4 md:px-8 shadow-lg">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6 md:gap-4">
+          
+          {/* Left: Titles */}
+          <div className="order-2 md:order-1 text-center md:text-left">
+             <div className="flex items-center justify-center md:justify-start gap-2 text-primaryHover mb-1">
                <LayoutDashboard className="w-5 h-5" />
-               <span className="uppercase tracking-widest text-xs font-bold">Painel Administrativo</span>
+               <span className="uppercase tracking-widest text-[10px] md:text-xs font-bold">Painel Administrativo</span>
              </div>
-             <h1 className="text-3xl font-bold tracking-tight">Gestão de Solicitações</h1>
+             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Gestão de Solicitações</h1>
           </div>
-          <Button 
-            variant="outline" 
-            className="border-white/20 text-white hover:bg-white/10 hover:border-white/40 transition-colors" 
-            onClick={onBack}
-          >
-            Sair do Admin
-          </Button>
+
+          {/* Center: New Logo */}
+          <div className="order-1 md:order-2 flex justify-center">
+             <img 
+               src="/admin-logo.png" 
+               alt="Missão Vida" 
+               className="h-16 md:h-20 w-auto object-contain brightness-0 invert" 
+             />
+          </div>
+
+          {/* Right: Action Button */}
+          <div className="order-3 md:order-3 flex justify-center md:justify-end">
+            <Button 
+              variant="outline" 
+              className="border-white/20 text-white hover:bg-white/10 hover:border-white/40 transition-colors py-2" 
+              onClick={onBack}
+            >
+              Sair do Admin
+            </Button>
+          </div>
+          
         </div>
       </div>
 
