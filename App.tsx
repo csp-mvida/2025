@@ -10,7 +10,11 @@ import { Stepper } from './components/Stepper';
 import { Button } from './components/ui/Button';
 import { Input, Select, Textarea } from './components/ui/Input';
 import { UrgencyAlert } from './components/UrgencyAlert';
-import { Save, Trash2, CheckCircle, UploadCloud, FileText, ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, Home, Lock, Download, Copy } from './components/ui/Icons';
+import { 
+  Save, Trash2, CheckCircle, UploadCloud, FileText, 
+  ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, 
+  Home, Lock, Download, Copy, Clock 
+} from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
 import { BackgroundAnimation } from './components/BackgroundAnimation';
