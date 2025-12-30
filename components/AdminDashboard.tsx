@@ -89,6 +89,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       <div className="bg-primaryDark text-white pt-8 pb-16 px-4 md:px-8 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
+             <div className="mb-4">
+               <img src="/logo.png" alt="Missão Vida" className="h-8 object-contain brightness-0 invert" />
+             </div>
              <div className="flex items-center gap-2 text-primaryHover mb-1">
                <LayoutDashboard className="w-5 h-5" />
                <span className="uppercase tracking-widest text-xs font-bold">Painel Administrativo</span>
