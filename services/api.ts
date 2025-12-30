@@ -30,8 +30,8 @@ export const fetchAuthorizers = async () => {
   const { data, error } = await supabase
     .from('authorizers')
     .select('name')
-    .eq('is_active', true)
-    .order('name');
+    .eq('is_active', true);
+    // Removed .order('name') to respect insertion order or manual order
 
   if (error) {
     console.error('Error fetching authorizers:', error);
@@ -84,8 +84,6 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
-  // Note: Values are converted to cents for the amount_cents column if needed, 
-  // but here we follow the existing structure.
   const dbPayload = {
     protocol: requestId,
     requester_name: data.requesterName,
@@ -94,7 +92,7 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
     description: data.description,
     due_date: data.dueDate,
     vendor_name: data.supplierName,
-    amount_cents: parseInt(data.value), // Converting raw string to integer
+    amount_cents: parseInt(data.value),
     payment_method: data.paymentMethod,
     pix_key: data.pixKey || null,
     status: 'pending',
@@ -113,7 +111,6 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
       return false;
     }
 
-    // Local storage mirror for backward compatibility in dashboard
     const newRequest: CSPRequest = {
       ...data,
       id: requestId,
@@ -152,9 +149,9 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     requesterName: req.requester_name,
     whatsapp: req.requester_whatsapp,
     departmentId: req.department_id,
-    authorizer: '', // Will be added to table later if needed
+    authorizer: '',
     dueDate: req.due_date,
-    paymentAccount: '', // Will be added to table later if needed
+    paymentAccount: '',
     isSpecificBudget: req.is_budget_specific ? 'yes' : 'no',
     supplierName: req.vendor_name,
     value: req.amount_cents.toString(),
