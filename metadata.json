@@ -1,0 +1,5 @@
+{
+  "name": "CSP | Central de Solicitação de Pagamento",
+  "description": "Premium payment request management system featuring urgency detection, draft saving, and strict validation workflows.",
+  "requestFramePermissions": []
+}
