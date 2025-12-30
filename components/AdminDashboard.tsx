@@ -99,11 +99,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           </div>
 
           {/* Center: New Logo */}
-          <div className="order-1 md:order-2 flex justify-center">
+          <div className="order-1 md:order-2 flex justify-center z-10">
              <img 
                src="/admin-logo.png" 
                alt="Missão Vida" 
-               className="h-16 md:h-20 w-auto object-contain brightness-0 invert" 
+               className="h-20 md:h-24 w-auto object-contain" 
              />
           </div>
 
