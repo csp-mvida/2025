@@ -329,9 +329,9 @@ function App() {
 
       <div className="w-full max-w-6xl relative z-10 flex flex-col items-center">
         
-        {/* Institutional Logo */}
+        {/* Institutional Logo (Reduced by 50%) */}
         <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-           <img src="/logo.png" alt="Missão Vida" className="h-24 md:h-32 object-contain" />
+           <img src="/logo.png" alt="Missão Vida" className="h-12 md:h-16 object-contain" />
         </div>
 
         {/* Institutional Tag */}
@@ -876,9 +876,9 @@ function App() {
   // View === 'form'
   return (
     <div className="min-h-screen bg-background text-slate-800 selection:bg-primary/20">
-      {/* Mobile Header for context */}
+      {/* Mobile Header for context (Logo Reduced) */}
       <div className="lg:hidden p-4 border-b border-slate-200 bg-white/90 backdrop-blur sticky top-0 z-20 flex items-center justify-between">
-        <img src="/logo.png" alt="Missão Vida" className="h-10 object-contain" />
+        <img src="/logo.png" alt="Missão Vida" className="h-5 object-contain" />
         <h1 className="font-bold text-sm text-slate-900">CSP <span className="text-slate-400">| Pagamentos</span></h1>
       </div>
 
@@ -912,10 +912,10 @@ function App() {
 
         <div className="w-full max-w-3xl mx-auto p-4 md:p-8 lg:p-12 flex-1 flex flex-col">
           
-          {/* Header with Logo for Form View */}
+          {/* Header with Logo for Form View (Logo Reduced) */}
           {!isSuccess && (
             <div className="flex justify-between items-start mb-10">
-              <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-20 object-contain hidden lg:block" />
+              <img src="/logo.png" alt="Missão Vida" className="h-8 md:h-10 object-contain hidden lg:block" />
               <button
                 onClick={() => setView('welcome')}
                 className="inline-flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-sm font-medium w-fit mt-2"
