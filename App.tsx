@@ -876,13 +876,23 @@ function App() {
   // View === 'form'
   return (
     <div className="min-h-screen bg-background text-slate-800 selection:bg-primary/20">
-      {/* Mobile Header (Centralized Logo) */}
-      <div className="lg:hidden p-4 border-b border-slate-200 bg-white/90 backdrop-blur sticky top-0 z-20 flex flex-col items-center gap-2">
-        <img src="/logo.png" alt="Missão Vida" className="h-12 object-contain" />
-        <h1 className="font-bold text-sm text-slate-900">CSP <span className="text-slate-400">| Pagamentos</span></h1>
-      </div>
-
+      
       <main className="min-h-screen flex flex-col">
+        {/* Header Unificado com Logo Centralizada (Igual ao Welcome) */}
+        {!isSuccess && (
+          <div className="p-6 md:p-10 border-b border-slate-100 bg-white/95 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
+            <div className="absolute right-6 top-1/2 -translate-y-1/2">
+              <button
+                onClick={() => setView('welcome')}
+                className="inline-flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-sm font-medium"
+              >
+                <Home className="w-4 h-4" /> <span className="hidden md:inline">Início</span>
+              </button>
+            </div>
+            <img src="/logo.png" alt="Missão Vida" className="h-12 md:h-16 object-contain" />
+          </div>
+        )}
+
         {/* Restore Draft Banner */}
         {hasSavedDraft && !isSuccess && (
           <div className="bg-white border-b border-primary/20 px-4 py-3 md:px-8 lg:px-12 flex items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-500 shadow-sm">
@@ -912,26 +922,11 @@ function App() {
 
         <div className="w-full max-w-3xl mx-auto p-4 md:p-8 lg:p-12 flex-1 flex flex-col">
           
-          {/* Header with Logo for Form View (Centralized) */}
-          {!isSuccess && (
-            <div className="relative flex flex-col items-center mb-10 w-full">
-              <div className="absolute right-0 top-2">
-                <button
-                  onClick={() => setView('welcome')}
-                  className="inline-flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-sm font-medium"
-                >
-                  <Home className="w-4 h-4" /> <span className="hidden md:inline">Início</span>
-                </button>
-              </div>
-              <img src="/logo.png" alt="Missão Vida" className="h-12 md:h-16 object-contain hidden lg:block" />
-            </div>
-          )}
-
           {!isSuccess ? (
             <>
               {/* Title Section */}
-              <div className="mb-10 text-center lg:text-left">
-                <div className="hidden lg:block mb-2 text-primary font-bold tracking-wider text-xs uppercase">Financeiro</div>
+              <div className="mb-10 text-center">
+                <div className="mb-2 text-primary font-bold tracking-wider text-xs uppercase">Financeiro</div>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
                   Nova Solicitação
                 </h1>
