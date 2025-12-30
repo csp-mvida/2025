@@ -12,10 +12,11 @@ import { Input, Select, Textarea } from './components/ui/Input';
 import { UrgencyAlert } from './components/UrgencyAlert';
 import { Save, Trash2, CheckCircle, UploadCloud, FileText, ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, Clock, Home, Lock, Download, Copy } from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
+import { LoginAdmin } from './components/LoginAdmin';
 
 function App() {
   // State
-  const [view, setView] = useState<'welcome' | 'form' | 'admin'>('welcome');
+  const [view, setView] = useState<'welcome' | 'form' | 'login' | 'admin'>('welcome');
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<CSPFormData>(INITIAL_DATA);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -319,7 +320,7 @@ function App() {
       {/* Admin Link */}
       <div className="absolute top-6 right-6 z-20">
         <button 
-          onClick={() => setView('admin')}
+          onClick={() => setView('login')}
           className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur border border-slate-200 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-white transition-all shadow-sm"
         >
           <Lock className="w-3 h-3" />
@@ -851,6 +852,10 @@ function App() {
   );
 
   // --- ROUTING LOGIC ---
+
+  if (view === 'login') {
+    return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
+  }
 
   if (view === 'admin') {
     return <AdminDashboard onBack={() => setView('welcome')} />;
