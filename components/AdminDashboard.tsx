@@ -100,7 +100,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Gestão de Solicitações</h1>
           </div>
 
-          {/* Center: New Logo */}
+          {/* Center: Logo */}
           <div className="order-1 md:order-2 flex justify-center z-10">
              <img 
                src="/admin-logo.png" 
