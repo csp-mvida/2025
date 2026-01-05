@@ -307,13 +307,13 @@ function App() {
 
   // --- RENDER WELCOME SCREEN ---
   const renderWelcome = () => (
-    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden bg-slate-50">
+    <div className="min-h-screen relative flex flex-col bg-slate-50">
       <BackgroundAnimation />
 
-      {/* Institutional Top Bar - Centralized Button & Increased Margin */}
-      <div className="absolute top-0 left-0 w-full z-30 animate-fade-up">
-        {/* Superior Green Utility Bar - Centralized */}
-        <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
+      {/* Institutional Top Header - Full Stacked to avoid overlap */}
+      <header className="relative z-30 animate-fade-up">
+        {/* Superior Green Utility Bar - Centralized Button */}
+        <div className="bg-primary py-3 px-4 flex justify-center shadow-md">
           <button 
             onClick={() => setView('login')}
             className="flex items-center gap-2 text-white font-bold hover:scale-105 transition-all group"
@@ -323,59 +323,59 @@ function App() {
           </button>
         </div>
         
-        {/* Main Nav in Welcome - Added margin-top for distance from green bar */}
-        <div className="mt-8 md:mt-12 p-4 md:p-6 flex justify-between items-center">
-          <div className="flex items-center gap-2 md:gap-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg shadow-sm border border-slate-100 flex items-center justify-center">
-              <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+        {/* Secondary Navigation - Centered Seal with breathing space */}
+        <div className="py-8 md:py-12 px-4 flex justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl shadow-md border border-slate-100 flex items-center justify-center">
+              <LayoutDashboard className="w-5 h-5 md:w-6 md:h-6 text-primary" />
             </div>
-            <span className="text-[9px] md:text-xs font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block">Central CSP</span>
+            <span className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.3em] text-center">Central CSP</span>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
+      <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
         
-        {/* Header Section */}
-        <div className="mb-6 md:mb-10 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
-           <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-24 object-contain mx-auto mb-8 drop-shadow-md" />
-           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-4 mx-auto">
-             <span className="relative flex h-2 w-2">
+        {/* Header Section - Logo with significant top margin to separate from Nav */}
+        <div className="mt-4 mb-8 md:mb-14 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
+           <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-28 object-contain mx-auto mb-10 drop-shadow-md" />
+           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-4 mx-auto">
+             <span className="relative flex h-2.5 w-2.5">
                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
              </span>
-             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Painel Financeiro 2025</span>
+             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Painel Financeiro 2025</span>
            </div>
         </div>
 
         {/* Hero Title */}
-        <div className="text-center mb-8 md:mb-12 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-4xl md:text-7xl text-slate-900 mb-4 md:mb-6 tracking-tighter leading-[1] max-w-3xl px-2">
+        <div className="text-center mb-10 md:mb-16 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <h1 className="text-4xl md:text-7xl text-slate-900 mb-6 tracking-tighter leading-[1.1] max-w-4xl px-2">
             <span className="font-light block md:inline text-2xl md:text-5xl">Sua ponte direta com o</span>{' '}
             <span className="font-black text-primary italic">Financeiro.</span>
           </h1>
-          <p className="text-base md:text-xl text-slate-500 font-medium max-w-xl mx-auto leading-relaxed px-4">
+          <p className="text-base md:text-xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed px-4">
             Solicite pagamentos de forma padronizada, segura e com total transparência em cada etapa.
           </p>
         </div>
 
         {/* Primary CTA */}
-        <div className="mb-12 md:mb-16 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+        <div className="mb-14 md:mb-20 animate-fade-up" style={{ animationDelay: '0.3s' }}>
           <div className="relative group">
-            <div className="absolute -inset-4 bg-primary/20 rounded-[2.5rem] blur-3xl group-hover:bg-primary/30 transition duration-500"></div>
+            <div className="absolute -inset-6 bg-primary/20 rounded-[3rem] blur-3xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
               onClick={handleStartRequest} 
-              className="relative px-8 py-4 md:px-12 md:py-6 bg-primary hover:bg-primaryHover text-lg md:text-2xl font-bold text-white rounded-3xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4 mx-auto"
+              className="relative px-10 py-5 md:px-14 md:py-7 bg-primary hover:bg-primaryHover text-xl md:text-2xl font-bold text-white rounded-3xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.03] flex items-center gap-5 mx-auto"
             >
               Criar Solicitação
-              <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-7 h-7 group-hover:translate-x-1.5 transition-transform" />
             </button>
           </div>
           
           {hasSavedDraft && (
             <button 
               onClick={handleRestoreDraft}
-              className="mt-6 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors"
+              className="mt-8 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors py-2 px-4 rounded-full hover:bg-white shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Retomar rascunho salvo
@@ -384,45 +384,45 @@ function App() {
         </div>
 
         {/* Professional Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 w-full px-4 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10 w-full px-4 mb-20 animate-fade-up" style={{ animationDelay: '0.4s' }}>
           
-          <div className="bg-white/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
-              <FileText className="w-6 h-6 text-primary" />
+          <div className="bg-white/50 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <FileText className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Protocolo Digital</h3>
-            <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
-              Geração automática de ID para rastreamento imediate de cada pedido realizado.
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-3">Protocolo Digital</h3>
+            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+              Geração automática de ID para rastreamento imediato de cada pedido realizado.
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-accent/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
-              <Clock className="w-6 h-6 text-accent" />
+          <div className="bg-white/50 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Clock className="w-7 h-7 text-accent" />
             </div>
-            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Agilidade Real</h3>
-            <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-3">Agilidade Real</h3>
+            <p className="text-slate-500 text-sm leading-relaxed font-medium">
               Detecção de urgência e avisos automáticos para garantir prazos críticos.
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
-              <CheckCircle className="w-6 h-6 text-slate-900" />
+          <div className="bg-white/50 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-14 h-14 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <CheckCircle className="w-7 h-7 text-slate-900" />
             </div>
-            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Padronização</h3>
-            <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-3">Padronização</h3>
+            <p className="text-slate-500 text-sm leading-relaxed font-medium">
               Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.
             </p>
           </div>
 
         </div>
         
-        <div className="mt-12 md:mt-20 py-8 border-t border-slate-200 w-full text-center">
+        <footer className="mt-auto py-10 border-t border-slate-200 w-full text-center">
           <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
             Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
           </p>
-        </div>
+        </footer>
       </div>
     </div>
   );
@@ -813,7 +813,7 @@ function App() {
         {!isSuccess && (
           <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
             {/* Superior Utility Green Bar - Centralized Button */}
-            <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
+            <div className="bg-primary py-3 px-4 flex justify-center shadow-md">
               <button 
                 onClick={() => setView('login')}
                 className="flex items-center gap-1.5 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
@@ -823,17 +823,24 @@ function App() {
               </button>
             </div>
             
-            <div className="max-w-7xl mx-auto px-4 md:px-8 mt-6 mb-3 md:mt-8 md:mb-4 flex items-center justify-between">
+            {/* Branding Seal - Centralized */}
+            <div className="py-4 flex justify-center border-b border-slate-50">
+              <div className="flex items-center gap-2">
+                 <div className="w-6 h-6 bg-primary/5 rounded flex items-center justify-center">
+                   <LayoutDashboard className="w-3 h-3 text-primary" />
+                 </div>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Central CSP</span>
+              </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
               {/* Left: Brand Identity */}
               <div className="flex items-center gap-3 md:gap-4 shrink-0">
                 <div 
                   className="cursor-pointer transition-opacity hover:opacity-80"
                   onClick={() => setView('welcome')}
                 >
-                  <img src="/logo.png" alt="Missão Vida" className="h-7 md:h-12 w-auto object-contain" />
-                </div>
-                <div className="hidden lg:flex flex-col border-l border-slate-200 pl-4">
-                  <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">CSP &bull; Central de Pagamento</span>
+                  <img src="/logo.png" alt="Missão Vida" className="h-8 md:h-12 w-auto object-contain" />
                 </div>
               </div>
 
