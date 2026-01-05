@@ -323,20 +323,13 @@ function App() {
           </button>
         </div>
         
-        {/* Secondary Navigation - Centered Seal with breathing space */}
-        <div className="py-8 md:py-12 px-4 flex justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl shadow-md border border-slate-100 flex items-center justify-center">
-              <LayoutDashboard className="w-5 h-5 md:w-6 md:h-6 text-primary" />
-            </div>
-            <span className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.3em] text-center">Central CSP</span>
-          </div>
-        </div>
+        {/* Padding Div for distance */}
+        <div className="py-6 md:py-8"></div>
       </header>
 
       <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
         
-        {/* Header Section - Logo with significant top margin to separate from Nav */}
+        {/* Header Section - Logo */}
         <div className="mt-4 mb-8 md:mb-14 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
            <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-28 object-contain mx-auto mb-10 drop-shadow-md" />
            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-4 mx-auto">
@@ -823,16 +816,6 @@ function App() {
               </button>
             </div>
             
-            {/* Branding Seal - Centralized */}
-            <div className="py-4 flex justify-center border-b border-slate-50">
-              <div className="flex items-center gap-2">
-                 <div className="w-6 h-6 bg-primary/5 rounded flex items-center justify-center">
-                   <LayoutDashboard className="w-3 h-3 text-primary" />
-                 </div>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Central CSP</span>
-              </div>
-            </div>
-
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
               {/* Left: Brand Identity */}
               <div className="flex items-center gap-3 md:gap-4 shrink-0">
