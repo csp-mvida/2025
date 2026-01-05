@@ -310,23 +310,29 @@ function App() {
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden bg-slate-50">
       <BackgroundAnimation />
 
-      {/* Admin Icon Button - Visible and positioned top right */}
-      <div className="absolute top-4 right-4 md:top-8 md:right-8 z-30 animate-fade-up">
+      {/* Institutional Top Bar */}
+      <div className="absolute top-0 left-0 w-full p-4 md:p-6 flex justify-between items-center z-30 animate-fade-up">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg shadow-sm border border-slate-100 flex items-center justify-center">
+            <LayoutDashboard className="w-5 h-5 text-primary" />
+          </div>
+          <span className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block">Central de Pagamentos</span>
+        </div>
+        
         <button 
           onClick={() => setView('login')}
-          className="flex flex-col items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/70 backdrop-blur-md border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/30 transition-all shadow-sm group"
-          title="Admin"
+          className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl bg-white/70 backdrop-blur-md border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/30 transition-all shadow-sm group"
         >
-          <Lock className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
-          <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-tighter mt-0.5">Admin</span>
+          <Lock className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:scale-110 transition-transform" />
+          <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider">Acesso Admin</span>
         </button>
       </div>
 
       <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
         
-        {/* Header Section - Tighter spacing */}
-        <div className="mb-6 md:mb-8 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
-           <img src="/logo.png" alt="Missão Vida" className="h-14 md:h-18 object-contain mx-auto mb-6 drop-shadow-sm" />
+        {/* Header Section */}
+        <div className="mb-6 md:mb-10 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
+           <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-24 object-contain mx-auto mb-8 drop-shadow-md" />
            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-4 mx-auto">
              <span className="relative flex h-2 w-2">
                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -336,10 +342,10 @@ function App() {
            </div>
         </div>
 
-        {/* Hero Title - More compact */}
-        <div className="text-center mb-8 md:mb-10 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-3xl md:text-6xl text-slate-900 mb-4 md:mb-6 tracking-tighter leading-[1] max-w-3xl px-2">
-            <span className="font-light block md:inline text-xl md:text-4xl">Sua ponte direta com o</span>{' '}
+        {/* Hero Title */}
+        <div className="text-center mb-8 md:mb-12 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <h1 className="text-4xl md:text-7xl text-slate-900 mb-4 md:mb-6 tracking-tighter leading-[1] max-w-3xl px-2">
+            <span className="font-light block md:inline text-2xl md:text-5xl">Sua ponte direta com o</span>{' '}
             <span className="font-black text-primary italic">Financeiro.</span>
           </h1>
           <p className="text-base md:text-xl text-slate-500 font-medium max-w-xl mx-auto leading-relaxed px-4">
@@ -348,15 +354,15 @@ function App() {
         </div>
 
         {/* Primary CTA */}
-        <div className="mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+        <div className="mb-12 md:mb-16 animate-fade-up" style={{ animationDelay: '0.3s' }}>
           <div className="relative group">
-            <div className="absolute -inset-4 bg-primary/20 rounded-[2rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
+            <div className="absolute -inset-4 bg-primary/20 rounded-[2.5rem] blur-3xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
               onClick={handleStartRequest} 
-              className="relative px-8 py-4 md:px-10 md:py-5 bg-primary hover:bg-primaryHover text-lg md:text-xl font-bold text-white rounded-2xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4 mx-auto"
+              className="relative px-8 py-4 md:px-12 md:py-6 bg-primary hover:bg-primaryHover text-lg md:text-2xl font-bold text-white rounded-3xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4 mx-auto"
             >
               Criar Solicitação
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
           
@@ -366,48 +372,48 @@ function App() {
               className="mt-6 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Retomar rascunho
+              Retomar rascunho salvo
             </button>
           )}
         </div>
 
-        {/* Professional Cards Grid - Tighter horizontal gaps */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 w-full px-2 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+        {/* Professional Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 w-full px-4 animate-fade-up" style={{ animationDelay: '0.4s' }}>
           
-          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
-              <FileText className="w-5 h-5 text-primary" />
+          <div className="bg-white/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+              <FileText className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 md:mb-2">Protocolo Digital</h3>
-            <p className="text-slate-500 text-[11px] md:text-xs leading-relaxed font-medium">
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Protocolo Digital</h3>
+            <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
               Geração automática de ID para rastreamento imediato de cada pedido realizado.
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
-              <Clock className="w-5 h-5 text-accent" />
+          <div className="bg-white/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-accent/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+              <Clock className="w-6 h-6 text-accent" />
             </div>
-            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 md:mb-2">Agilidade Real</h3>
-            <p className="text-slate-500 text-[11px] md:text-xs leading-relaxed font-medium">
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Agilidade Real</h3>
+            <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
               Detecção de urgência e avisos automáticos para garantir prazos críticos.
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
-              <CheckCircle className="w-5 h-5 text-slate-900" />
+          <div className="bg-white/40 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+              <CheckCircle className="w-6 h-6 text-slate-900" />
             </div>
-            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 md:mb-2">Padronização</h3>
-            <p className="text-slate-500 text-[11px] md:text-xs leading-relaxed font-medium">
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Padronização</h3>
+            <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
               Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.
             </p>
           </div>
 
         </div>
         
-        <div className="mt-10 md:mt-14 py-6 border-t border-slate-200 w-full text-center">
-          <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.4em]">
+        <div className="mt-12 md:mt-20 py-8 border-t border-slate-200 w-full text-center">
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
             Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
           </p>
         </div>
@@ -799,48 +805,61 @@ function App() {
 
       <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
-          <div className="p-3 md:p-4 border-b border-slate-100 bg-white/80 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
-            <div className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          <header className="px-4 py-3 md:px-8 md:py-4 border-b border-slate-100 bg-white/70 backdrop-blur-xl sticky top-0 z-50 flex items-center justify-between shadow-sm">
+            {/* Logo Section */}
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="Missão Vida" className="h-8 md:h-12 w-auto object-contain" />
+              <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:block">CSP 2025</span>
+            </div>
+
+            {/* Navigation Actions */}
+            <div className="flex items-center gap-2 md:gap-4">
               <button
                 onClick={() => setView('welcome')}
-                className="inline-flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-[10px] md:text-xs font-medium"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-slate-500 hover:text-primary hover:bg-primary/5 transition-all text-xs font-bold"
               >
-                <Home className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Início</span>
+                <Home className="w-4 h-4" /> 
+                <span className="hidden sm:inline">Início</span>
               </button>
+              
               <button 
                 onClick={() => setView('login')}
-                className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm"
-                title="Admin"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 hover:text-primary hover:border-primary/30 transition-all shadow-xs group"
+                title="Acesso Administrativo"
               >
-                <Lock className="w-3.5 h-3.5" />
+                <Lock className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">Admin</span>
               </button>
             </div>
-            <img src="/logo.png" alt="Missão Vida" className="h-8 md:h-12 object-contain mx-auto" />
-          </div>
+          </header>
         )}
 
-        <div className="w-full max-w-2xl mx-auto p-3 md:p-6 flex-1 flex flex-col relative z-10">
+        <div className="w-full max-w-2xl mx-auto p-4 md:p-8 flex-1 flex flex-col relative z-10">
           
           {!isSuccess ? (
             <>
-              <div className="mb-4 md:mb-6 text-center">
-                <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-1">
-                  Solicitação
+              <div className="mb-6 md:mb-10 text-center animate-in fade-in duration-700">
+                <div className="inline-block p-2 bg-primary/5 rounded-2xl mb-4">
+                  <FileText className="w-8 h-8 text-primary" />
+                </div>
+                <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-2 tracking-tight">
+                  Solicitação de Pagamento
                 </h1>
-                <p className="text-slate-500 text-[11px] md:text-base">Preencha os dados abaixo.</p>
+                <p className="text-slate-500 text-xs md:text-base font-medium">Preencha os dados com atenção para agilizar o processo.</p>
               </div>
 
-              <div className="flex justify-center md:justify-end gap-2 mb-3">
+              <div className="flex justify-center md:justify-end gap-2 mb-4">
                  {Object.values(formData).some(v => v !== '' && v !== 'no' && v !== false) && (
-                   <button onClick={clearDraft} className="text-[9px] md:text-[10px] text-danger hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                     <Trash2 className="w-2.5 h-2.5" /> Limpar
+                   <button onClick={clearDraft} className="text-[10px] md:text-xs text-danger font-bold hover:underline flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all border border-transparent hover:border-red-100">
+                     <Trash2 className="w-3 h-3" /> Limpar Rascunho
                    </button>
                  )}
               </div>
 
               <Stepper currentStep={step} />
 
-              <div className="flex-1 mt-4">
+              <div className="flex-1 mt-6">
                 {step === 0 && renderStep1()}
                 {step === 1 && renderStep2()}
                 {step === 2 && renderStep3()}
@@ -848,21 +867,21 @@ function App() {
                 {step === 4 && renderReview()}
               </div>
 
-              <div className="mt-6 pt-3 border-t border-slate-200 flex justify-between items-center sticky bottom-0 bg-white/95 backdrop-blur py-3 -mx-3 px-3 md:mx-0 md:px-0 z-10">
+              <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center sticky bottom-0 bg-white/80 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-8 md:px-8 z-10">
                 <Button 
                   variant="ghost" 
                   onClick={prevStep} 
                   disabled={step === 0 || isSubmitting}
-                  size="sm"
-                  className={step === 0 ? 'invisible' : 'text-xs px-2'}
+                  size="md"
+                  className={step === 0 ? 'invisible' : 'text-xs md:text-sm px-4'}
                 >
-                  <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Voltar
+                  <ChevronLeft className="w-4 h-4 mr-2" /> Voltar
                 </Button>
 
                 {step < 4 ? (
-                  <Button onClick={nextStep} size="sm" className="px-5 text-xs" disabled={isUploading}>
+                  <Button onClick={nextStep} size="md" className="px-8 text-xs md:text-sm font-bold shadow-xl shadow-primary/20" disabled={isUploading}>
                     {isUploading ? 'Enviando...' : (
-                      <>Próximo <ChevronRight className="w-3.5 h-3.5 ml-1" /></>
+                      <>Próximo Passo <ChevronRight className="w-4 h-4 ml-2" /></>
                     )}
                   </Button>
                 ) : (
@@ -870,11 +889,11 @@ function App() {
                     variant={isUrgent ? "accent" : "primary"} 
                     onClick={handleSubmit} 
                     disabled={isSubmitting}
-                    size="sm"
-                    className="px-5 text-xs shadow-lg"
+                    size="md"
+                    className="px-10 text-xs md:text-sm font-black shadow-2xl shadow-primary/30"
                   >
-                    {isSubmitting ? 'Enviando...' : (
-                      <>Confirmar <CheckCircle className="w-3.5 h-3.5 ml-1" /></>
+                    {isSubmitting ? 'Processando...' : (
+                      <>Finalizar e Enviar <CheckCircle className="w-4 h-4 ml-2" /></>
                     )}
                   </Button>
                 )}
