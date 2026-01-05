@@ -310,7 +310,7 @@ function App() {
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden bg-slate-50">
       <BackgroundAnimation />
 
-      {/* Admin Icon Button - Fixed top right */}
+      {/* Admin Icon Button - Visible and positioned top right */}
       <div className="absolute top-4 right-4 z-30 animate-fade-up">
         <button 
           onClick={() => setView('login')}
@@ -325,7 +325,7 @@ function App() {
       <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
         
         {/* Header Section - Tighter spacing */}
-        <div className="mb-8 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
+        <div className="mb-6 md:mb-8 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
            <img src="/logo.png" alt="Missão Vida" className="h-14 md:h-18 object-contain mx-auto mb-6 drop-shadow-sm" />
            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-4">
              <span className="relative flex h-2 w-2">
@@ -337,25 +337,25 @@ function App() {
         </div>
 
         {/* Hero Title - More compact */}
-        <div className="text-center mb-10 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-4xl md:text-6xl text-slate-900 mb-6 tracking-tighter leading-[1] max-w-3xl">
-            <span className="font-light block md:inline text-2xl md:text-4xl">Sua ponte direta com o</span>{' '}
+        <div className="text-center mb-8 md:mb-10 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <h1 className="text-3xl md:text-6xl text-slate-900 mb-4 md:mb-6 tracking-tighter leading-[1] max-w-3xl px-2">
+            <span className="font-light block md:inline text-xl md:text-4xl">Sua ponte direta com o</span>{' '}
             <span className="font-black text-primary italic">Financeiro.</span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-500 font-medium max-w-xl mx-auto leading-relaxed px-4">
+          <p className="text-base md:text-xl text-slate-500 font-medium max-w-xl mx-auto leading-relaxed px-4">
             Solicite pagamentos de forma padronizada, segura e com total transparência em cada etapa.
           </p>
         </div>
 
         {/* Primary CTA */}
-        <div className="mb-14 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+        <div className="mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.3s' }}>
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-[2rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
               onClick={handleStartRequest} 
-              className="relative px-10 py-5 bg-primary hover:bg-primaryHover text-white text-lg md:text-xl font-bold rounded-2xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4"
+              className="relative px-8 py-4 md:px-10 md:py-5 bg-primary hover:bg-primaryHover text-lg md:text-xl font-bold text-white rounded-2xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4"
             >
-              Criar Nova Solicitação
+              Criar Solicitação
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -366,47 +366,47 @@ function App() {
               className="mt-6 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Retomar rascunho salvo
+              Retomar rascunho
             </button>
           )}
         </div>
 
-        {/* Professional Cards Grid - Tighter gaps */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 w-full animate-fade-up" style={{ animationDelay: '0.4s' }}>
+        {/* Professional Cards Grid - Tighter horizontal gaps */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 w-full px-2 animate-fade-up" style={{ animationDelay: '0.4s' }}>
           
-          <div className="bg-white/40 backdrop-blur-xl p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
-            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
               <FileText className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Protocolo Digital</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
+            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 md:mb-2">Protocolo Digital</h3>
+            <p className="text-slate-500 text-[11px] md:text-xs leading-relaxed font-medium">
               Geração automática de ID para rastreamento imediato de cada pedido realizado.
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
-            <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
               <Clock className="w-5 h-5 text-accent" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Agilidade Real</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
+            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 md:mb-2">Agilidade Real</h3>
+            <p className="text-slate-500 text-[11px] md:text-xs leading-relaxed font-medium">
               Detecção de urgência e avisos automáticos para garantir prazos críticos.
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
-            <div className="w-12 h-12 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
               <CheckCircle className="w-5 h-5 text-slate-900" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Padronização</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
+            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-1 md:mb-2">Padronização</h3>
+            <p className="text-slate-500 text-[11px] md:text-xs leading-relaxed font-medium">
               Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.
             </p>
           </div>
 
         </div>
         
-        <div className="mt-14 py-6 border-t border-slate-200 w-full text-center">
+        <div className="mt-10 md:mt-14 py-6 border-t border-slate-200 w-full text-center">
           <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.4em]">
             Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
           </p>
@@ -418,26 +418,25 @@ function App() {
   // --- RENDER STEPS ---
   const renderStep1 = () => (
     <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <Input 
-          label="Responsável pela solicitação" 
+          label="Responsável" 
           value={formData.requesterName} 
           onChange={e => handleChange('requesterName', e.target.value)} 
           required 
-          placeholder="Seu nome completo"
+          placeholder="Seu nome"
           error={errors.requesterName}
         />
         <Input 
-          label="WhatsApp para contato" 
+          label="WhatsApp" 
           value={formData.whatsapp} 
           onChange={handlePhoneChange} 
           required 
           placeholder="(00) 00000-0000"
-          helperText="Digite com DDD (10 ou 11 dígitos)"
           error={errors.whatsapp}
         />
         <Select 
-          label="Núcleo / Departamento" 
+          label="Núcleo / Depto" 
           value={formData.departmentId} 
           onChange={e => handleChange('departmentId', e.target.value)} 
           required
@@ -449,7 +448,7 @@ function App() {
           ))}
         </Select>
         <Select 
-          label="Quem autorizou?" 
+          label="Autorizador" 
           value={formData.authorizer} 
           onChange={e => handleChange('authorizer', e.target.value)} 
           required
@@ -463,13 +462,13 @@ function App() {
         
         <div className="md:col-span-2">
            <label className="block text-sm md:text-base font-medium text-slate-700 mb-1">
-             Vencimento do Pagamento <span className="text-accent">*</span>
+             Vencimento <span className="text-accent">*</span>
            </label>
-           <div className="flex gap-3">
+           <div className="flex gap-2">
              <div className="flex-1">
                <input 
                  type="date"
-                 className={`w-full px-4 py-2 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
+                 className={`w-full px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
                  value={getDateValue()} 
                  onChange={e => {
                    const newDate = e.target.value;
@@ -483,7 +482,7 @@ function App() {
              <div className="w-1/3">
                <input 
                  type="time"
-                 className={`w-full px-4 py-2 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
+                 className={`w-full px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
                  value={getTimeValue()} 
                  onChange={e => {
                    const newTime = e.target.value;
@@ -504,7 +503,7 @@ function App() {
 
   const renderStep2 = () => (
     <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <Select 
           label="Conta de Pagamento" 
           value={formData.paymentAccount} 
@@ -519,13 +518,13 @@ function App() {
         </Select>
         
         <div className="md:col-span-1">
-          <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5">Verba Específica? <span className="text-accent">*</span></label>
+          <label className="block text-sm md:text-base font-medium text-slate-700 mb-1">Verba Específica? <span className="text-accent">*</span></label>
           <div className="flex gap-2">
-             <label className={`flex-1 flex items-center justify-center px-4 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
+             <label className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
                 <input type="radio" name="budget" className="hidden" checked={formData.isSpecificBudget === 'yes'} onChange={() => handleChange('isSpecificBudget', 'yes')} />
                 Sim
              </label>
-             <label className={`flex-1 flex items-center justify-center px-4 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
+             <label className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
                 <input type="radio" name="budget" className="hidden" checked={formData.isSpecificBudget === 'no'} onChange={() => handleChange('isSpecificBudget', 'no')} />
                 Não
              </label>
@@ -570,7 +569,7 @@ function App() {
           <option value="">Selecione...</option>
           <option value="PIX">PIX</option>
           <option value="Boleto">Boleto</option>
-          <option value="Transferência">Transferência Bancária</option>
+          <option value="Transferência">Transferência</option>
         </Select>
 
         {formData.paymentMethod === 'PIX' && (
@@ -585,16 +584,16 @@ function App() {
         )}
 
         {formData.paymentMethod === 'Boleto' && (
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in">
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 animate-in fade-in">
              <Input 
-              label="Linha Digitável / Código" 
+              label="Código de Barras" 
               value={formData.boletoCode || ''} 
               onChange={e => handleChange('boletoCode', e.target.value)} 
               error={errors.boletoCode}
             />
             <Input 
               type="date"
-              label="Vencimento do Boleto" 
+              label="Vencimento Boleto" 
               value={formData.boletoDueDate || ''} 
               onChange={e => handleChange('boletoDueDate', e.target.value)} 
             />
@@ -605,23 +604,23 @@ function App() {
   );
 
   const renderStep3 = () => (
-    <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
       <div>
         <label className="block text-sm md:text-base font-medium text-slate-700 mb-2">Possui Nota Fiscal? <span className="text-accent">*</span></label>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
             <button 
               onClick={() => handleChange('hasInvoice', 'yes')}
-              className={`flex-1 py-3 px-4 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
+              className={`flex-1 py-3 px-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
             >
-              <FileText className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="font-medium text-xs md:text-base">Sim, possuo</span>
+              <FileText className="w-5 h-5" />
+              <span className="font-medium text-xs md:text-sm">Sim, possuo</span>
             </button>
             <button 
               onClick={() => handleChange('hasInvoice', 'no')}
-              className={`flex-1 py-3 px-4 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
+              className={`flex-1 py-3 px-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
             >
-              <AlertTriangle className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="font-medium text-xs md:text-base">Não possuo agora</span>
+              <AlertTriangle className="w-5 h-5" />
+              <span className="font-medium text-xs md:text-sm">Não possuo</span>
             </button>
         </div>
       </div>
@@ -635,58 +634,53 @@ function App() {
               {!formData.invoiceFileMeta && !isUploading ? (
                 <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
                   <div className="p-2.5 bg-white border border-slate-200 rounded-full shadow-sm">
-                    <UploadCloud className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                    <UploadCloud className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <span className="text-primary font-medium hover:underline text-sm md:text-base">Clique para selecionar</span>
+                    <span className="text-primary font-medium hover:underline text-xs md:text-sm">Clique para selecionar</span>
                     <p className="text-slate-500 text-[10px] md:text-xs mt-0.5">PDF, JPG ou PNG</p>
                   </div>
                 </label>
               ) : isUploading ? (
                  <div className="flex flex-col items-center gap-2">
-                   <RefreshCw className="w-6 h-6 md:w-8 md:h-8 text-primary animate-spin" />
-                   <span className="text-primary font-medium text-sm md:text-base">Enviando arquivo...</span>
+                   <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+                   <span className="text-primary font-medium text-xs md:text-sm">Enviando...</span>
                  </div>
               ) : (
                 <div className="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <FileText className="text-primary w-4 h-4" />
                     <div className="text-left">
-                      <p className="text-xs md:text-sm font-medium text-slate-900 truncate max-w-[150px]">{formData.invoiceFileMeta?.name}</p>
-                      <p className="text-[10px] md:text-xs text-slate-500">{(formData.invoiceFileMeta!.size / 1024).toFixed(1)} KB • <span className="text-green-600 font-bold">Enviado</span></p>
+                      <p className="text-[10px] md:text-xs font-medium text-slate-900 truncate max-w-[120px]">{formData.invoiceFileMeta?.name}</p>
+                      <p className="text-[9px] text-green-600 font-bold">Enviado</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setFormData(prev => ({...prev, invoiceFile: null, invoiceFileMeta: undefined, invoiceUrl: undefined}))}
-                    className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-danger transition-colors"
+                    className="p-1 text-slate-400 hover:text-danger"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
            </div>
-           {errors.invoiceFile && <p className="mt-1.5 text-xs text-danger">{errors.invoiceFile}</p>}
+           {errors.invoiceFile && <p className="mt-1 text-xs text-danger">{errors.invoiceFile}</p>}
         </div>
       ) : (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 animate-in fade-in">
-           <p className="text-amber-800 text-xs md:text-sm mb-2">
-             Caso não tenha a nota fiscal agora, é obrigatório enviá-la posteriormente pelo WhatsApp para o setor financeiro.
+           <p className="text-amber-800 text-[11px] md:text-xs mb-2">
+             É obrigatório enviar posteriormente pelo WhatsApp para o financeiro.
            </p>
-           <label className="flex items-center gap-2.5 cursor-pointer group">
-             <div className="relative flex items-center">
-               <input 
-                type="checkbox" 
-                className="peer appearance-none w-5 h-5 border-2 border-amber-500 rounded bg-white checked:bg-amber-500 transition-colors"
-                checked={formData.invoiceSentViaWhatsapp}
-                onChange={e => handleChange('invoiceSentViaWhatsapp', e.target.checked)}
-               />
-               <CheckCircle className="w-3 h-3 text-white absolute left-1 top-1 opacity-0 peer-checked:opacity-100 pointer-events-none" />
-             </div>
-             <span className="text-xs md:text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
-               Comprometo-me a enviar a NF pelo WhatsApp.
-             </span>
+           <label className="flex items-center gap-2 cursor-pointer group">
+             <input 
+              type="checkbox" 
+              className="peer appearance-none w-4 h-4 border-2 border-amber-500 rounded bg-white checked:bg-amber-500"
+              checked={formData.invoiceSentViaWhatsapp}
+              onChange={e => handleChange('invoiceSentViaWhatsapp', e.target.checked)}
+             />
+             <span className="text-[11px] md:text-xs text-slate-600">Comprometo-me a enviar via WhatsApp.</span>
            </label>
-           {errors.invoiceSentViaWhatsapp && <p className="mt-1.5 text-xs text-danger">{errors.invoiceSentViaWhatsapp}</p>}
+           {errors.invoiceSentViaWhatsapp && <p className="mt-1 text-xs text-danger">{errors.invoiceSentViaWhatsapp}</p>}
         </div>
       )}
     </div>
@@ -700,32 +694,20 @@ function App() {
         onChange={e => handleChange('description', e.target.value)} 
         required 
         rows={3}
-        placeholder="Ex: Compra de materiais de escritório..."
+        placeholder="Ex: Compra de materiais..."
         error={errors.description}
       />
       
-      <Input 
-        label="Número de Autorização (Opcional)" 
-        value={formData.authNumber || ''} 
-        onChange={e => handleChange('authNumber', e.target.value)} 
-        placeholder="Se houver um código prévio"
-      />
-
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
-        <label className="flex items-start gap-2.5 cursor-pointer group">
-           <div className="relative flex items-start mt-0.5">
-             <input 
-              type="checkbox" 
-              className="peer appearance-none w-5 h-5 border-2 border-primary rounded bg-white checked:bg-primary transition-colors"
-              checked={formData.termsAccepted}
-              onChange={e => handleChange('termsAccepted', e.target.checked)}
-             />
-             <CheckCircle className="w-3 h-3 text-white absolute left-1 top-1 opacity-0 peer-checked:opacity-100 pointer-events-none" />
-           </div>
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <label className="flex items-start gap-2.5 cursor-pointer">
+           <input 
+            type="checkbox" 
+            className="peer appearance-none w-5 h-5 border-2 border-primary rounded bg-white checked:bg-primary shrink-0 mt-0.5"
+            checked={formData.termsAccepted}
+            onChange={e => handleChange('termsAccepted', e.target.checked)}
+           />
            <div>
-             <span className="text-xs md:text-sm font-medium text-slate-800 group-hover:text-black transition-colors">
-               Confirmo que li e concordo com os prazos e regras.
-             </span>
+             <span className="text-xs md:text-sm font-medium text-slate-800">Concordo com os prazos e regras.</span>
              {errors.termsAccepted && <p className="mt-1 text-xs text-danger">{errors.termsAccepted}</p>}
            </div>
         </label>
@@ -737,23 +719,23 @@ function App() {
     const deptName = departments.find(d => d.id === formData.departmentId)?.name || 'N/A';
     
     const reviewItem = (label: string, value: string | React.ReactNode, full: boolean = false) => (
-      <div className={`${full ? 'col-span-2' : ''} bg-white p-3 rounded-lg border border-slate-200 shadow-sm`}>
-        <span className="block text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">{label}</span>
-        <div className="text-xs md:text-sm font-medium text-slate-800 truncate">{value || '-'}</div>
+      <div className={`${full ? 'col-span-2' : ''} bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm`}>
+        <span className="block text-[8px] uppercase tracking-wider text-slate-500 mb-0.5">{label}</span>
+        <div className="text-[11px] md:text-sm font-medium text-slate-800 truncate">{value || '-'}</div>
       </div>
     );
 
     return (
       <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
-        <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 border border-slate-200 shadow-lg">
-          <h3 className="text-base md:text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
             <FileText className="text-primary w-4 h-4" /> Resumo
           </h3>
           
           <div className="grid grid-cols-2 gap-2">
              {reviewItem("Responsável", formData.requesterName, true)}
-             {reviewItem("Departamento", deptName)}
-             {reviewItem("Vencimento", new Date(formData.dueDate).toLocaleString('pt-BR'))}
+             {reviewItem("Depto", deptName)}
+             {reviewItem("Vencimento", new Date(formData.dueDate).toLocaleDateString('pt-BR'))}
              {reviewItem("Fornecedor", formData.supplierName)}
              {reviewItem("Valor", <span className="text-primary font-bold">{formatCurrency(formData.value)}</span>)}
              {reviewItem("Autorizador", formData.authorizer)}
@@ -767,32 +749,32 @@ function App() {
   };
 
   const renderSuccess = () => (
-    <div className="flex flex-col items-center justify-center py-8 text-center animate-in zoom-in duration-500 max-w-2xl mx-auto">
-      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 ring-8 ring-primary/5">
-        <CheckCircle className="w-10 h-10 text-primary" />
+    <div className="flex flex-col items-center justify-center py-8 text-center animate-in zoom-in duration-500 max-w-2xl mx-auto px-2">
+      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 ring-8 ring-primary/5">
+        <CheckCircle className="w-8 h-8 text-primary" />
       </div>
-      <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">Enviada!</h2>
-      <p className="text-slate-500 mb-6 text-base">Solicitação processada com sucesso.</p>
+      <h2 className="text-xl md:text-3xl font-bold text-slate-900 mb-1">Enviada!</h2>
+      <p className="text-slate-500 mb-6 text-sm">Solicitação processada com sucesso.</p>
       
       <div className="w-full bg-white border border-slate-200 rounded-2xl p-6 mb-6 shadow-lg relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primaryDark"></div>
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Protocolo</p>
         <div className="flex items-center justify-center gap-3">
-           <p className="text-2xl md:text-3xl font-mono text-slate-900 font-bold tracking-tight">{generatedId}</p>
+           <p className="text-xl md:text-3xl font-mono text-slate-900 font-bold tracking-tight">{generatedId}</p>
            <button 
              onClick={handleCopyId}
              className={`p-1.5 rounded-full transition-all duration-300 ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-primary'}`}
            >
-             {isIdCopied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+             {isIdCopied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
            </button>
         </div>
       </div>
 
       <div className="flex flex-col w-full gap-2">
-        <Button id="btn-copy-resume" variant="outline" fullWidth onClick={handleCopyResume} className="border-slate-300 text-slate-700 py-3 text-sm">
+        <Button id="btn-copy-resume" variant="outline" fullWidth onClick={handleCopyResume} className="border-slate-300 text-slate-700 py-3 text-xs md:text-sm">
           Copiar Resumo
         </Button>
-        <Button onClick={handleReset} fullWidth size="md" className="shadow-xl py-3 text-sm">
+        <Button onClick={handleReset} fullWidth size="md" className="shadow-xl py-3 text-xs md:text-sm">
           Nova Solicitação
         </Button>
       </div>
@@ -817,11 +799,11 @@ function App() {
 
       <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
-          <div className="p-4 border-b border-slate-100 bg-white/80 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          <div className="p-3 md:p-4 border-b border-slate-100 bg-white/80 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
               <button
                 onClick={() => setView('welcome')}
-                className="inline-flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-xs font-medium"
+                className="inline-flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-[10px] md:text-xs font-medium"
               >
                 <Home className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Início</span>
               </button>
@@ -833,25 +815,25 @@ function App() {
                 <Lock className="w-3.5 h-3.5" />
               </button>
             </div>
-            <img src="/logo.png" alt="Missão Vida" className="h-10 md:h-12 object-contain" />
+            <img src="/logo.png" alt="Missão Vida" className="h-8 md:h-12 object-contain" />
           </div>
         )}
 
-        <div className="w-full max-w-2xl mx-auto p-4 md:p-6 flex-1 flex flex-col relative z-10">
+        <div className="w-full max-w-2xl mx-auto p-3 md:p-6 flex-1 flex flex-col relative z-10">
           
           {!isSuccess ? (
             <>
-              <div className="mb-6 text-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
-                  Nova Solicitação
+              <div className="mb-4 md:mb-6 text-center">
+                <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-1">
+                  Solicitação
                 </h1>
-                <p className="text-slate-500 text-sm md:text-base">Preencha os dados abaixo.</p>
+                <p className="text-slate-500 text-[11px] md:text-base">Preencha os dados abaixo.</p>
               </div>
 
-              <div className="flex justify-end gap-2 mb-4">
+              <div className="flex justify-end gap-2 mb-3">
                  {Object.values(formData).some(v => v !== '' && v !== 'no' && v !== false) && (
-                   <button onClick={clearDraft} className="text-[10px] text-danger hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                     <Trash2 className="w-2.5 h-2.5" /> Limpar rascunho
+                   <button onClick={clearDraft} className="text-[9px] md:text-[10px] text-danger hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                     <Trash2 className="w-2.5 h-2.5" /> Limpar
                    </button>
                  )}
               </div>
@@ -866,21 +848,21 @@ function App() {
                 {step === 4 && renderReview()}
               </div>
 
-              <div className="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center sticky bottom-0 bg-white/95 backdrop-blur py-3 -mx-4 px-4 md:mx-0 md:px-0 z-10">
+              <div className="mt-6 pt-3 border-t border-slate-200 flex justify-between items-center sticky bottom-0 bg-white/95 backdrop-blur py-3 -mx-3 px-3 md:mx-0 md:px-0 z-10">
                 <Button 
                   variant="ghost" 
                   onClick={prevStep} 
                   disabled={step === 0 || isSubmitting}
                   size="sm"
-                  className={step === 0 ? 'invisible' : ''}
+                  className={step === 0 ? 'invisible' : 'text-xs px-2'}
                 >
-                  <ChevronLeft className="w-3.5 h-3.5 mr-1.5" /> Voltar
+                  <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Voltar
                 </Button>
 
                 {step < 4 ? (
-                  <Button onClick={nextStep} size="sm" className="px-6" disabled={isUploading}>
+                  <Button onClick={nextStep} size="sm" className="px-5 text-xs" disabled={isUploading}>
                     {isUploading ? 'Enviando...' : (
-                      <>Próximo <ChevronRight className="w-3.5 h-3.5 ml-1.5" /></>
+                      <>Próximo <ChevronRight className="w-3.5 h-3.5 ml-1" /></>
                     )}
                   </Button>
                 ) : (
@@ -889,10 +871,10 @@ function App() {
                     onClick={handleSubmit} 
                     disabled={isSubmitting}
                     size="sm"
-                    className="px-6 shadow-lg"
+                    className="px-5 text-xs shadow-lg"
                   >
                     {isSubmitting ? 'Enviando...' : (
-                      <>Confirmar Envio <CheckCircle className="w-3.5 h-3.5 ml-1.5" /></>
+                      <>Confirmar <CheckCircle className="w-3.5 h-3.5 ml-1" /></>
                     )}
                   </Button>
                 )}
