@@ -311,7 +311,7 @@ function App() {
       <BackgroundAnimation />
 
       {/* Admin Icon Button - Visible and positioned top right */}
-      <div className="absolute top-4 right-4 z-30 animate-fade-up">
+      <div className="absolute top-4 right-4 md:top-8 md:right-8 z-30 animate-fade-up">
         <button 
           onClick={() => setView('login')}
           className="flex flex-col items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/70 backdrop-blur-md border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/30 transition-all shadow-sm group"
@@ -800,7 +800,7 @@ function App() {
       <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
           <div className="p-3 md:p-4 border-b border-slate-100 bg-white/80 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <div className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 flex items-center gap-2">
               <button
                 onClick={() => setView('welcome')}
                 className="inline-flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-[10px] md:text-xs font-medium"
