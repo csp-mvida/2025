@@ -14,7 +14,8 @@ import {
   Save, Trash2, CheckCircle, UploadCloud, FileText, 
   ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, 
   Home, Lock, Download, Copy, Clock, LayoutDashboard 
-} from './components/ui/Icons';
+}
+from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
 import { BackgroundAnimation } from './components/BackgroundAnimation';
@@ -322,22 +323,23 @@ function App() {
             <span className="text-[11px] md:text-sm uppercase tracking-widest">Acesso Restrito Admin</span>
           </button>
         </div>
-        
-        {/* Breathing space between Bar and Logo */}
-        <div className="py-4 md:py-6"></div>
       </header>
 
       <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
         
-        {/* Header Section - Logo */}
-        <div className="mt-2 mb-6 md:mb-8 text-center animate-fade-up">
-           <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-24 object-contain mx-auto mb-6 drop-shadow-md" />
-           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-3 mx-auto">
+        {/* Header Section - Logo and Status */}
+        <div className="mt-8 mb-8 md:mb-10 text-center animate-fade-up">
+           <img 
+             src="/logo.png" 
+             alt="Missão Vida" 
+             className="h-16 md:h-24 object-contain mx-auto mb-6 drop-shadow-md" 
+           />
+           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mx-auto">
              <span className="relative flex h-2 w-2">
                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
              </span>
-             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Painel Financeiro 2025</span>
+             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Central de Solicitação de Pagamentos</span>
            </div>
         </div>
 
