@@ -4,70 +4,78 @@ import React from 'react';
 
 export const BackgroundAnimation: React.FC = () => {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-30">
+    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40">
+      <div className="absolute inset-0 bg-slate-50"></div>
+      
       <svg
-        className="absolute w-full h-full"
-        viewBox="0 0 100 100"
+        className="absolute w-[200%] h-full top-0 left-0"
+        viewBox="0 0 1000 1000"
         preserveAspectRatio="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="line-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="transparent" />
-            <stop offset="50%" stopColor="#008b5a" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="transparent" />
+          <linearGradient id="wave-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#008b5a" stopOpacity="0.05" />
+            <stop offset="50%" stopColor="#008b5a" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#008b5a" stopOpacity="0.05" />
           </linearGradient>
-          <linearGradient id="line-grad-2" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="transparent" />
-            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.1" />
-            <stop offset="100%" stopColor="transparent" />
+          <linearGradient id="wave-grad-2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.02" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
           </linearGradient>
         </defs>
-        
-        {/* Camada 1: Linhas Lentas e Longas */}
+
+        {/* Onda 1: Verde Primário Profunda */}
         <path
-          d="M-20 20 Q 30 5 60 25 T 130 15"
-          fill="none"
-          stroke="url(#line-grad-1)"
-          strokeWidth="0.03"
-          className="animate-[float_25s_ease-in-out_infinite]"
+          d="M0,400 C150,350 350,450 500,400 C650,350 850,450 1000,400 L1000,1000 L0,1000 Z"
+          fill="url(#wave-grad-1)"
+          className="animate-wave-slow"
         />
+
+        {/* Onda 2: Âmbar Sutil Intermediária */}
         <path
-          d="M-20 85 Q 20 70 50 90 T 130 75"
-          fill="none"
-          stroke="url(#line-grad-1)"
-          strokeWidth="0.04"
-          className="animate-[float_35s_ease-in-out_infinite_reverse]"
+          d="M0,500 C200,450 400,550 600,500 C800,450 1000,550 1200,500 L1200,1000 L0,1000 Z"
+          fill="url(#wave-grad-2)"
+          className="animate-wave-medium"
         />
-        
-        {/* Camada 2: Detalhes em Âmbar Sutis */}
+
+        {/* Onda 3: Verde Primário Superficial */}
         <path
-          d="M-30 50 Q 25 75 55 45 T 140 55"
-          fill="none"
-          stroke="url(#line-grad-2)"
-          strokeWidth="0.02"
-          className="animate-[float_40s_linear_infinite]"
-        />
-        
-        {/* Camada 3: Linhas Médias */}
-        <path
-          d="M-10 40 Q 45 20 75 45 T 120 35"
-          fill="none"
-          stroke="url(#line-grad-1)"
-          strokeWidth="0.03"
-          className="animate-[float_30s_ease-in-out_infinite_delay]"
+          d="M0,600 C250,550 450,650 700,600 C950,550 1150,650 1400,600 L1400,1000 L0,1000 Z"
+          fill="url(#wave-grad-1)"
+          className="animate-wave-fast"
         />
       </svg>
       
       <style>{`
-        @keyframes float {
-          0%, 100% { transform: translate(-2%, 0%) rotate(0deg); }
-          50% { transform: translate(2%, -1%) rotate(0.5deg); }
+        @keyframes waveMove {
+          0% { transform: translateX(0) translateY(0); }
+          50% { transform: translateX(-15%) translateY(15px); }
+          100% { transform: translateX(0) translateY(0); }
         }
-        .animate-delay {
-          animation-delay: -10s;
+        
+        @keyframes waveMoveReverse {
+          0% { transform: translateX(-20%) translateY(0); }
+          50% { transform: translateX(-5%) translateY(-10px); }
+          100% { transform: translateX(-20%) translateY(0); }
+        }
+
+        .animate-wave-slow {
+          animation: waveMove 25s ease-in-out infinite;
+        }
+        
+        .animate-wave-medium {
+          animation: waveMoveReverse 35s ease-in-out infinite;
+        }
+        
+        .animate-wave-fast {
+          animation: waveMove 20s ease-in-out infinite;
+          opacity: 0.6;
         }
       `}</style>
     </div>
   );
 };
+
+export default BackgroundAnimation;
