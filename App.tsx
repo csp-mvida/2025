@@ -344,7 +344,7 @@ function App() {
 
         {/* Hero Section */}
         <div className="text-center mb-10 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-6 tracking-tight leading-[1.15] md:leading-[1.1]">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-6 tracking-tight leading-[1.15] md:leading-[1.1] font-heading">
             Central de Solicitação
             <br className="hidden lg:block" />
              <span className="lg:hidden"> </span>
