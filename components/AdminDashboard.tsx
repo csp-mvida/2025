@@ -113,7 +113,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           <div className="order-3 md:order-3 flex justify-center md:justify-end">
             <Button 
               variant="ghost" 
-              className="text-white border border-white/20 hover:bg-danger hover:border-danger hover:text-white transition-colors py-2 px-4" 
+              className="text-white border border-white/20 hover:bg-white hover:text-primary hover:border-white/20 transition-colors py-2 px-4" 
               onClick={onBack}
             >
               Sair do Admin
@@ -139,7 +139,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              </div>
            </div>
            <div className="bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-             <p className="text-sm text-slate-500 font-medium mb-1">Total de Registros</p>
+             <p className className="text-sm text-slate-500 font-medium mb-1">Total de Registros</p>
              <h3 className="text-2xl font-bold text-slate-900">{requests.length}</h3>
            </div>
         </div>
