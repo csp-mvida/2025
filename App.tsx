@@ -314,8 +314,8 @@ function App() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-      {/* Admin Quick Link */}
-      <div className="absolute top-8 right-8 z-30 animate-fade-up">
+      {/* Admin Quick Link - Hidden on Mobile */}
+      <div className="absolute top-8 right-8 z-30 animate-fade-up hidden md:block">
         <button 
           onClick={() => setView('login')}
           className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-md border border-slate-200 text-xs font-bold text-slate-500 hover:text-primary hover:border-primary/30 transition-all shadow-sm"
@@ -339,10 +339,10 @@ function App() {
            </div>
         </div>
 
-        {/* Hero Title - Adjusted font weights for contrast */}
+        {/* Hero Title - Adjusted font weights and sizes */}
         <div className="text-center mb-16 animate-fade-up" style={{ animationDelay: '0.2s' }}>
           <h1 className="text-5xl md:text-7xl text-slate-900 mb-8 tracking-tighter leading-[1] max-w-4xl">
-            <span className="font-light block md:inline">Sua ponte direta com o</span>{' '}
+            <span className="font-light block md:inline text-3xl md:text-5xl">Sua ponte direta com o</span>{' '}
             <span className="font-black text-primary italic">Financeiro.</span>
           </h1>
           <p className="text-xl md:text-2xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
