@@ -310,21 +310,21 @@ function App() {
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden bg-slate-50">
       <BackgroundAnimation />
 
-      {/* Institutional Top Bar - Redesigned with Green Bar */}
+      {/* Institutional Top Bar - Centralized Button & Increased Margin */}
       <div className="absolute top-0 left-0 w-full z-30 animate-fade-up">
-        {/* Superior Green Utility Bar */}
-        <div className="bg-primary py-2 px-4 md:px-8 flex justify-end">
+        {/* Superior Green Utility Bar - Centralized */}
+        <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
           <button 
             onClick={() => setView('login')}
-            className="flex items-center gap-2 text-white/90 hover:text-white transition-colors group"
+            className="flex items-center gap-2 text-white font-bold hover:scale-105 transition-all group"
           >
-            <Lock className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider">Acesso Restrito Admin</span>
+            <Lock className="w-4 h-4" />
+            <span className="text-[11px] md:text-sm uppercase tracking-widest">Acesso Restrito Admin</span>
           </button>
         </div>
         
-        {/* Main Nav in Welcome */}
-        <div className="p-4 md:p-6 flex justify-between items-center">
+        {/* Main Nav in Welcome - Added margin-top for distance from green bar */}
+        <div className="mt-8 md:mt-12 p-4 md:p-6 flex justify-between items-center">
           <div className="flex items-center gap-2 md:gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg shadow-sm border border-slate-100 flex items-center justify-center">
               <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-primary" />
@@ -812,18 +812,18 @@ function App() {
       <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
           <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-            {/* Superior Utility Green Bar */}
-            <div className="bg-primary py-1.5 px-4 md:px-8 flex justify-end">
+            {/* Superior Utility Green Bar - Centralized Button */}
+            <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
               <button 
                 onClick={() => setView('login')}
-                className="flex items-center gap-1.5 text-white/90 hover:text-white transition-all text-[10px] md:text-xs font-bold uppercase tracking-wider group"
+                className="flex items-center gap-1.5 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
               >
-                <Lock className="w-3 md:w-3.5 h-3 md:h-3.5 group-hover:scale-110 transition-transform" />
+                <Lock className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
                 Acesso Restrito Admin
               </button>
             </div>
             
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-2 md:py-3 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 mt-6 mb-3 md:mt-8 md:mb-4 flex items-center justify-between">
               {/* Left: Brand Identity */}
               <div className="flex items-center gap-3 md:gap-4 shrink-0">
                 <div 
