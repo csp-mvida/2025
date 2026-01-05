@@ -112,8 +112,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           {/* Right: Action Button */}
           <div className="order-3 md:order-3 flex justify-center md:justify-end">
             <Button 
-              variant="outline" 
-              className="border-white/20 text-white hover:bg-white/10 hover:border-white/40 transition-colors py-2" 
+              variant="ghost" 
+              className="text-white hover:bg-danger hover:text-white transition-colors py-2 px-4 border border-white/20 hover:border-danger" 
               onClick={onBack}
             >
               Sair do Admin
