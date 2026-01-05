@@ -310,22 +310,28 @@ function App() {
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden bg-slate-50">
       <BackgroundAnimation />
 
-      {/* Institutional Top Bar - Refined for mobile to avoid overlap */}
-      <div className="absolute top-0 left-0 w-full p-4 md:p-6 flex justify-between items-center z-30 animate-fade-up">
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg shadow-sm border border-slate-100 flex items-center justify-center">
-            <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-          </div>
-          <span className="text-[9px] md:text-xs font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block">Central CSP</span>
+      {/* Institutional Top Bar - Redesigned with Green Bar */}
+      <div className="absolute top-0 left-0 w-full z-30 animate-fade-up">
+        {/* Superior Green Utility Bar */}
+        <div className="bg-primary py-2 px-4 md:px-8 flex justify-end">
+          <button 
+            onClick={() => setView('login')}
+            className="flex items-center gap-2 text-white/90 hover:text-white transition-colors group"
+          >
+            <Lock className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider">Acesso Restrito Admin</span>
+          </button>
         </div>
         
-        <button 
-          onClick={() => setView('login')}
-          className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl bg-white/80 backdrop-blur-md border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/30 transition-all shadow-sm group"
-        >
-          <Lock className="w-3 h-3 md:w-4 md:h-4 group-hover:scale-110 transition-transform" />
-          <span className="text-[9px] md:text-xs font-bold uppercase tracking-wider">Acesso Admin</span>
-        </button>
+        {/* Main Nav in Welcome */}
+        <div className="p-4 md:p-6 flex justify-between items-center">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg shadow-sm border border-slate-100 flex items-center justify-center">
+              <LayoutDashboard className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+            </div>
+            <span className="text-[9px] md:text-xs font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block">Central CSP</span>
+          </div>
+        </div>
       </div>
 
       <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
@@ -386,7 +392,7 @@ function App() {
             </div>
             <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3">Protocolo Digital</h3>
             <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
-              Geração automática de ID para rastreamento imediato de cada pedido realizado.
+              Geração automática de ID para rastreamento imediate de cada pedido realizado.
             </p>
           </div>
 
@@ -806,10 +812,18 @@ function App() {
       <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
           <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-            {/* Top Accent Line */}
-            <div className="h-1 w-full bg-gradient-to-r from-primary via-primaryHover to-primaryDark"></div>
+            {/* Superior Utility Green Bar */}
+            <div className="bg-primary py-1.5 px-4 md:px-8 flex justify-end">
+              <button 
+                onClick={() => setView('login')}
+                className="flex items-center gap-1.5 text-white/90 hover:text-white transition-all text-[10px] md:text-xs font-bold uppercase tracking-wider group"
+              >
+                <Lock className="w-3 md:w-3.5 h-3 md:h-3.5 group-hover:scale-110 transition-transform" />
+                Acesso Restrito Admin
+              </button>
+            </div>
             
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-2 md:py-4 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 py-2 md:py-3 flex items-center justify-between">
               {/* Left: Brand Identity */}
               <div className="flex items-center gap-3 md:gap-4 shrink-0">
                 <div 
@@ -819,30 +833,18 @@ function App() {
                   <img src="/logo.png" alt="Missão Vida" className="h-7 md:h-12 w-auto object-contain" />
                 </div>
                 <div className="hidden lg:flex flex-col border-l border-slate-200 pl-4">
-                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">CSP &bull; Central de Pagamento</span>
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Gestão Financeira {new Date().getFullYear()}</span>
+                  <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">CSP &bull; Central de Pagamento</span>
                 </div>
               </div>
 
               {/* Right: Actions */}
-              <div className="flex items-center gap-1.5 md:gap-3">
+              <div className="flex items-center">
                 <button
                   onClick={() => setView('welcome')}
-                  className="flex items-center gap-1.5 md:gap-2 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-all text-[10px] md:text-xs font-bold border border-transparent"
+                  className="flex items-center gap-1.5 md:gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-all text-[10px] md:text-xs font-bold"
                 >
                   <Home className="w-3.5 h-3.5 md:w-4 md:h-4" /> 
-                  <span className="hidden sm:inline uppercase tracking-wider">Início</span>
-                </button>
-                
-                <div className="w-px h-5 bg-slate-200 mx-0.5 hidden sm:block"></div>
-
-                <button 
-                  onClick={() => setView('login')}
-                  className="flex items-center gap-1.5 md:gap-2 px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-md group"
-                  title="Painel Admin"
-                >
-                  <Lock className="w-3 md:w-3.5 h-3 md:h-3.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider">Admin</span>
+                  <span className="uppercase tracking-wider">Início</span>
                 </button>
               </div>
             </div>
