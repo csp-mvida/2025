@@ -339,10 +339,11 @@ function App() {
            </div>
         </div>
 
-        {/* Hero Title */}
+        {/* Hero Title - Adjusted font weights for contrast */}
         <div className="text-center mb-16 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-8 tracking-tighter leading-[1] max-w-4xl">
-            Sua ponte direta com o <span className="text-primary italic">Financeiro.</span>
+          <h1 className="text-5xl md:text-7xl text-slate-900 mb-8 tracking-tighter leading-[1] max-w-4xl">
+            <span className="font-light block md:inline">Sua ponte direta com o</span>{' '}
+            <span className="font-black text-primary italic">Financeiro.</span>
           </h1>
           <p className="text-xl md:text-2xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
             Solicite pagamentos de forma padronizada, segura e com total transparência em cada etapa.
