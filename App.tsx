@@ -13,7 +13,7 @@ import { UrgencyAlert } from './components/UrgencyAlert';
 import { 
   Save, Trash2, CheckCircle, UploadCloud, FileText, 
   ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, 
-  Home, Lock, Download, Copy, Clock 
+  Home, Lock, Download, Copy, Clock, LayoutDashboard 
 } from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
@@ -307,119 +307,109 @@ function App() {
 
   // --- RENDER WELCOME SCREEN ---
   const renderWelcome = () => (
-    <div className="min-h-screen relative flex flex-col items-center justify-center p-6 md:p-12 overflow-hidden bg-slate-50">
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden bg-slate-50">
       <BackgroundAnimation />
 
-      {/* Decorative Blur Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-      {/* Admin Quick Link - Hidden on Mobile */}
-      <div className="absolute top-8 right-8 z-30 animate-fade-up hidden md:block">
+      {/* Admin Icon Button - Fixed top right */}
+      <div className="absolute top-4 right-4 z-30 animate-fade-up">
         <button 
           onClick={() => setView('login')}
-          className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-md border border-slate-200 text-xs font-bold text-slate-500 hover:text-primary hover:border-primary/30 transition-all shadow-sm"
+          className="flex flex-col items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/70 backdrop-blur-md border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/30 transition-all shadow-sm group"
+          title="Admin"
         >
-          <Lock className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-          Acesso Restrito
+          <Lock className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform" />
+          <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-tighter mt-0.5">Admin</span>
         </button>
       </div>
 
       <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
         
-        {/* Header Section */}
-        <div className="mb-12 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
-           <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-20 object-contain mx-auto mb-8 drop-shadow-sm" />
-           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
+        {/* Header Section - Tighter spacing */}
+        <div className="mb-8 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
+           <img src="/logo.png" alt="Missão Vida" className="h-14 md:h-18 object-contain mx-auto mb-6 drop-shadow-sm" />
+           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-4">
              <span className="relative flex h-2 w-2">
                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
              </span>
-             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Painel Financeiro 2025</span>
+             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Painel Financeiro 2025</span>
            </div>
         </div>
 
-        {/* Hero Title - Adjusted font weights and sizes */}
-        <div className="text-center mb-16 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <h1 className="text-5xl md:text-7xl text-slate-900 mb-8 tracking-tighter leading-[1] max-w-4xl">
-            <span className="font-light block md:inline text-3xl md:text-5xl">Sua ponte direta com o</span>{' '}
+        {/* Hero Title - More compact */}
+        <div className="text-center mb-10 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <h1 className="text-4xl md:text-6xl text-slate-900 mb-6 tracking-tighter leading-[1] max-w-3xl">
+            <span className="font-light block md:inline text-2xl md:text-4xl">Sua ponte direta com o</span>{' '}
             <span className="font-black text-primary italic">Financeiro.</span>
           </h1>
-          <p className="text-xl md:text-2xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-500 font-medium max-w-xl mx-auto leading-relaxed px-4">
             Solicite pagamentos de forma padronizada, segura e com total transparência em cada etapa.
           </p>
         </div>
 
         {/* Primary CTA */}
-        <div className="mb-20 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+        <div className="mb-14 animate-fade-up" style={{ animationDelay: '0.3s' }}>
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-[2rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
               onClick={handleStartRequest} 
-              className="relative px-12 py-6 bg-primary hover:bg-primaryHover text-white text-xl md:text-2xl font-bold rounded-2xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4"
+              className="relative px-10 py-5 bg-primary hover:bg-primaryHover text-white text-lg md:text-xl font-bold rounded-2xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4"
             >
               Criar Nova Solicitação
-              <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
           
           {hasSavedDraft && (
             <button 
               onClick={handleRestoreDraft}
-              className="mt-8 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-sm transition-colors"
+              className="mt-6 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-3.5 h-3.5" />
               Retomar rascunho salvo
             </button>
           )}
         </div>
 
-        {/* Professional Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full animate-fade-up" style={{ animationDelay: '0.4s' }}>
+        {/* Professional Cards Grid - Tighter gaps */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 w-full animate-fade-up" style={{ animationDelay: '0.4s' }}>
           
-          <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[32px] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
-            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <FileText className="w-6 h-6 text-primary" />
+          <div className="bg-white/40 backdrop-blur-xl p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <FileText className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-3">Protocolo Digital</h3>
-            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Protocolo Digital</h3>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">
               Geração automática de ID para rastreamento imediato de cada pedido realizado.
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[32px] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
-            <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Clock className="w-6 h-6 text-accent" />
+          <div className="bg-white/40 backdrop-blur-xl p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Clock className="w-5 h-5 text-accent" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-3">Agilidade Real</h3>
-            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Agilidade Real</h3>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">
               Detecção de urgência e avisos automáticos para garantir prazos críticos.
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[32px] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
-            <div className="w-14 h-14 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <CheckCircle className="w-6 h-6 text-slate-900" />
+          <div className="bg-white/40 backdrop-blur-xl p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-12 h-12 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <CheckCircle className="w-5 h-5 text-slate-900" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-3">Padronização</h3>
-            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Padronização</h3>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">
               Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.
             </p>
           </div>
 
         </div>
         
-        <div className="mt-20 py-8 border-t border-slate-200 w-full text-center flex flex-col items-center gap-4">
-          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
+        <div className="mt-14 py-6 border-t border-slate-200 w-full text-center">
+          <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.4em]">
             Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
           </p>
-          {/* Mobile Admin Access Trigger */}
-          <button 
-            onClick={() => setView('login')}
-            className="md:hidden text-[10px] font-bold text-slate-300 hover:text-primary transition-colors uppercase tracking-widest"
-          >
-            Acesso Administrativo
-          </button>
         </div>
       </div>
     </div>
@@ -427,8 +417,8 @@ function App() {
 
   // --- RENDER STEPS ---
   const renderStep1 = () => (
-    <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input 
           label="Responsável pela solicitação" 
           value={formData.requesterName} 
@@ -472,14 +462,14 @@ function App() {
         </Select>
         
         <div className="md:col-span-2">
-           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5">
+           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1">
              Vencimento do Pagamento <span className="text-accent">*</span>
            </label>
-           <div className="flex gap-4">
+           <div className="flex gap-3">
              <div className="flex-1">
                <input 
                  type="date"
-                 className={`w-full px-4 py-2.5 md:py-3 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-base md:text-lg ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
+                 className={`w-full px-4 py-2 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
                  value={getDateValue()} 
                  onChange={e => {
                    const newDate = e.target.value;
@@ -493,7 +483,7 @@ function App() {
              <div className="w-1/3">
                <input 
                  type="time"
-                 className={`w-full px-4 py-2.5 md:py-3 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-base md:text-lg ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
+                 className={`w-full px-4 py-2 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
                  value={getTimeValue()} 
                  onChange={e => {
                    const newTime = e.target.value;
@@ -505,10 +495,7 @@ function App() {
                />
              </div>
            </div>
-           {errors.dueDate && <p className="mt-1 text-sm md:text-base text-danger">{errors.dueDate}</p>}
-           <p className="mt-1 text-xs md:text-sm text-slate-500">
-             Horário é opcional (padrão 00:00).
-           </p>
+           {errors.dueDate && <p className="mt-1 text-xs text-danger">{errors.dueDate}</p>}
            <UrgencyAlert isUrgent={isUrgent} />
         </div>
       </div>
@@ -516,8 +503,8 @@ function App() {
   );
 
   const renderStep2 = () => (
-    <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Select 
           label="Conta de Pagamento" 
           value={formData.paymentAccount} 
@@ -532,13 +519,13 @@ function App() {
         </Select>
         
         <div className="md:col-span-1">
-          <label className="block text-sm md:text-base font-medium text-slate-700 mb-2">Verba Específica? <span className="text-accent">*</span></label>
-          <div className="flex gap-4">
-             <label className={`flex-1 flex items-center justify-center px-4 py-2 md:py-3 rounded-lg border cursor-pointer transition-all text-sm md:text-base ${formData.isSpecificBudget === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
+          <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5">Verba Específica? <span className="text-accent">*</span></label>
+          <div className="flex gap-2">
+             <label className={`flex-1 flex items-center justify-center px-4 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
                 <input type="radio" name="budget" className="hidden" checked={formData.isSpecificBudget === 'yes'} onChange={() => handleChange('isSpecificBudget', 'yes')} />
                 Sim
              </label>
-             <label className={`flex-1 flex items-center justify-center px-4 py-2 md:py-3 rounded-lg border cursor-pointer transition-all text-sm md:text-base ${formData.isSpecificBudget === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
+             <label className={`flex-1 flex items-center justify-center px-4 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
                 <input type="radio" name="budget" className="hidden" checked={formData.isSpecificBudget === 'no'} onChange={() => handleChange('isSpecificBudget', 'no')} />
                 Não
              </label>
@@ -598,7 +585,7 @@ function App() {
         )}
 
         {formData.paymentMethod === 'Boleto' && (
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in">
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in">
              <Input 
               label="Linha Digitável / Código" 
               value={formData.boletoCode || ''} 
@@ -618,102 +605,102 @@ function App() {
   );
 
   const renderStep3 = () => (
-    <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
       <div>
-        <label className="block text-sm md:text-base font-medium text-slate-700 mb-3">Possui Nota Fiscal? <span className="text-accent">*</span></label>
-        <div className="flex gap-4">
+        <label className="block text-sm md:text-base font-medium text-slate-700 mb-2">Possui Nota Fiscal? <span className="text-accent">*</span></label>
+        <div className="flex gap-3">
             <button 
               onClick={() => handleChange('hasInvoice', 'yes')}
-              className={`flex-1 py-4 px-6 rounded-xl border flex flex-col items-center gap-2 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
+              className={`flex-1 py-3 px-4 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
             >
-              <FileText className="w-6 h-6 md:w-8 md:h-8" />
-              <span className="font-medium text-sm md:text-lg">Sim, possuo</span>
+              <FileText className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="font-medium text-xs md:text-base">Sim, possuo</span>
             </button>
             <button 
               onClick={() => handleChange('hasInvoice', 'no')}
-              className={`flex-1 py-4 px-6 rounded-xl border flex flex-col items-center gap-2 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
+              className={`flex-1 py-3 px-4 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
             >
-              <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />
-              <span className="font-medium text-sm md:text-lg">Não possuo agora</span>
+              <AlertTriangle className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="font-medium text-xs md:text-base">Não possuo agora</span>
             </button>
         </div>
       </div>
 
       {formData.hasInvoice === 'yes' ? (
         <div className="animate-in fade-in">
-           <label className="block text-sm md:text-base font-medium text-slate-700 mb-2">Upload do Anexo <span className="text-accent">*</span></label>
-           <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${errors.invoiceFile ? 'border-danger bg-red-50' : isUploading ? 'border-primary bg-primary/5 cursor-wait' : 'border-slate-300 hover:border-primary bg-slate-50'}`}>
+           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5">Upload do Anexo <span className="text-accent">*</span></label>
+           <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${errors.invoiceFile ? 'border-danger bg-red-50' : isUploading ? 'border-primary bg-primary/5 cursor-wait' : 'border-slate-300 hover:border-primary bg-slate-50'}`}>
               <input type="file" id="file-upload" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} disabled={isUploading} />
               
               {!formData.invoiceFileMeta && !isUploading ? (
-                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-3">
-                  <div className="p-3 bg-white border border-slate-200 rounded-full shadow-sm">
-                    <UploadCloud className="w-8 h-8 md:w-10 md:h-10 text-primary" />
+                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                  <div className="p-2.5 bg-white border border-slate-200 rounded-full shadow-sm">
+                    <UploadCloud className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                   </div>
                   <div>
-                    <span className="text-primary font-medium hover:underline text-base md:text-lg">Clique para selecionar</span>
-                    <p className="text-slate-500 text-sm md:text-base mt-1">PDF, JPG ou PNG</p>
+                    <span className="text-primary font-medium hover:underline text-sm md:text-base">Clique para selecionar</span>
+                    <p className="text-slate-500 text-[10px] md:text-xs mt-0.5">PDF, JPG ou PNG</p>
                   </div>
                 </label>
               ) : isUploading ? (
-                 <div className="flex flex-col items-center gap-3">
-                   <RefreshCw className="w-8 h-8 md:w-10 md:h-10 text-primary animate-spin" />
-                   <span className="text-primary font-medium text-base md:text-lg">Enviando arquivo...</span>
+                 <div className="flex flex-col items-center gap-2">
+                   <RefreshCw className="w-6 h-6 md:w-8 md:h-8 text-primary animate-spin" />
+                   <span className="text-primary font-medium text-sm md:text-base">Enviando arquivo...</span>
                  </div>
               ) : (
-                <div className="flex items-center justify-between bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+                <div className="flex items-center justify-between bg-white border border-slate-200 p-3 rounded-lg shadow-sm">
                   <div className="flex items-center gap-3">
-                    <FileText className="text-primary w-5 h-5" />
+                    <FileText className="text-primary w-4 h-4" />
                     <div className="text-left">
-                      <p className="text-sm md:text-base font-medium text-slate-900 truncate max-w-[200px]">{formData.invoiceFileMeta?.name}</p>
-                      <p className="text-xs md:text-sm text-slate-500">{(formData.invoiceFileMeta!.size / 1024).toFixed(1)} KB • <span className="text-green-600 font-bold">Enviado</span></p>
+                      <p className="text-xs md:text-sm font-medium text-slate-900 truncate max-w-[150px]">{formData.invoiceFileMeta?.name}</p>
+                      <p className="text-[10px] md:text-xs text-slate-500">{(formData.invoiceFileMeta!.size / 1024).toFixed(1)} KB • <span className="text-green-600 font-bold">Enviado</span></p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setFormData(prev => ({...prev, invoiceFile: null, invoiceFileMeta: undefined, invoiceUrl: undefined}))}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-danger transition-colors"
+                    className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-danger transition-colors"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               )}
            </div>
-           {errors.invoiceFile && <p className="mt-2 text-sm text-danger">{errors.invoiceFile}</p>}
+           {errors.invoiceFile && <p className="mt-1.5 text-xs text-danger">{errors.invoiceFile}</p>}
         </div>
       ) : (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 animate-in fade-in">
-           <p className="text-amber-800 text-sm md:text-base mb-3">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 animate-in fade-in">
+           <p className="text-amber-800 text-xs md:text-sm mb-2">
              Caso não tenha a nota fiscal agora, é obrigatório enviá-la posteriormente pelo WhatsApp para o setor financeiro.
            </p>
-           <label className="flex items-center gap-3 cursor-pointer group">
+           <label className="flex items-center gap-2.5 cursor-pointer group">
              <div className="relative flex items-center">
                <input 
                 type="checkbox" 
-                className="peer appearance-none w-5 h-5 md:w-6 md:h-6 border-2 border-amber-500 rounded bg-white checked:bg-amber-500 transition-colors"
+                className="peer appearance-none w-5 h-5 border-2 border-amber-500 rounded bg-white checked:bg-amber-500 transition-colors"
                 checked={formData.invoiceSentViaWhatsapp}
                 onChange={e => handleChange('invoiceSentViaWhatsapp', e.target.checked)}
                />
-               <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-white absolute left-1 top-1 opacity-0 peer-checked:opacity-100 pointer-events-none" />
+               <CheckCircle className="w-3 h-3 text-white absolute left-1 top-1 opacity-0 peer-checked:opacity-100 pointer-events-none" />
              </div>
-             <span className="text-sm md:text-base text-slate-600 group-hover:text-slate-900 transition-colors">
+             <span className="text-xs md:text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
                Comprometo-me a enviar a NF pelo WhatsApp.
              </span>
            </label>
-           {errors.invoiceSentViaWhatsapp && <p className="mt-2 text-sm text-danger">{errors.invoiceSentViaWhatsapp}</p>}
+           {errors.invoiceSentViaWhatsapp && <p className="mt-1.5 text-xs text-danger">{errors.invoiceSentViaWhatsapp}</p>}
         </div>
       )}
     </div>
   );
 
   const renderStep4 = () => (
-    <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
       <Textarea 
         label="Descrição do Pagamento" 
         value={formData.description} 
         onChange={e => handleChange('description', e.target.value)} 
         required 
-        rows={4}
-        placeholder="Ex: Pagamento referente à compra de materiais de escritório para o mês de Outubro..."
+        rows={3}
+        placeholder="Ex: Compra de materiais de escritório..."
         error={errors.description}
       />
       
@@ -724,25 +711,22 @@ function App() {
         placeholder="Se houver um código prévio"
       />
 
-      <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 mt-6">
-        <label className="flex items-start gap-3 cursor-pointer group">
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
+        <label className="flex items-start gap-2.5 cursor-pointer group">
            <div className="relative flex items-start mt-0.5">
              <input 
               type="checkbox" 
-              className="peer appearance-none w-5 h-5 md:w-6 md:h-6 border-2 border-primary rounded bg-white checked:bg-primary transition-colors"
+              className="peer appearance-none w-5 h-5 border-2 border-primary rounded bg-white checked:bg-primary transition-colors"
               checked={formData.termsAccepted}
               onChange={e => handleChange('termsAccepted', e.target.checked)}
              />
-             <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-white absolute left-0.5 top-0.5 opacity-0 peer-checked:opacity-100 pointer-events-none" />
+             <CheckCircle className="w-3 h-3 text-white absolute left-1 top-1 opacity-0 peer-checked:opacity-100 pointer-events-none" />
            </div>
            <div>
-             <span className="text-sm md:text-base font-medium text-slate-800 group-hover:text-black transition-colors">
+             <span className="text-xs md:text-sm font-medium text-slate-800 group-hover:text-black transition-colors">
                Confirmo que li e concordo com os prazos e regras.
              </span>
-             <p className="text-xs md:text-sm text-slate-500 mt-1">
-               Entendo que solicitações urgentes devem ser comunicadas via WhatsApp.
-             </p>
-             {errors.termsAccepted && <p className="mt-2 text-sm text-danger">{errors.termsAccepted}</p>}
+             {errors.termsAccepted && <p className="mt-1 text-xs text-danger">{errors.termsAccepted}</p>}
            </div>
         </label>
       </div>
@@ -753,83 +737,63 @@ function App() {
     const deptName = departments.find(d => d.id === formData.departmentId)?.name || 'N/A';
     
     const reviewItem = (label: string, value: string | React.ReactNode, full: boolean = false) => (
-      <div className={`${full ? 'col-span-2' : ''} bg-white p-3 md:p-4 rounded-lg border border-slate-200 shadow-sm`}>
-        <span className="block text-[10px] md:text-xs uppercase tracking-wider text-slate-500 mb-1">{label}</span>
-        <div className="text-sm md:text-lg font-medium text-slate-800">{value || '-'}</div>
+      <div className={`${full ? 'col-span-2' : ''} bg-white p-3 rounded-lg border border-slate-200 shadow-sm`}>
+        <span className="block text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">{label}</span>
+        <div className="text-xs md:text-sm font-medium text-slate-800 truncate">{value || '-'}</div>
       </div>
     );
 
     return (
-      <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
-        <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-6 border border-slate-200 shadow-lg">
-          <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <FileText className="text-primary w-5 h-5" /> Resumo da Solicitação
+      <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+        <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 border border-slate-200 shadow-lg">
+          <h3 className="text-base md:text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <FileText className="text-primary w-4 h-4" /> Resumo
           </h3>
           
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
              {reviewItem("Responsável", formData.requesterName, true)}
              {reviewItem("Departamento", deptName)}
              {reviewItem("Vencimento", new Date(formData.dueDate).toLocaleString('pt-BR'))}
              {reviewItem("Fornecedor", formData.supplierName)}
              {reviewItem("Valor", <span className="text-primary font-bold">{formatCurrency(formData.value)}</span>)}
-             {reviewItem("Forma Pagto", formData.paymentMethod)}
              {reviewItem("Autorizador", formData.authorizer)}
              {reviewItem("Descrição", formData.description, true)}
-             {reviewItem("Anexo", formData.invoiceFileMeta ? formData.invoiceFileMeta.name : (formData.invoiceSentViaWhatsapp ? "Enviará via WhatsApp" : "Não"), true)}
           </div>
         </div>
         
         <UrgencyAlert isUrgent={isUrgent} />
-
-        <div className="flex gap-4 p-4 bg-slate-50 rounded-lg text-sm md:text-base text-slate-600 border border-slate-200">
-          <AlertTriangle className="w-5 h-5 shrink-0 text-slate-500" />
-          <p>Verifique todas as informações antes de enviar. Após o envio, você receberá um ID de protocolo.</p>
-        </div>
       </div>
     );
   };
 
   const renderSuccess = () => (
-    <div className="flex flex-col items-center justify-center py-12 text-center animate-in zoom-in duration-500 max-w-2xl mx-auto">
-      <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6 ring-8 ring-primary/5">
-        <CheckCircle className="w-12 h-12 text-primary" />
+    <div className="flex flex-col items-center justify-center py-8 text-center animate-in zoom-in duration-500 max-w-2xl mx-auto">
+      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4 ring-8 ring-primary/5">
+        <CheckCircle className="w-10 h-10 text-primary" />
       </div>
-      <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Solicitação Enviada!</h2>
-      <p className="text-slate-500 mb-8 text-lg">Sua solicitação foi processada com sucesso.</p>
+      <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">Enviada!</h2>
+      <p className="text-slate-500 mb-6 text-base">Solicitação processada com sucesso.</p>
       
-      <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 mb-8 shadow-lg relative overflow-hidden group">
+      <div className="w-full bg-white border border-slate-200 rounded-2xl p-6 mb-6 shadow-lg relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primaryDark"></div>
-        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">ID do Protocolo</p>
-        <div className="flex items-center justify-center gap-4">
-           <p className="text-3xl md:text-4xl font-mono text-slate-900 font-bold tracking-tight">{generatedId}</p>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Protocolo</p>
+        <div className="flex items-center justify-center gap-3">
+           <p className="text-2xl md:text-3xl font-mono text-slate-900 font-bold tracking-tight">{generatedId}</p>
            <button 
              onClick={handleCopyId}
-             className={`p-2 rounded-full transition-all duration-300 ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-primary'}`}
-             title="Copiar ID"
+             className={`p-1.5 rounded-full transition-all duration-300 ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-primary'}`}
            >
-             {isIdCopied ? <CheckCircle className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
+             {isIdCopied ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
            </button>
-        </div>
-        <div className={`mt-2 text-sm font-medium text-green-600 transition-opacity duration-300 ${isIdCopied ? 'opacity-100' : 'opacity-0'}`}>
-          Copiado!
         </div>
       </div>
 
-      {isUrgent && (
-        <div className="w-full bg-amber-50 border border-amber-200 p-4 rounded-xl mb-8 flex items-start gap-3 text-left">
-          <AlertTriangle className="text-amber-600 w-5 h-5 mt-0.5 shrink-0" />
-          <p className="text-amber-800 text-sm md:text-base">
-            <strong>Atenção:</strong> Solicitação urgente identificada. Envie o ID acima para o financeiro via WhatsApp para agilizar a aprovação.
-          </p>
-        </div>
-      )}
-
-      <div className="flex flex-col w-full gap-3">
-        <Button id="btn-copy-resume" variant="outline" fullWidth onClick={handleCopyResume} className="border-slate-300 text-slate-700 hover:bg-slate-50 py-4">
-          <Copy className="w-4 h-4 mr-2" /> Copiar Resumo
+      <div className="flex flex-col w-full gap-2">
+        <Button id="btn-copy-resume" variant="outline" fullWidth onClick={handleCopyResume} className="border-slate-300 text-slate-700 py-3 text-sm">
+          Copiar Resumo
         </Button>
-        <Button onClick={handleReset} fullWidth size="lg" className="shadow-xl py-4">
-          <RefreshCw className="w-4 h-4 mr-2" /> Nova Solicitação
+        <Button onClick={handleReset} fullWidth size="md" className="shadow-xl py-3 text-sm">
+          Nova Solicitação
         </Button>
       </div>
     </div>
@@ -849,79 +813,52 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-slate-800 selection:bg-primary/20">
-      
-      {/* Background decoration even on form view, but more subtle */}
       <BackgroundAnimation />
 
       <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
-          <div className="p-6 md:p-10 border-b border-slate-100 bg-white/80 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
-            <div className="absolute right-6 top-1/2 -translate-y-1/2">
+          <div className="p-4 border-b border-slate-100 bg-white/80 backdrop-blur sticky top-0 z-20 flex flex-col items-center">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
               <button
                 onClick={() => setView('welcome')}
-                className="inline-flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-sm font-medium"
+                className="inline-flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-xs font-medium"
               >
-                <Home className="w-4 h-4" /> <span className="hidden md:inline">Início</span>
+                <Home className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Início</span>
+              </button>
+              <button 
+                onClick={() => setView('login')}
+                className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm"
+                title="Admin"
+              >
+                <Lock className="w-3.5 h-3.5" />
               </button>
             </div>
-            <img src="/logo.png" alt="Missão Vida" className="h-12 md:h-16 object-contain" />
+            <img src="/logo.png" alt="Missão Vida" className="h-10 md:h-12 object-contain" />
           </div>
         )}
 
-        {hasSavedDraft && !isSuccess && (
-          <div className="bg-white/90 backdrop-blur-sm border-b border-primary/20 px-4 py-3 md:px-8 lg:px-12 flex items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-500 shadow-sm relative z-10">
-            <div className="flex items-center gap-3">
-              <RefreshCw className="text-primary w-5 h-5 shrink-0" />
-              <div>
-                <p className="text-sm md:text-base font-medium text-slate-800">Rascunho encontrado</p>
-                <p className="text-xs md:text-sm text-slate-500">Deseja continuar preenchendo a solicitação anterior?</p>
-              </div>
-            </div>
-            <div className="flex gap-2 shrink-0">
-               <button 
-                onClick={handleDiscardDraft}
-                className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-               >
-                 Descartar
-               </button>
-               <button 
-                onClick={handleRestoreDraft}
-                className="px-3 py-1.5 text-xs font-medium bg-primary hover:bg-primaryHover text-white rounded-lg transition-colors shadow-lg shadow-primary/20"
-               >
-                 Restaurar
-               </button>
-            </div>
-          </div>
-        )}
-
-        <div className="w-full max-w-3xl mx-auto p-4 md:p-8 lg:p-12 flex-1 flex flex-col relative z-10">
+        <div className="w-full max-w-2xl mx-auto p-4 md:p-6 flex-1 flex flex-col relative z-10">
           
           {!isSuccess ? (
             <>
-              <div className="mb-10 text-center">
-                <div className="mb-2 text-primary font-bold tracking-wider text-xs uppercase">Financeiro</div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+              <div className="mb-6 text-center">
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
                   Nova Solicitação
                 </h1>
-                <p className="text-slate-500 md:text-lg">Preencha os dados abaixo para registrar um novo pagamento.</p>
+                <p className="text-slate-500 text-sm md:text-base">Preencha os dados abaixo.</p>
               </div>
 
-              <div className="flex justify-end gap-3 mb-6">
+              <div className="flex justify-end gap-2 mb-4">
                  {Object.values(formData).some(v => v !== '' && v !== 'no' && v !== false) && (
-                   <>
-                     <button onClick={clearDraft} className="text-xs text-danger hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                       <Trash2 className="w-3 h-3" /> Limpar rascunho
-                     </button>
-                     <button id="btn-save-draft" onClick={handleManualSave} className="text-xs text-primary hover:text-primaryHover border border-primary/20 hover:border-primary/50 bg-white flex items-center gap-1 px-3 py-1 rounded transition-all shadow-sm">
-                       <Save className="w-3 h-3" /> Salvar rascunho
-                     </button>
-                   </>
+                   <button onClick={clearDraft} className="text-[10px] text-danger hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                     <Trash2 className="w-2.5 h-2.5" /> Limpar rascunho
+                   </button>
                  )}
               </div>
 
               <Stepper currentStep={step} />
 
-              <div className="flex-1">
+              <div className="flex-1 mt-4">
                 {step === 0 && renderStep1()}
                 {step === 1 && renderStep2()}
                 {step === 2 && renderStep3()}
@@ -929,48 +866,35 @@ function App() {
                 {step === 4 && renderReview()}
               </div>
 
-              <div className="mt-12 pt-6 border-t border-slate-200 flex justify-between items-center sticky bottom-0 bg-white/95 backdrop-blur py-4 -mx-4 px-4 md:mx-0 md:px-0 z-10">
+              <div className="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center sticky bottom-0 bg-white/95 backdrop-blur py-3 -mx-4 px-4 md:mx-0 md:px-0 z-10">
                 <Button 
                   variant="ghost" 
                   onClick={prevStep} 
                   disabled={step === 0 || isSubmitting}
+                  size="sm"
                   className={step === 0 ? 'invisible' : ''}
                 >
-                  <ChevronLeft className="w-4 h-4 mr-2" /> Voltar
+                  <ChevronLeft className="w-3.5 h-3.5 mr-1.5" /> Voltar
                 </Button>
 
                 {step < 4 ? (
-                  <Button onClick={nextStep} className="px-8" disabled={isUploading}>
-                    {isUploading ? 'Enviando Arquivo...' : (
-                      <>Próximo <ChevronRight className="w-4 h-4 ml-2" /></>
+                  <Button onClick={nextStep} size="sm" className="px-6" disabled={isUploading}>
+                    {isUploading ? 'Enviando...' : (
+                      <>Próximo <ChevronRight className="w-3.5 h-3.5 ml-1.5" /></>
                     )}
                   </Button>
                 ) : (
-                  <div className="flex gap-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => generatePDF(formData, departments)}
-                      disabled={isSubmitting}
-                      className="hidden md:inline-flex"
-                    >
-                      <Download className="w-4 h-4 mr-2" /> Baixar Resumo
-                    </Button>
-                    <Button 
-                      variant={isUrgent ? "accent" : "primary"} 
-                      onClick={handleSubmit} 
-                      disabled={isSubmitting}
-                      className="px-8 shadow-xl"
-                    >
-                      {isSubmitting ? (
-                        <span className="flex items-center gap-2">
-                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                          Enviando...
-                        </span>
-                      ) : (
-                        <>Confirmar Envio <CheckCircle className="w-4 h-4 ml-2" /></>
-                      )}
-                    </Button>
-                  </div>
+                  <Button 
+                    variant={isUrgent ? "accent" : "primary"} 
+                    onClick={handleSubmit} 
+                    disabled={isSubmitting}
+                    size="sm"
+                    className="px-6 shadow-lg"
+                  >
+                    {isSubmitting ? 'Enviando...' : (
+                      <>Confirmar Envio <CheckCircle className="w-3.5 h-3.5 ml-1.5" /></>
+                    )}
+                  </Button>
                 )}
               </div>
             </>
