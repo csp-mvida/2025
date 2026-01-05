@@ -409,10 +409,17 @@ function App() {
 
         </div>
         
-        <div className="mt-20 py-8 border-t border-slate-200 w-full text-center">
+        <div className="mt-20 py-8 border-t border-slate-200 w-full text-center flex flex-col items-center gap-4">
           <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
             Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
           </p>
+          {/* Mobile Admin Access Trigger */}
+          <button 
+            onClick={() => setView('login')}
+            className="md:hidden text-[10px] font-bold text-slate-300 hover:text-primary transition-colors uppercase tracking-widest"
+          >
+            Acesso Administrativo
+          </button>
         </div>
       </div>
     </div>
