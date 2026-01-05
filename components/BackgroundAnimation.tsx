@@ -4,74 +4,60 @@ import React from 'react';
 
 export const BackgroundAnimation: React.FC = () => {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40">
-      <div className="absolute inset-0 bg-slate-50"></div>
-      
-      <svg
-        className="absolute w-[200%] h-full top-0 left-0"
-        viewBox="0 0 1000 1000"
-        preserveAspectRatio="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <linearGradient id="wave-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#008b5a" stopOpacity="0.05" />
-            <stop offset="50%" stopColor="#008b5a" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#008b5a" stopOpacity="0.05" />
-          </linearGradient>
-          <linearGradient id="wave-grad-2" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.02" />
-            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
+    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none bg-slate-50">
+      {/* Wave Container */}
+      <div className="absolute bottom-0 left-0 w-full h-[60%] opacity-30">
+        
+        {/* Layer 1: Deep Green Wave */}
+        <div className="absolute bottom-0 left-0 w-[200%] h-full animate-wave-slow">
+          <svg className="w-full h-full" viewBox="0 0 1000 100" preserveAspectRatio="none">
+            <path 
+              d="M0,50 C150,100 350,0 500,50 C650,100 850,0 1000,50 L1000,100 L0,100 Z" 
+              fill="#008b5a" 
+              opacity="0.2"
+            />
+          </svg>
+        </div>
 
-        {/* Onda 1: Verde Primário Profunda */}
-        <path
-          d="M0,400 C150,350 350,450 500,400 C650,350 850,450 1000,400 L1000,1000 L0,1000 Z"
-          fill="url(#wave-grad-1)"
-          className="animate-wave-slow"
-        />
+        {/* Layer 2: Amber Wave */}
+        <div className="absolute bottom-0 left-0 w-[200%] h-[90%] animate-wave-medium">
+          <svg className="w-full h-full" viewBox="0 0 1000 100" preserveAspectRatio="none">
+            <path 
+              d="M0,50 C200,100 400,0 600,50 C800,100 1000,0 1200,50 L1200,100 L0,100 Z" 
+              fill="#f59e0b" 
+              opacity="0.1"
+            />
+          </svg>
+        </div>
 
-        {/* Onda 2: Âmbar Sutil Intermediária */}
-        <path
-          d="M0,500 C200,450 400,550 600,500 C800,450 1000,550 1200,500 L1200,1000 L0,1000 Z"
-          fill="url(#wave-grad-2)"
-          className="animate-wave-medium"
-        />
-
-        {/* Onda 3: Verde Primário Superficial */}
-        <path
-          d="M0,600 C250,550 450,650 700,600 C950,550 1150,650 1400,600 L1400,1000 L0,1000 Z"
-          fill="url(#wave-grad-1)"
-          className="animate-wave-fast"
-        />
-      </svg>
+        {/* Layer 3: Light Green Wave */}
+        <div className="absolute bottom-0 left-0 w-[200%] h-[80%] animate-wave-fast">
+          <svg className="w-full h-full" viewBox="0 0 1000 100" preserveAspectRatio="none">
+            <path 
+              d="M0,50 C250,100 450,0 700,50 C950,100 1150,0 1400,50 L1400,100 L0,100 Z" 
+              fill="#008b5a" 
+              opacity="0.15"
+            />
+          </svg>
+        </div>
+      </div>
       
       <style>{`
-        @keyframes waveMove {
-          0% { transform: translateX(0) translateY(0); }
-          50% { transform: translateX(-15%) translateY(15px); }
-          100% { transform: translateX(0) translateY(0); }
-        }
-        
-        @keyframes waveMoveReverse {
-          0% { transform: translateX(-20%) translateY(0); }
-          50% { transform: translateX(-5%) translateY(-10px); }
-          100% { transform: translateX(-20%) translateY(0); }
+        @keyframes waveMoveHorizontal {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
         }
 
         .animate-wave-slow {
-          animation: waveMove 25s ease-in-out infinite;
+          animation: waveMoveHorizontal 30s linear infinite;
         }
         
         .animate-wave-medium {
-          animation: waveMoveReverse 35s ease-in-out infinite;
+          animation: waveMoveHorizontal 20s linear infinite reverse;
         }
         
         .animate-wave-fast {
-          animation: waveMove 20s ease-in-out infinite;
-          opacity: 0.6;
+          animation: waveMoveHorizontal 15s linear infinite;
         }
       `}</style>
     </div>
