@@ -327,7 +327,7 @@ function App() {
         {/* Header Section - Tighter spacing */}
         <div className="mb-6 md:mb-8 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
            <img src="/logo.png" alt="Missão Vida" className="h-14 md:h-18 object-contain mx-auto mb-6 drop-shadow-sm" />
-           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-4">
+           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-4 mx-auto">
              <span className="relative flex h-2 w-2">
                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -353,7 +353,7 @@ function App() {
             <div className="absolute -inset-4 bg-primary/20 rounded-[2rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
               onClick={handleStartRequest} 
-              className="relative px-8 py-4 md:px-10 md:py-5 bg-primary hover:bg-primaryHover text-lg md:text-xl font-bold text-white rounded-2xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4"
+              className="relative px-8 py-4 md:px-10 md:py-5 bg-primary hover:bg-primaryHover text-lg md:text-xl font-bold text-white rounded-2xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4 mx-auto"
             >
               Criar Solicitação
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -374,7 +374,7 @@ function App() {
         {/* Professional Cards Grid - Tighter horizontal gaps */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 w-full px-2 animate-fade-up" style={{ animationDelay: '0.4s' }}>
           
-          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
               <FileText className="w-5 h-5 text-primary" />
             </div>
@@ -384,7 +384,7 @@ function App() {
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
               <Clock className="w-5 h-5 text-accent" />
             </div>
@@ -394,7 +394,7 @@ function App() {
             </p>
           </div>
 
-          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+          <div className="bg-white/40 backdrop-blur-xl p-5 md:p-6 rounded-3xl border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
               <CheckCircle className="w-5 h-5 text-slate-900" />
             </div>
@@ -461,14 +461,14 @@ function App() {
         </Select>
         
         <div className="md:col-span-2">
-           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1">
+           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1 text-center md:text-left">
              Vencimento <span className="text-accent">*</span>
            </label>
-           <div className="flex gap-2">
+           <div className="flex gap-2 justify-center md:justify-start">
              <div className="flex-1">
                <input 
                  type="date"
-                 className={`w-full px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
+                 className={`w-full px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base text-center md:text-left ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
                  value={getDateValue()} 
                  onChange={e => {
                    const newDate = e.target.value;
@@ -482,7 +482,7 @@ function App() {
              <div className="w-1/3">
                <input 
                  type="time"
-                 className={`w-full px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
+                 className={`w-full px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base text-center md:text-left ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
                  value={getTimeValue()} 
                  onChange={e => {
                    const newTime = e.target.value;
@@ -494,7 +494,7 @@ function App() {
                />
              </div>
            </div>
-           {errors.dueDate && <p className="mt-1 text-xs text-danger">{errors.dueDate}</p>}
+           {errors.dueDate && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.dueDate}</p>}
            <UrgencyAlert isUrgent={isUrgent} />
         </div>
       </div>
@@ -518,8 +518,8 @@ function App() {
         </Select>
         
         <div className="md:col-span-1">
-          <label className="block text-sm md:text-base font-medium text-slate-700 mb-1">Verba Específica? <span className="text-accent">*</span></label>
-          <div className="flex gap-2">
+          <label className="block text-sm md:text-base font-medium text-slate-700 mb-1 text-center md:text-left">Verba Específica? <span className="text-accent">*</span></label>
+          <div className="flex gap-2 justify-center md:justify-start">
              <label className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
                 <input type="radio" name="budget" className="hidden" checked={formData.isSpecificBudget === 'yes'} onChange={() => handleChange('isSpecificBudget', 'yes')} />
                 Sim
@@ -606,8 +606,8 @@ function App() {
   const renderStep3 = () => (
     <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
       <div>
-        <label className="block text-sm md:text-base font-medium text-slate-700 mb-2">Possui Nota Fiscal? <span className="text-accent">*</span></label>
-        <div className="flex gap-2">
+        <label className="block text-sm md:text-base font-medium text-slate-700 mb-2 text-center md:text-left">Possui Nota Fiscal? <span className="text-accent">*</span></label>
+        <div className="flex gap-2 justify-center md:justify-start">
             <button 
               onClick={() => handleChange('hasInvoice', 'yes')}
               className={`flex-1 py-3 px-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
@@ -627,7 +627,7 @@ function App() {
 
       {formData.hasInvoice === 'yes' ? (
         <div className="animate-in fade-in">
-           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5">Upload do Anexo <span className="text-accent">*</span></label>
+           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left">Upload do Anexo <span className="text-accent">*</span></label>
            <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${errors.invoiceFile ? 'border-danger bg-red-50' : isUploading ? 'border-primary bg-primary/5 cursor-wait' : 'border-slate-300 hover:border-primary bg-slate-50'}`}>
               <input type="file" id="file-upload" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} disabled={isUploading} />
               
@@ -664,14 +664,14 @@ function App() {
                 </div>
               )}
            </div>
-           {errors.invoiceFile && <p className="mt-1 text-xs text-danger">{errors.invoiceFile}</p>}
+           {errors.invoiceFile && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.invoiceFile}</p>}
         </div>
       ) : (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 animate-in fade-in">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 animate-in fade-in text-center md:text-left">
            <p className="text-amber-800 text-[11px] md:text-xs mb-2">
              É obrigatório enviar posteriormente pelo WhatsApp para o financeiro.
            </p>
-           <label className="flex items-center gap-2 cursor-pointer group">
+           <label className="flex items-center gap-2 cursor-pointer group justify-center md:justify-start">
              <input 
               type="checkbox" 
               className="peer appearance-none w-4 h-4 border-2 border-amber-500 rounded bg-white checked:bg-amber-500"
@@ -680,7 +680,7 @@ function App() {
              />
              <span className="text-[11px] md:text-xs text-slate-600">Comprometo-me a enviar via WhatsApp.</span>
            </label>
-           {errors.invoiceSentViaWhatsapp && <p className="mt-1 text-xs text-danger">{errors.invoiceSentViaWhatsapp}</p>}
+           {errors.invoiceSentViaWhatsapp && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.invoiceSentViaWhatsapp}</p>}
         </div>
       )}
     </div>
@@ -699,7 +699,7 @@ function App() {
       />
       
       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-        <label className="flex items-start gap-2.5 cursor-pointer">
+        <label className="flex items-start gap-2.5 cursor-pointer justify-center md:justify-start text-center md:text-left">
            <input 
             type="checkbox" 
             className="peer appearance-none w-5 h-5 border-2 border-primary rounded bg-white checked:bg-primary shrink-0 mt-0.5"
@@ -708,7 +708,7 @@ function App() {
            />
            <div>
              <span className="text-xs md:text-sm font-medium text-slate-800">Concordo com os prazos e regras.</span>
-             {errors.termsAccepted && <p className="mt-1 text-xs text-danger">{errors.termsAccepted}</p>}
+             {errors.termsAccepted && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.termsAccepted}</p>}
            </div>
         </label>
       </div>
@@ -719,16 +719,16 @@ function App() {
     const deptName = departments.find(d => d.id === formData.departmentId)?.name || 'N/A';
     
     const reviewItem = (label: string, value: string | React.ReactNode, full: boolean = false) => (
-      <div className={`${full ? 'col-span-2' : ''} bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm`}>
+      <div className={`${full ? 'col-span-2' : ''} bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm text-center md:text-left`}>
         <span className="block text-[8px] uppercase tracking-wider text-slate-500 mb-0.5">{label}</span>
-        <div className="text-[11px] md:text-sm font-medium text-slate-800 truncate">{value || '-'}</div>
+        <div className="text-[11px] md:text-sm font-medium text-slate-800 truncate mx-auto md:mx-0">{value || '-'}</div>
       </div>
     );
 
     return (
       <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2 justify-center md:justify-start">
             <FileText className="text-primary w-4 h-4" /> Resumo
           </h3>
           
@@ -815,7 +815,7 @@ function App() {
                 <Lock className="w-3.5 h-3.5" />
               </button>
             </div>
-            <img src="/logo.png" alt="Missão Vida" className="h-8 md:h-12 object-contain" />
+            <img src="/logo.png" alt="Missão Vida" className="h-8 md:h-12 object-contain mx-auto" />
           </div>
         )}
 
@@ -830,7 +830,7 @@ function App() {
                 <p className="text-slate-500 text-[11px] md:text-base">Preencha os dados abaixo.</p>
               </div>
 
-              <div className="flex justify-end gap-2 mb-3">
+              <div className="flex justify-center md:justify-end gap-2 mb-3">
                  {Object.values(formData).some(v => v !== '' && v !== 'no' && v !== false) && (
                    <button onClick={clearDraft} className="text-[9px] md:text-[10px] text-danger hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
                      <Trash2 className="w-2.5 h-2.5" /> Limpar
