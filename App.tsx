@@ -307,127 +307,110 @@ function App() {
 
   // --- RENDER WELCOME SCREEN ---
   const renderWelcome = () => (
-    <div className="min-h-screen relative flex flex-col items-center justify-center p-6 md:p-12 overflow-hidden bg-slate-50 selection:bg-primary/20">
-      
-      {/* Dynamic Animated Background */}
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-6 md:p-12 overflow-hidden bg-slate-50">
       <BackgroundAnimation />
 
-      {/* Premium Background Decor */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-gradient-to-b from-primary/5 via-slate-50 to-transparent rounded-[100%] blur-3xl pointer-events-none opacity-60"></div>
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-accent/5 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+      {/* Decorative Blur Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-      {/* Admin Link */}
-      <div className="absolute top-6 right-6 z-20">
+      {/* Admin Quick Link */}
+      <div className="absolute top-8 right-8 z-30 animate-fade-up">
         <button 
           onClick={() => setView('login')}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur border border-slate-200 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-white transition-all shadow-sm"
+          className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-md border border-slate-200 text-xs font-bold text-slate-500 hover:text-primary hover:border-primary/30 transition-all shadow-sm"
         >
-          <Lock className="w-3 h-3" />
-          Acesso Administrativo
+          <Lock className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+          Acesso Restrito
         </button>
       </div>
 
-      <div className="w-full max-w-6xl relative z-10 flex flex-col items-center">
+      <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
         
-        {/* Institutional Logo */}
-        <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-1000">
-           <img src="/logo.png" alt="Missão Vida" className="h-12 md:h-16 object-contain" />
-        </div>
-
-        {/* Institutional Tag */}
-        <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm text-[11px] font-bold text-slate-600 uppercase tracking-widest">
-             <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-             Sistema Financeiro Online
+        {/* Header Section */}
+        <div className="mb-12 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
+           <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-20 object-contain mx-auto mb-8 drop-shadow-sm" />
+           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
+             <span className="relative flex h-2 w-2">
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+             </span>
+             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Painel Financeiro 2025</span>
            </div>
         </div>
 
-        {/* Hero Section */}
-        <div className="text-center mb-10 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-6 tracking-tight leading-[1.15] md:leading-[1.1]">
-            Central de Solicitação
-            <br className="hidden lg:block" />
-             <span className="lg:hidden"> </span>
-            <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-primary to-primaryDark pb-2">
-              de Pagamento
-              <svg className="absolute w-full h-3 -bottom-1 left-0 text-primary/10 hidden md:block" viewBox="0 0 100 10" preserveAspectRatio="none">
-                 <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="4" fill="none" />
-              </svg>
-            </span>
+        {/* Hero Title */}
+        <div className="text-center mb-16 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-8 tracking-tighter leading-[1] max-w-4xl">
+            Sua ponte direta com o <span className="text-primary italic">Financeiro.</span>
           </h1>
-          <p className="text-lg md:text-2xl text-slate-500 leading-relaxed font-light mx-auto max-w-2xl">
-            Gestão transparente e ágil. Centralize suas contas a pagar com padronização e segurança.
+          <p className="text-xl md:text-2xl text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
+            Solicite pagamentos de forma padronizada, segura e com total transparência em cada etapa.
           </p>
         </div>
 
-        {/* Action Button */}
-        <div className="flex flex-col items-center gap-6 mb-12 w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+        {/* Primary CTA */}
+        <div className="mb-20 animate-fade-up" style={{ animationDelay: '0.3s' }}>
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primaryDark rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+            <div className="absolute -inset-4 bg-primary/20 rounded-[2rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
               onClick={handleStartRequest} 
-              className="relative px-8 py-4 md:px-12 md:py-6 bg-primary hover:bg-primaryHover text-white text-lg md:text-xl font-semibold rounded-full shadow-2xl transition-all duration-300 transform group-hover:-translate-y-1 flex items-center gap-3"
+              className="relative px-12 py-6 bg-primary hover:bg-primaryHover text-white text-xl md:text-2xl font-bold rounded-2xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.02] flex items-center gap-4"
             >
-              Iniciar Nova Solicitação
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform" />
+              Criar Nova Solicitação
+              <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
           
           {hasSavedDraft && (
-             <button 
-               onClick={handleStartRequest} 
-               className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-all text-sm font-medium shadow-sm"
-             >
-               <RefreshCw className="w-4 h-4" />
-               Retomar rascunho anterior
-             </button>
+            <button 
+              onClick={handleRestoreDraft}
+              className="mt-8 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-sm transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Retomar rascunho salvo
+            </button>
           )}
         </div>
 
-        {/* Optimized Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
+        {/* Professional Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full animate-fade-up" style={{ animationDelay: '0.4s' }}>
           
-          {/* Card 1: Dados Essenciais */}
-          <div className="group relative bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-100 overflow-hidden text-left">
-            <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-emerald-500 transition-all duration-700 ease-out"></div>
-            <div className="relative w-12 h-12 rounded-full bg-emerald-50/50 flex items-center justify-center mb-4 group-hover:bg-emerald-50 transition-colors duration-500">
-              <FileText className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-emerald-600 transition-colors" />
+          <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[32px] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <FileText className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-3 group-hover:text-emerald-700 transition-colors">Dados Essenciais</h3>
-            <p className="text-[#666] text-sm leading-relaxed font-light">
-              Tenha em mãos os dados do fornecedor, valor exato e a <span className="font-medium text-slate-800">Nota Fiscal</span> para agilizar a aprovação.
+            <h3 className="text-xl font-bold text-slate-900 mb-3">Protocolo Digital</h3>
+            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+              Geração automática de ID para rastreamento imediato de cada pedido realizado.
             </p>
           </div>
 
-          {/* Card 2: Prazos e Regras */}
-          <div className="group relative bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-100 overflow-hidden text-left">
-            <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-amber-500 transition-all duration-700 ease-out"></div>
-            <div className="relative w-12 h-12 rounded-full bg-amber-50/50 flex items-center justify-center mb-4 group-hover:bg-amber-50 transition-colors duration-500">
-              <Clock className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-amber-600 transition-colors" />
+          <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[32px] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Clock className="w-6 h-6 text-accent" />
             </div>
-            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-3 group-hover:text-amber-700 transition-colors">Prazos e Regras</h3>
-            <p className="text-[#666] text-sm leading-relaxed font-light">
-              Respeite o prazo mínimo de <strong className="text-slate-800 font-medium">2 horas</strong> para processamento. Planeje com antecedência.
+            <h3 className="text-xl font-bold text-slate-900 mb-3">Agilidade Real</h3>
+            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+              Detecção de urgência e avisos automáticos para garantir prazos críticos.
             </p>
           </div>
 
-          {/* Card 3: Urgências */}
-          <div className="group relative bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-[24px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] hover:scale-[1.02] transition-all duration-500 ease-out border border-slate-100 overflow-hidden text-left">
-            <div className="absolute left-0 bottom-0 w-1.5 h-0 group-hover:h-full bg-rose-500 transition-all duration-700 ease-out"></div>
-            <div className="relative w-12 h-12 rounded-full bg-rose-50/50 flex items-center justify-center mb-4 group-hover:bg-rose-50 transition-colors duration-500">
-              <AlertTriangle className="w-5 h-5 text-slate-600 stroke-[1.5] group-hover:text-rose-600 transition-colors" />
+          <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[32px] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group">
+            <div className="w-14 h-14 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <CheckCircle className="w-6 h-6 text-slate-900" />
             </div>
-            <h3 className="text-xl font-semibold text-[#1A1A1A] tracking-tight mb-3 group-hover:text-rose-700 transition-colors">Urgências</h3>
-            <p className="text-[#666] text-sm leading-relaxed font-light">
-              Emergências reais (menos de 2h) devem ser lançadas e comunicadas via <strong className="text-slate-900 font-bold">WhatsApp</strong>.
+            <h3 className="text-xl font-bold text-slate-900 mb-3">Padronização</h3>
+            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+              Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.
             </p>
           </div>
 
         </div>
         
-        <div className="mt-16 text-center animate-in fade-in duration-1000 delay-500">
-          <p className="text-[10px] md:text-xs text-slate-400 uppercase tracking-widest font-semibold hover:text-primary transition-colors cursor-default">
-            CSP &copy; {new Date().getFullYear()} • Tecnologia & Finanças
+        <div className="mt-20 py-8 border-t border-slate-200 w-full text-center">
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
+            Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
           </p>
         </div>
       </div>

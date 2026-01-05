@@ -34,7 +34,6 @@
               }
             },
             fontFamily: {
-              // Definindo Montserrat como a fonte padrão (sans) e para títulos (heading)
               sans: ['Montserrat', 'system-ui', 'sans-serif'],
               heading: ['Montserrat', 'system-ui', 'sans-serif'],
             }
@@ -48,9 +47,20 @@
         color-scheme: light;
       }
       body {
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Montserrat', sans-serif !important;
         background-color: #ffffff;
-        color: #1e293b; /* Slate 800 */
+        color: #1e293b;
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      /* Animações customizadas */
+      @keyframes slideInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .animate-fade-up {
+        animation: slideInUp 0.8s ease-out forwards;
       }
       /* Custom scrollbar */
       ::-webkit-scrollbar {
@@ -65,12 +75,6 @@
       }
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
-      }
-      .glass-panel {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-left: 1px solid #e2e8f0;
       }
     </style>
   <script type="importmap">
