@@ -310,8 +310,8 @@ function App() {
     <div className="min-h-screen relative flex flex-col bg-slate-50">
       <BackgroundAnimation />
 
-      {/* Institutional Top Header - Full Stacked to avoid overlap */}
-      <header className="relative z-30 animate-fade-up">
+      {/* Institutional Top Header - Always fully revealed at the top */}
+      <header className="relative z-30">
         {/* Superior Green Utility Bar - Centralized Button */}
         <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
           <button 
@@ -323,14 +323,14 @@ function App() {
           </button>
         </div>
         
-        {/* Padding Div for distance */}
+        {/* Breathing space between Bar and Logo */}
         <div className="py-4 md:py-6"></div>
       </header>
 
       <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
         
         {/* Header Section - Logo */}
-        <div className="mt-2 mb-6 md:mb-8 text-center animate-fade-up" style={{ animationDelay: '0.1s' }}>
+        <div className="mt-2 mb-6 md:mb-8 text-center animate-fade-up">
            <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-24 object-contain mx-auto mb-6 drop-shadow-md" />
            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-3 mx-auto">
              <span className="relative flex h-2 w-2">
@@ -342,7 +342,7 @@ function App() {
         </div>
 
         {/* Hero Title */}
-        <div className="text-center mb-8 md:mb-10 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+        <div className="text-center mb-8 md:mb-10 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-4xl md:text-6xl text-slate-900 mb-4 tracking-tighter leading-[1.1] max-w-4xl px-2">
             <span className="font-light block md:inline text-2xl md:text-4xl">Sua ponte direta com o</span>{' '}
             <span className="font-black text-primary italic">Financeiro.</span>
@@ -353,7 +353,7 @@ function App() {
         </div>
 
         {/* Primary CTA */}
-        <div className="mb-10 md:mb-12 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+        <div className="mb-10 md:mb-12 animate-fade-up" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-[2.5rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
@@ -377,7 +377,7 @@ function App() {
         </div>
 
         {/* Professional Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full px-4 mb-12 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full px-4 mb-12 animate-fade-up" style={{ animationDelay: '0.3s' }}>
           
           <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
             <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -805,7 +805,7 @@ function App() {
       <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
           <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-            {/* Superior Utility Green Bar - Centralized Button */}
+            {/* Superior Utility Green Bar - Static at the top */}
             <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
               <button 
                 onClick={() => setView('login')}
