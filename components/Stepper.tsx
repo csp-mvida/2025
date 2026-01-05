@@ -9,7 +9,7 @@ const STEPS = ["Identificação", "Pagamento", "Comprovação", "Descrição", "
 
 export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
   return (
-    <div className="w-full mb-10">
+    <div className="w-full mb-6">
       <div className="relative flex justify-between">
         {STEPS.map((label, index) => {
           const isCompleted = index < currentStep;
