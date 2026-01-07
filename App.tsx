@@ -631,9 +631,9 @@ function App() {
 
         {formData.paymentMethod === 'Boleto' && (
           <div className="md:col-span-2 space-y-3 animate-in fade-in">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                <Input 
-                label="Código de Barras (Opcional se anexar)" 
+                label={<>Código de Barras <span className="text-[10px] font-bold text-slate-400 block">(Opcional se anexar)</span></>} 
                 value={formData.boletoCode || ''} 
                 onChange={e => handleChange('boletoCode', e.target.value)} 
                 error={errors.boletoCode}

@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label: React.ReactNode;
   error?: string;
   helperText?: string;
 }
@@ -9,7 +9,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ label, error, helperText, className = '', ...props }, ref) => {
   return (
     <div className="w-full">
-      <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left">
+      <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left leading-tight">
         {label} {props.required && <span className="text-accent">*</span>}
       </label>
       <input
@@ -31,10 +31,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ label, er
   );
 });
 
-export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { label: string, error?: string }>(({ label, error, children, ...props }, ref) => {
+export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { label: React.ReactNode, error?: string }>(({ label, error, children, ...props }, ref) => {
   return (
     <div className="w-full">
-      <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left">
+      <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left leading-tight">
         {label} {props.required && <span className="text-accent">*</span>}
       </label>
       <div className="relative">
@@ -61,10 +61,10 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
   );
 });
 
-export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string, error?: string }>(({ label, error, className = '', ...props }, ref) => {
+export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: React.ReactNode, error?: string }>(({ label, error, className = '', ...props }, ref) => {
   return (
     <div className="w-full">
-      <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left">
+      <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left leading-tight">
         {label} {props.required && <span className="text-accent">*</span>}
       </label>
       <textarea
