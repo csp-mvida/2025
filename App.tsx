@@ -831,7 +831,7 @@ function App() {
   const renderSuccess = () => (
     <div className="flex flex-col items-center justify-center py-6 text-center animate-in zoom-in duration-500 max-w-2xl mx-auto px-2">
       <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 ring-8 ring-primary/5">
-        CheckCircle className="w-8 h-8 text-primary" />
+        <CheckCircle className="w-8 h-8 text-primary" />
       </div>
       <h2 className="text-xl md:text-3xl font-bold text-slate-900 mb-1">Enviada!</h2>
       <p className="text-slate-500 mb-6 text-sm">Solicitação processada com sucesso.</p>
