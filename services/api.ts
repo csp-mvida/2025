@@ -31,7 +31,6 @@ export const fetchAuthorizers = async () => {
     .from('authorizers')
     .select('name')
     .eq('is_active', true);
-    // Removed .order('name') to respect insertion order or manual order
 
   if (error) {
     console.error('Error fetching authorizers:', error);
@@ -97,6 +96,7 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
     pix_key: data.pixKey || null,
     status: 'pending',
     invoice_attachment_path: url_anexo,
+    boleto_attachment_path: data.boletoUrl || null,
     is_budget_specific: data.isSpecificBudget === 'yes',
     authorization_number: data.authNumber || null
   };
@@ -162,6 +162,7 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     termsAccepted: true,
     createdAt: req.created_at,
     status: req.status as RequestStatus,
+    boletoUrl: req.boleto_attachment_path,
     history: []
   }));
 };

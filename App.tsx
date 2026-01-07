@@ -31,6 +31,7 @@ function App() {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false); 
+  const [isUploadingBoleto, setIsUploadingBoleto] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [generatedId, setGeneratedId] = useState('');
   const [isIdCopied, setIsIdCopied] = useState(false); 
@@ -72,7 +73,7 @@ function App() {
   // Auto-Save Draft Logic
   useEffect(() => {
     if (!isSuccess && draftLoaded) {
-      const { invoiceFile, ...dataToSave } = formData;
+      const { invoiceFile, boletoFile, ...dataToSave } = formData;
       localStorage.setItem('csp_draft', JSON.stringify(dataToSave));
     }
   }, [formData, isSuccess, draftLoaded]);
@@ -102,7 +103,7 @@ function App() {
   };
 
   const handleManualSave = () => {
-    const { invoiceFile, ...dataToSave } = formData;
+    const { invoiceFile, boletoFile, ...dataToSave } = formData;
     localStorage.setItem('csp_draft', JSON.stringify(dataToSave));
     const btn = document.getElementById('btn-save-draft');
     if (btn) {
@@ -176,6 +177,44 @@ function App() {
     }
   };
 
+  const handleBoletoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFormData(prev => ({
+        ...prev,
+        boletoFile: file, 
+        boletoFileMeta: { name: file.name, size: file.size }
+      }));
+
+      setIsUploadingBoleto(true);
+      try {
+        const publicUrl = await uploadInvoice(file);
+        setFormData(prev => ({
+          ...prev,
+          boletoUrl: publicUrl
+        }));
+        if (errors.boletoFile) {
+          setErrors(prev => {
+            const newErrors = {...prev};
+            delete newErrors.boletoFile;
+            return newErrors;
+          });
+        }
+      } catch (error) {
+        console.error("Boleto upload failed", error);
+        alert("Erro ao fazer upload do boleto. Tente novamente.");
+        setFormData(prev => ({
+          ...prev,
+          boletoFile: null,
+          boletoFileMeta: undefined,
+          boletoUrl: undefined
+        }));
+      } finally {
+        setIsUploadingBoleto(false);
+      }
+    }
+  };
+
   const clearDraft = () => {
     if (window.confirm("Tem certeza que deseja limpar o rascunho?")) {
       setFormData(INITIAL_DATA);
@@ -235,7 +274,7 @@ function App() {
       if (!formData.value || parseInt(formData.value) === 0) newErrors.value = "Valor obrigatório";
       if (!formData.paymentMethod) newErrors.paymentMethod = "Forma de pagamento obrigatória";
       if (formData.paymentMethod === 'PIX' && !formData.pixKey) newErrors.pixKey = "Chave PIX obrigatória";
-      if (formData.paymentMethod === 'Boleto' && !formData.boletoCode && !formData.hasInvoice) newErrors.boletoCode = "Código de barras necessário se não houver anexo";
+      if (formData.paymentMethod === 'Boleto' && !formData.boletoCode && !formData.boletoUrl) newErrors.boletoCode = "Código de barras ou anexo necessário";
     }
 
     if (currentStep === 2) { 
@@ -264,7 +303,7 @@ function App() {
 
   const nextStep = () => {
     if (validateStep(step)) {
-      if (step === 2 && isUploading) {
+      if ((step === 2 && isUploading) || (step === 1 && isUploadingBoleto)) {
         alert("Aguarde o término do upload do arquivo.");
         return;
       }
@@ -591,19 +630,53 @@ function App() {
         )}
 
         {formData.paymentMethod === 'Boleto' && (
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 animate-in fade-in">
-             <Input 
-              label="Código de Barras" 
-              value={formData.boletoCode || ''} 
-              onChange={e => handleChange('boletoCode', e.target.value)} 
-              error={errors.boletoCode}
-            />
-            <Input 
-              type="date"
-              label="Vencimento Boleto" 
-              value={formData.boletoDueDate || ''} 
-              onChange={e => handleChange('boletoDueDate', e.target.value)} 
-            />
+          <div className="md:col-span-2 space-y-3 animate-in fade-in">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+               <Input 
+                label="Código de Barras (Opcional se anexar)" 
+                value={formData.boletoCode || ''} 
+                onChange={e => handleChange('boletoCode', e.target.value)} 
+                error={errors.boletoCode}
+              />
+              <Input 
+                type="date"
+                label="Vencimento Boleto" 
+                value={formData.boletoDueDate || ''} 
+                onChange={e => handleChange('boletoDueDate', e.target.value)} 
+              />
+             </div>
+             
+             <div>
+               <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left">Anexar Código de Barras / Boleto</label>
+               <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-colors ${isUploadingBoleto ? 'border-primary bg-primary/5 cursor-wait' : 'border-slate-300 hover:border-primary bg-slate-50'}`}>
+                  <input type="file" id="boleto-upload" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleBoletoFileChange} disabled={isUploadingBoleto} />
+                  
+                  {!formData.boletoFileMeta && !isUploadingBoleto ? (
+                    <label htmlFor="boleto-upload" className="cursor-pointer flex flex-col items-center gap-1">
+                      <UploadCloud className="w-5 h-5 text-primary" />
+                      <span className="text-primary font-bold text-xs uppercase tracking-wider">Selecionar Arquivo</span>
+                      <p className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200 mt-1">
+                        AVISO: O código deve estar COMPLETAMENTE LEGÍVEL.
+                      </p>
+                    </label>
+                  ) : isUploadingBoleto ? (
+                     <div className="flex flex-col items-center gap-1">
+                       <RefreshCw className="w-5 h-5 text-primary animate-spin" />
+                       <span className="text-primary font-medium text-xs">Carregando...</span>
+                     </div>
+                  ) : (
+                    <div className="flex items-center justify-between bg-white border border-slate-200 p-2 rounded-lg shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="text-primary w-4 h-4" />
+                        <span className="text-[10px] font-medium text-slate-900 truncate max-w-[150px]">{formData.boletoFileMeta?.name}</span>
+                      </div>
+                      <button onClick={() => setFormData(prev => ({...prev, boletoFile: null, boletoFileMeta: undefined, boletoUrl: undefined}))} className="text-slate-400 hover:text-danger">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+               </div>
+             </div>
           </div>
         )}
       </div>
@@ -758,7 +831,7 @@ function App() {
   const renderSuccess = () => (
     <div className="flex flex-col items-center justify-center py-6 text-center animate-in zoom-in duration-500 max-w-2xl mx-auto px-2">
       <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 ring-8 ring-primary/5">
-        <CheckCircle className="w-8 h-8 text-primary" />
+        CheckCircle className="w-8 h-8 text-primary" />
       </div>
       <h2 className="text-xl md:text-3xl font-bold text-slate-900 mb-1">Enviada!</h2>
       <p className="text-slate-500 mb-6 text-sm">Solicitação processada com sucesso.</p>
@@ -887,8 +960,8 @@ function App() {
                 </Button>
 
                 {step < 4 ? (
-                  <Button onClick={nextStep} size="md" className="px-6 text-xs font-bold shadow-lg shadow-primary/20" disabled={isUploading}>
-                    {isUploading ? 'Enviando...' : (
+                  <Button onClick={nextStep} size="md" className="px-6 text-xs font-bold shadow-lg shadow-primary/20" disabled={isUploading || isUploadingBoleto}>
+                    {isUploading || isUploadingBoleto ? 'Enviando...' : (
                       <>Próximo Passo <ChevronRight className="w-4 h-4 ml-1" /></>
                     )}
                   </Button>

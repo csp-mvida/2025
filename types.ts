@@ -24,6 +24,9 @@ export interface CSPFormData {
   pixKey?: string;
   boletoCode?: string;
   boletoDueDate?: string;
+  boletoFile?: File | null;
+  boletoFileMeta?: { name: string; size: number };
+  boletoUrl?: string;
 
   // Step 3: Proof
   hasInvoice: 'yes' | 'no';
