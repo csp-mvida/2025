@@ -356,11 +356,11 @@ function App() {
         <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
           <button 
             onClick={() => setView('login')}
-            className="flex items-center gap-2 text-white font-bold hover:scale-105 transition-all group"
+            className="flex items-center gap-2 text-green-300 font-bold hover:scale-105 transition-all group"
           >
             <Lock className="w-4 h-4" />
             <span className="text-[11px] md:text-sm uppercase tracking-widest">
-              Acesso Restrito <span className="text-green-300">Admin</span>
+              Acesso Restrito Admin
             </span>
           </button>
         </div>
@@ -886,10 +886,10 @@ function App() {
             <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
               <button 
                 onClick={() => setView('login')}
-                className="flex items-center gap-1.5 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
+                className="flex items-center gap-1.5 text-green-300 font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
               >
                 <Lock className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-                Acesso Restrito <span className="text-green-300">Admin</span>
+                Acesso Restrito Admin
               </button>
             </div>
             
