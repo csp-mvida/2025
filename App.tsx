@@ -360,7 +360,7 @@ function App() {
           >
             <Lock className="w-4 h-4" />
             <span className="text-[11px] md:text-sm uppercase tracking-widest">
-              Acesso Restrito <span className="text-primaryHover">Admin</span>
+              Acesso Restrito <span className="text-green-300">Admin</span>
             </span>
           </button>
         </div>
@@ -369,7 +369,7 @@ function App() {
       <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
         
         {/* Header Section - Logo and Status */}
-        <div className="mt-8 mb-8 md:mb-10 text-center animate-fade-up">
+        <div className="mt-4 mb-8 md:mb-10 text-center animate-fade-up">
            <img 
              src="/logo.png" 
              alt="Missão Vida" 
@@ -889,7 +889,7 @@ function App() {
                 className="flex items-center gap-1.5 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
               >
                 <Lock className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-                Acesso Restrito <span className="text-primaryHover">Admin</span>
+                Acesso Restrito <span className="text-green-300">Admin</span>
               </button>
             </div>
             
