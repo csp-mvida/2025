@@ -347,115 +347,115 @@ function App() {
 
   // --- RENDER WELCOME SCREEN ---
   const renderWelcome = () => (
-    <div className="min-h-screen relative flex flex-col bg-slate-50">
+    <div className="h-screen w-full relative flex flex-col bg-slate-50 overflow-hidden">
       <BackgroundAnimation />
 
-      {/* Institutional Top Header - Always fully revealed at the top */}
-      <header className="relative z-30">
+      {/* Institutional Top Header */}
+      <header className="relative z-30 shrink-0">
         {/* Superior Green Utility Bar - Centralized Button */}
-        <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
+        <div className="bg-primary py-2 px-4 flex justify-center shadow-md">
           <button 
             onClick={() => setView('login')}
             className="flex items-center gap-2 text-white font-bold hover:scale-105 transition-all group"
           >
-            <Lock className="w-4 h-4" />
-            <span className="text-[11px] md:text-sm uppercase tracking-widest">
+            <Lock className="w-3.5 h-3.5" />
+            <span className="text-[10px] md:text-xs uppercase tracking-widest">
               Acesso Restrito <span className="text-primaryHover">Admin</span>
             </span>
           </button>
         </div>
       </header>
 
-      <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
+      <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 relative z-10 overflow-hidden">
         
         {/* Header Section - Logo and Status */}
-        <div className="mt-8 mb-8 md:mb-10 text-center animate-fade-up">
+        <div className="mb-4 md:mb-6 text-center animate-fade-up">
            <img 
              src="/logo.png" 
              alt="Missão Vida" 
-             className="h-16 md:h-24 object-contain mx-auto mb-6 drop-shadow-md" 
+             className="h-12 md:h-20 object-contain mx-auto mb-4 drop-shadow-sm" 
            />
-           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mx-auto">
-             <span className="relative flex h-2 w-2">
+           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-100 shadow-sm mx-auto">
+             <span className="relative flex h-1.5 w-1.5">
                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
              </span>
-             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Central de Solicitação de Pagamentos</span>
+             <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Central de Solicitação de Pagamentos</span>
            </div>
         </div>
 
         {/* Hero Title */}
-        <div className="text-center mb-8 md:mb-10 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <h1 className="text-4xl md:text-6xl text-slate-900 mb-4 tracking-tighter leading-[1.1] max-w-4xl px-2">
-            <span className="font-light block md:inline text-2xl md:text-4xl">Sua ponte direta com o</span>{' '}
+        <div className="text-center mb-6 md:mb-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-3xl md:text-5xl lg:text-6xl text-slate-900 mb-2 tracking-tighter leading-[1.1] max-w-4xl px-2">
+            <span className="font-light block md:inline text-xl md:text-3xl lg:text-4xl">Sua ponte direta com o</span>{' '}
             <span className="font-black text-primary italic">Financeiro.</span>
           </h1>
-          <p className="text-sm md:text-lg text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed px-4">
+          <p className="text-xs md:text-base lg:text-lg text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed px-4">
             Solicite pagamentos de forma padronizada, segura e com total transparência em cada etapa.
           </p>
         </div>
 
         {/* Primary CTA */}
-        <div className="mb-10 md:mb-12 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+        <div className="mb-6 md:mb-10 animate-fade-up" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
-            <div className="absolute -inset-4 bg-primary/20 rounded-[2.5rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
+            <div className="absolute -inset-4 bg-primary/20 rounded-[2rem] blur-xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
               onClick={handleStartRequest} 
-              className="relative px-8 py-4 md:px-12 md:py-5 bg-primary hover:bg-primaryHover text-lg md:text-xl font-bold text-white rounded-3xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.03] flex items-center gap-4 mx-auto"
+              className="relative px-6 py-3 md:px-10 md:py-4 bg-primary hover:bg-primaryHover text-base md:text-lg lg:text-xl font-bold text-white rounded-2xl shadow-xl transition-all duration-300 transform group-hover:scale-[1.03] flex items-center gap-3 mx-auto"
             >
               Criar Solicitação
-              <ChevronRight className="w-6 h-6 group-hover:translate-x-1.5 transition-transform" />
+              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
           
           {hasSavedDraft && (
             <button 
               onClick={handleRestoreDraft}
-              className="mt-6 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors py-1 px-4 rounded-full hover:bg-white shadow-sm"
+              className="mt-4 flex items-center gap-1.5 mx-auto text-slate-400 hover:text-primary font-bold text-[10px] transition-colors py-1 px-3 rounded-full hover:bg-white shadow-sm"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-3 h-3" />
               Retomar rascunho salvo
             </button>
           )}
         </div>
 
         {/* Professional Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full px-4 mb-12 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 lg:gap-6 w-full px-4 mb-4 md:mb-8 animate-fade-up" style={{ animationDelay: '0.3s' }}>
           
-          <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <FileText className="w-6 h-6 text-primary" />
+          <div className="bg-white/40 backdrop-blur-xl p-4 lg:p-6 rounded-2xl border border-white/60 shadow-lg shadow-slate-200/40 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <FileText className="w-5 h-5 text-primary" />
             </div>
-            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Protocolo Digital</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
-              Geração automática de ID para rastreamento imediato de cada pedido realizado.
+            <h3 className="text-sm md:text-base font-bold text-slate-900 mb-1">Protocolo Digital</h3>
+            <p className="text-slate-500 text-[10px] leading-relaxed font-medium">
+              Geração automática de ID para rastreamento imediato de cada pedido.
             </p>
           </div>
 
-          <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <Clock className="w-6 h-6 text-accent" />
+          <div className="bg-white/40 backdrop-blur-xl p-4 lg:p-6 rounded-2xl border border-white/60 shadow-lg shadow-slate-200/40 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Clock className="w-5 h-5 text-accent" />
             </div>
-            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Agilidade Real</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
-              Detecção de urgência e avisos automáticos para garantir prazos críticos.
+            <h3 className="text-sm md:text-base font-bold text-slate-900 mb-1">Agilidade Real</h3>
+            <p className="text-slate-500 text-[10px] leading-relaxed font-medium">
+              Detecção de urgência e avisos automáticos para prazos críticos.
             </p>
           </div>
 
-          <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="w-12 h-12 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <CheckCircle className="w-6 h-6 text-slate-900" />
+          <div className="bg-white/40 backdrop-blur-xl p-4 lg:p-6 rounded-2xl border border-white/60 shadow-lg shadow-slate-200/40 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-10 h-10 bg-slate-900/10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <CheckCircle className="w-5 h-5 text-slate-900" />
             </div>
-            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Padronização</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
-              Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.
+            <h3 className="text-sm md:text-base font-bold text-slate-900 mb-1">Padronização</h3>
+            <p className="text-slate-500 text-[10px] leading-relaxed font-medium">
+              Fluxo guiado que evita erros e agiliza a aprovação financeira.
             </p>
           </div>
 
         </div>
         
-        <footer className="mt-auto pt-3 pb-8 border-t border-slate-200 w-full text-center">
-          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
+        <footer className="mt-auto py-4 border-t border-slate-100 w-full text-center shrink-0">
+          <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.4em]">
             Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
           </p>
         </footer>
