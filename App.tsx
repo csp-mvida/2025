@@ -359,7 +359,9 @@ function App() {
             className="flex items-center gap-2 text-white font-bold hover:scale-105 transition-all group"
           >
             <Lock className="w-4 h-4" />
-            <span className="text-[11px] md:text-sm uppercase tracking-widest">Acesso Restrito Admin</span>
+            <span className="text-[11px] md:text-sm uppercase tracking-widest">
+              Acesso Restrito <span className="text-primaryHover">Admin</span>
+            </span>
           </button>
         </div>
       </header>
@@ -452,7 +454,7 @@ function App() {
 
         </div>
         
-        <footer className="mt-auto py-6 border-t border-slate-200 w-full text-center">
+        <footer className="mt-auto pt-3 pb-8 border-t border-slate-200 w-full text-center">
           <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
             Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
           </p>
@@ -887,7 +889,7 @@ function App() {
                 className="flex items-center gap-1.5 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
               >
                 <Lock className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
-                Acesso Restrito Admin
+                Acesso Restrito <span className="text-primaryHover">Admin</span>
               </button>
             </div>
             
@@ -985,6 +987,14 @@ function App() {
           )}
         </div>
       </main>
+      
+      {!isSuccess && view === 'form' && (
+        <footer className="w-full pt-3 pb-8 border-t border-slate-200 text-center relative z-10">
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
+            Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
+          </p>
+        </footer>
+      )}
     </div>
   );
 }
