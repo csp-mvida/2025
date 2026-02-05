@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { INITIAL_DATA, CSPFormData, Department, ValidationErrors } from './types';
-import { URGENCY_THRESHOLD_HOURS } from './constants';
+import { URGENCY_THRESHOLD_HOURS, SPECIFIC_BUDGET_OPTIONS } from './constants';
 import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency, generateId } from './utils/formatters';
 import { fetchDepartments, fetchAuthorizers, fetchPaymentAccounts, submitRequest, uploadInvoice } from './services/api';
 
@@ -108,6 +108,7 @@ function App() {
     }
     if (s === 1) {
       if (!formData.paymentAccount) errs.paymentAccount = "Conta é obrigatória";
+      if (formData.isSpecificBudget === 'yes' && !formData.specificBudgetName) errs.specificBudgetName = "Selecione a verba";
       if (!formData.supplierName) errs.supplierName = "Fornecedor é obrigatório";
       if (!formData.value || parseInt(formData.value) === 0) errs.value = "Valor é obrigatório";
       if (!formData.paymentMethod) errs.paymentMethod = "Forma é obrigatória";
@@ -221,9 +222,19 @@ function App() {
         <label className="block text-sm font-medium text-slate-700 mb-1.5">Verba Específica? <span className="text-accent">*</span></label>
         <div className="flex gap-2">
           <button onClick={() => handleChange('isSpecificBudget', 'yes')} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'yes' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Sim</button>
-          <button onClick={() => handleChange('isSpecificBudget', 'no')} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'no' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Não</button>
+          <button onClick={() => { handleChange('isSpecificBudget', 'no'); handleChange('specificBudgetName', ''); }} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'no' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Não</button>
         </div>
       </div>
+      
+      {formData.isSpecificBudget === 'yes' && (
+        <div className="md:col-span-2 animate-in slide-in-from-top-2 duration-300">
+          <Select label="Escolha a Verba Específica" value={formData.specificBudgetName} onChange={e => handleChange('specificBudgetName', e.target.value)} required error={errors.specificBudgetName}>
+            <option value="">Selecione a verba...</option>
+            {SPECIFIC_BUDGET_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </Select>
+        </div>
+      )}
+
       <Input label="Fornecedor / Recebedor" value={formData.supplierName} onChange={e => handleChange('supplierName', e.target.value)} required error={errors.supplierName} />
       <Input label="Valor (R$)" value={formatCurrency(formData.value)} onChange={e => handleChange('value', parseCurrency(e.target.value))} required error={errors.value} placeholder="R$ 0,00" />
       <div className="md:col-span-2">
@@ -317,6 +328,7 @@ function App() {
       { label: 'Valor', value: formatCurrency(formData.value), color: 'text-primary' },
       { label: 'Forma Pagto', value: formData.paymentMethod },
       { label: 'Autorizador', value: formData.authorizer },
+      { label: 'Verba Específica', value: formData.isSpecificBudget === 'yes' ? formData.specificBudgetName : 'Não' },
       { label: 'Descrição', value: formData.description, full: true },
       { label: 'Anexo Nota', value: formData.invoiceUrl ? 'Enviado' : 'Não possui', full: false },
       { label: 'Anexo Boleto', value: formData.boletoUrl ? 'Enviado' : 'N/A', full: false }

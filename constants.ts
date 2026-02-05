@@ -27,4 +27,16 @@ export const DEPARTMENTS_FALLBACK = [
   { id: '6', name: 'TI / Desenvolvimento', active: true },
 ];
 
+export const SPECIFIC_BUDGET_OPTIONS = [
+  "CASA DO PROFETA",
+  "CONVENIO TRIAGEM",
+  "CONVENIO CEV",
+  "FAZENDA",
+  "GRANJA",
+  "VEICULOS",
+  "VERBA PR DOUGLAS",
+  "VERBA PR JOAO",
+  "OUTROS"
+];
+
 export const URGENCY_THRESHOLD_HOURS = 2;
