@@ -9,10 +9,11 @@ import { Stepper } from './components/Stepper';
 import { Button } from './components/ui/Button';
 import { Input, Select, Textarea } from './components/ui/Input';
 import { UrgencyAlert } from './components/UrgencyAlert';
+import { OrientationDrawer } from './components/OrientationDrawer';
 import { 
   CheckCircle, UploadCloud, FileText, 
   ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, 
-  Home, Lock, Copy, Search, Trash2, Save
+  Home, Lock, Copy, Search, Trash2, Save, Info
 }
 from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -34,6 +35,7 @@ function App() {
   const [generatedId, setGeneratedId] = useState('');
   const [isIdCopied, setIsIdCopied] = useState(false); 
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const isUrgent = checkUrgency(formData.dueDate);
 
@@ -314,11 +316,20 @@ function App() {
   if (view === 'welcome') return (
     <div className="min-h-screen relative flex flex-col bg-slate-50 overflow-x-hidden">
       <BackgroundAnimation />
+      <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
+      
       <header className="relative z-30">
-        <div className="bg-primary py-3 px-6 flex justify-center shadow-lg">
-          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity"><Lock className="w-4 h-4" /> Acesso Administrativo</button>
+        <div className="bg-primary py-3 px-6 flex justify-between items-center shadow-lg">
+          <div className="w-24 md:w-32" /> {/* Spacer */}
+          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
+            <Lock className="w-4 h-4" /> Acesso Administrativo
+          </button>
+          <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
+            <Info className="w-4 h-4" /> Regras e Prazos
+          </button>
         </div>
       </header>
+
       <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-8 relative z-10 text-center">
         <img src="/logo.png" alt="Logo" className="h-20 md:h-28 mb-12 drop-shadow-2xl animate-fade-up" />
         <div className="space-y-6 max-w-3xl mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
