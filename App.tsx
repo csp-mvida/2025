@@ -439,14 +439,14 @@ function App() {
         </div>
       </header>
 
-      {/* Main container with justify-start on mobile to remove big white spaces */}
-      <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-start md:justify-center p-6 pt-12 md:p-8 relative z-10 text-center">
+      {/* Main container: Adjusted padding and margins for mobile full screen */}
+      <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-4 pt-8 md:p-8 relative z-10 text-center">
         <img 
           src="/logo.png" 
           alt="Logo" 
-          className="h-12 md:h-24 mb-8 md:mb-12 md:-mt-20 drop-shadow-2xl animate-fade-up" 
+          className="h-12 md:h-24 mb-4 md:mb-12 md:-mt-20 drop-shadow-2xl animate-fade-up" 
         />
-        <div className="space-y-4 md:space-y-6 max-w-3xl mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+        <div className="space-y-4 md:space-y-6 max-w-3xl mb-6 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-3xl md:text-7xl font-bold text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic font-black">pagamentos.</span></h1>
           <p className="text-sm md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
         </div>
@@ -474,8 +474,8 @@ function App() {
       <main className="flex-1 flex flex-col items-center justify-start md:justify-center p-4 pt-6 md:p-8">
         {!isSuccess ? (
           <div className="w-full max-w-3xl animate-in fade-in zoom-in-95 duration-700">
-            {/* Top Navigation - Tighter on mobile */}
-            <div className="flex flex-row justify-between items-center gap-4 mb-6 md:mb-10 px-1">
+            {/* Top Navigation - Tighter on desktop */}
+            <div className="flex flex-row justify-between items-center gap-4 mb-6 md:mb-6 px-1">
               <button onClick={() => setView('welcome')} className="flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-[9px] md:text-xs font-bold uppercase tracking-widest"><Home className="w-3.5 h-3.5 md:w-4 md:h-4" /> Início</button>
               <div className="flex gap-2 md:gap-4">
                 <button onClick={clearDraft} className="flex items-center gap-1.5 text-danger hover:opacity-80 transition-opacity text-[8px] md:text-[10px] font-bold uppercase"><Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5" /> Limpar</button>
@@ -483,8 +483,8 @@ function App() {
               </div>
             </div>
 
-            {/* Title Section - Reduced gaps */}
-            <div className="mb-6 md:mb-12 text-center md:text-left">
+            {/* Title Section - Reduced gaps on desktop */}
+            <div className="mb-6 md:mb-6 text-center md:text-left">
                <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1 block">Financeiro</span>
                <h1 className="text-2xl md:text-5xl font-bold text-slate-900 tracking-tighter mb-1">Nova Solicitação</h1>
                <p className="text-xs md:text-base text-slate-500 font-medium">Preencha os dados para registrar o pagamento.</p>
@@ -492,7 +492,8 @@ function App() {
 
             <Stepper currentStep={step} />
 
-            <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-5 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-50 mb-6 md:mb-10">
+            {/* Main Content Box - Reduced padding and margin bottom on desktop */}
+            <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-5 md:p-8 shadow-2xl shadow-slate-200/50 border border-slate-50 mb-6 md:mb-6">
               {step === 0 && renderStep1()}
               {step === 1 && renderStep2()}
               {step === 2 && renderStep3()}
@@ -500,7 +501,8 @@ function App() {
               {step === 4 && renderReview()}
             </div>
 
-            <div className="flex justify-between items-center pt-6 md:pt-8 border-t border-slate-200">
+            {/* Footer Navigation - Reduced padding top on desktop */}
+            <div className="flex justify-between items-center pt-6 md:pt-4 border-t border-slate-200">
               <button onClick={prevStep} className={`flex items-center gap-1.5 md:gap-2 text-slate-400 hover:text-slate-600 font-bold text-xs md:text-sm transition-all ${step === 0 ? 'invisible' : ''}`}><ChevronLeft className="w-4 h-4 md:w-5 md:h-5" /> Voltar</button>
               {step < 4 ? (
                 <Button onClick={nextStep} size="md" className="rounded-xl px-6 md:px-10 py-3 md:py-4 shadow-xl text-xs md:text-base">Próximo <ChevronRight className="w-4 h-4 md:w-5 md:h-5 ml-1.5" /></Button>

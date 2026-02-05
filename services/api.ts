@@ -57,15 +57,16 @@ export const fetchPaymentAccounts = async () => {
 
 // Upload File to Supabase Storage
 export const uploadInvoice = async (file: File): Promise<string> => {
-  const fileExt = file.name.split('.').pop();
-  // Extremely safe filename: timestamp + random string
-  const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+  const fileExt = file.name.split('.').pop() || 'bin';
+  // Use a safe, unique path structure: bucket/timestamp_random.ext
+  const safeFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
   const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(fileName, file, {
+    .upload(safeFileName, file, {
       cacheControl: '3600',
-      upsert: false
+      upsert: false,
+      contentType: file.type || undefined // Explicitly pass content type
     });
 
   if (error) {
@@ -75,7 +76,7 @@ export const uploadInvoice = async (file: File): Promise<string> => {
 
   const { data: publicUrlData } = supabase.storage
     .from(BUCKET_NAME)
-    .getPublicUrl(fileName);
+    .getPublicUrl(safeFileName);
 
   return publicUrlData.publicUrl;
 };

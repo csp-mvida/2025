@@ -43,11 +43,11 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
         })}
         
         {/* Progress Line Background */}
-        <div className="absolute top-5 left-0 w-full h-[2px] bg-slate-100 -z-0"></div>
+        <div className="absolute top-[18px] left-0 w-full h-[4px] bg-slate-100 -z-0"></div>
         
         {/* Active Progress Line */}
         <div 
-          className="absolute top-5 left-0 h-[2px] bg-primary transition-all duration-700 ease-in-out -z-0"
+          className="absolute top-[18px] left-0 h-[4px] bg-primary transition-all duration-700 ease-in-out -z-0"
           style={{ width: `${(currentStep / (STEPS.length - 1)) * 100}%` }}
         ></div>
       </div>
