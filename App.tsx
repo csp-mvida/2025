@@ -94,9 +94,12 @@ function App() {
           setFormData(prev => ({ ...prev, boletoUrl: url }));
         }
         toast.success(isInvoice ? 'Nota fiscal enviada!' : 'Boleto enviado!', { id: toastId });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Upload error", error);
-        toast.error('Erro no upload. Tente novamente.', { id: toastId });
+        // Mostrar erro detalhado se disponível
+        const errorMsg = error.message || 'Erro desconhecido';
+        toast.error(`Falha no upload: ${errorMsg}`, { id: toastId });
+        
         if (isInvoice) {
            setFormData(prev => ({ ...prev, invoiceFileMeta: undefined, invoiceUrl: '' }));
         } else {
