@@ -4,7 +4,7 @@ export interface Department {
   active: boolean;
 }
 
-export type RequestStatus = 'pending' | 'approved' | 'paid' | 'rejected';
+export type RequestStatus = 'pending' | 'approved' | 'paid' | 'rejected' | 'draft';
 
 export interface CSPFormData {
   // Step 1: Identification

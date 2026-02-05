@@ -3,6 +3,7 @@ import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
 const STORAGE_BUCKET = 'uploads'; // Nome do bucket centralizado
 const TABLE_NAME = 'payment_requests';
+const PLACEHOLDER_UUID = '00000000-0000-0000-0000-000000000000';
 
 // Fetch Departments from Supabase
 export const fetchDepartments = async (): Promise<Department[]> => {
@@ -24,11 +25,11 @@ export const fetchDepartments = async (): Promise<Department[]> => {
   }));
 };
 
-// Fetch Authorizers from Supabase
-export const fetchAuthorizers = async () => {
+// Fetch Authorizers from Supabase (Agora retorna ID e Name)
+export const fetchAuthorizers = async (): Promise<{ id: string; name: string }[]> => {
   const { data, error } = await supabase
     .from('authorizers')
-    .select('name')
+    .select('id, name')
     .eq('is_active', true);
 
   if (error) {
@@ -36,14 +37,14 @@ export const fetchAuthorizers = async () => {
     return [];
   }
 
-  return data.map(a => a.name);
+  return data.map(a => ({ id: a.id, name: a.name }));
 };
 
-// Fetch Payment Accounts from Supabase
-export const fetchPaymentAccounts = async () => {
+// Fetch Payment Accounts from Supabase (Agora retorna ID e Label)
+export const fetchPaymentAccounts = async (): Promise<{ id: string; label: string }[]> => {
   const { data, error } = await supabase
     .from('payment_accounts')
-    .select('label')
+    .select('id, label')
     .eq('is_active', true)
     .order('label');
 
@@ -52,7 +53,7 @@ export const fetchPaymentAccounts = async () => {
     return [];
   }
 
-  return data.map(a => a.label);
+  return data.map(a => ({ id: a.id, label: a.label }));
 };
 
 /**
@@ -64,7 +65,8 @@ export const fetchPaymentAccounts = async () => {
  */
 export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', protocolId: string): Promise<string> => {
   const fileExt = file.name.split('.').pop() || 'bin';
-  const subfolder = type === 'invoice' ? 'invoices' : 'boletos';
+  // Usando 'notas_fiscais' para invoices e 'boletos' para boletos
+  const subfolder = type === 'invoice' ? 'notas_fiscais' : 'boletos'; 
   
   // Novo path: subfolder/protocolId/timestamp_random.ext
   const safeFileName = `${subfolder}/${protocolId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
@@ -86,7 +88,6 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
 
   if (error) {
     console.error('[storage-upload] Detailed Error:', error);
-    // Throw the error object itself, which might contain more details
     throw new Error(error.message || 'Falha desconhecida no upload do Supabase Storage.');
   }
 
@@ -98,13 +99,91 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
   return publicUrlData.publicUrl;
 };
 
-export const submitRequest = async (data: CSPFormData, requestId: string): Promise<boolean> => {
+/**
+ * Cria um registro inicial no banco de dados com status DRAFT.
+ * Isso garante que o protocolo exista antes de qualquer upload.
+ */
+export const createDraftRequest = async (requestId: string): Promise<boolean> => {
+  const dbPayload = {
+    protocol: requestId,
+    status: 'draft',
+    // Preenchendo campos obrigatórios com placeholders para evitar erro 400
+    requester_name: 'Rascunho',
+    requester_whatsapp: '(00) 00000-0000',
+    department_id: PLACEHOLDER_UUID,
+    authorizer_id: PLACEHOLDER_UUID,
+    due_date: new Date().toISOString().split('T')[0],
+    payment_account_id: PLACEHOLDER_UUID,
+    vendor_name: 'Rascunho',
+    amount_cents: 0,
+    payment_method: 'PIX',
+    description: 'Rascunho de solicitação',
+    invoice_commitment: false,
+    agreed_terms: false,
+    urgent: false,
+  };
+
+  try {
+    // Usamos upsert para garantir que se o rascunho já existir (ex: refresh), ele não falhe
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .upsert([dbPayload], { onConflict: 'protocol' });
+
+    if (error) {
+      console.error('[createDraftRequest] Supabase DB Upsert Error:', JSON.stringify(error, null, 2));
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[createDraftRequest] Save failed", e);
+    return false;
+  }
+};
+
+/**
+ * Atualiza o registro DRAFT com a URL do anexo após um upload bem-sucedido.
+ */
+export const updateRequestAttachments = async (
+  protocolId: string, 
+  type: 'invoice' | 'boleto', 
+  url: string
+): Promise<boolean> => {
+  const payload = type === 'invoice' 
+    ? { invoice_attachment_path: url } 
+    : { boleto_attachment_path: url };
+
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .update(payload)
+    .eq('protocol', protocolId);
+
+  if (error) {
+    console.error('[updateRequestAttachments] Supabase DB Update Error:', JSON.stringify(error, null, 2));
+    return false;
+  }
+  return true;
+};
+
+
+/**
+ * Finaliza a solicitação, atualizando o registro DRAFT para PENDING e preenchendo todos os dados.
+ */
+export const submitRequest = async (
+  data: CSPFormData, 
+  requestId: string, 
+  authorizerId: string, 
+  paymentAccountId: string, 
+  isUrgent: boolean
+): Promise<boolean> => {
+  
+  // Nota: invoice_attachment_path e boleto_attachment_path já devem estar preenchidos
+  // via updateRequestAttachments, mas incluímos aqui para garantir que o valor final
+  // (se for 'Pendente via WhatsApp') seja salvo corretamente.
   const url_anexo = data.hasInvoice === 'yes' && data.invoiceUrl 
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
   const dbPayload = {
-    protocol: requestId,
     requester_name: data.requesterName,
     requester_whatsapp: data.whatsapp,
     department_id: data.departmentId,
@@ -114,30 +193,41 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
     amount_cents: parseInt(data.value),
     payment_method: data.paymentMethod,
     pix_key: data.pixKey || null,
-    status: 'pending',
+    status: 'pending', // Status final
     invoice_attachment_path: url_anexo,
     boleto_attachment_path: data.boletoUrl || null,
     is_budget_specific: data.isSpecificBudget === 'yes',
-    authorization_number: data.authNumber || null
+    budget_id: null, // budget_id é nullable
+    authorization_number: data.authNumber || null,
+    authorizer_id: authorizerId, // UUID obrigatório
+    payment_account_id: paymentAccountId, // UUID obrigatório
+    agreed_terms: data.termsAccepted, // Boolean obrigatório
+    urgent: isUrgent, // Boolean obrigatório
+    invoice_commitment: data.invoiceSentViaWhatsapp, // Boolean obrigatório
   };
 
   try {
+    // Usamos UPDATE no registro DRAFT existente
     const { error } = await supabase
       .from(TABLE_NAME)
-      .insert([dbPayload]);
+      .update(dbPayload)
+      .eq('protocol', requestId);
 
     if (error) {
-      console.error('Supabase DB Insert Error:', error);
+      // Log detalhado do erro (Tarefa 1)
+      console.error('Supabase DB Update Error (Final Submission):', JSON.stringify(error, null, 2));
       return false;
     }
 
     return true;
 
   } catch (e) {
-    console.error("Save failed", e);
+    console.error("Final submission failed", e);
     return false;
   }
 };
+
+// Funções de leitura (mantidas, mas agora os dados de autorizador/conta virão do DB)
 
 export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
   const { data, error } = await supabase
@@ -150,22 +240,24 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     return null;
   }
 
+  // Nota: authorizer e paymentAccount são strings no CSPFormData, mas o DB armazena IDs.
+  // Para simplificar, mantemos strings vazias aqui, pois o RequestTracker não exibe esses campos.
   return {
     id: data.protocol,
     requesterName: data.requester_name,
     whatsapp: data.requester_whatsapp,
     departmentId: data.department_id,
-    authorizer: '',
+    authorizer: '', // Não mapeado de volta para nome aqui
     dueDate: data.due_date,
-    paymentAccount: '',
+    paymentAccount: '', // Não mapeado de volta para label aqui
     isSpecificBudget: data.is_budget_specific ? 'yes' : 'no',
     supplierName: data.vendor_name,
     value: data.amount_cents.toString(),
     paymentMethod: data.payment_method,
     hasInvoice: data.invoice_attachment_path ? 'yes' : 'no',
-    invoiceSentViaWhatsapp: false,
+    invoiceSentViaWhatsapp: data.invoice_commitment, // Mapeando de volta
     description: data.description,
-    termsAccepted: true,
+    termsAccepted: data.agreed_terms, // Mapeando de volta
     createdAt: data.created_at,
     status: data.status as RequestStatus,
     invoiceUrl: data.invoice_attachment_path,
@@ -198,9 +290,9 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     value: req.amount_cents.toString(),
     paymentMethod: req.payment_method,
     hasInvoice: req.invoice_attachment_path ? 'yes' : 'no',
-    invoiceSentViaWhatsapp: false,
+    invoiceSentViaWhatsapp: req.invoice_commitment,
     description: req.description,
-    termsAccepted: true,
+    termsAccepted: req.agreed_terms,
     createdAt: req.created_at,
     status: req.status as RequestStatus,
     boletoUrl: req.boleto_attachment_path,

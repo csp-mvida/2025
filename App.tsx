@@ -3,7 +3,10 @@ import { Toaster, toast } from 'react-hot-toast';
 import { INITIAL_DATA, CSPFormData, Department, ValidationErrors } from './types';
 import { URGENCY_THRESHOLD_HOURS, SPECIFIC_BUDGET_OPTIONS } from './constants';
 import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency, generateId } from './utils/formatters';
-import { fetchDepartments, fetchAuthorizers, fetchPaymentAccounts, submitRequest, uploadInvoice } from './services/api';
+import { 
+  fetchDepartments, fetchAuthorizers, fetchPaymentAccounts, 
+  submitRequest, uploadInvoice, createDraftRequest, updateRequestAttachments 
+} from './services/api';
 
 // Components
 import { Stepper } from './components/Stepper';
@@ -27,8 +30,8 @@ function App() {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<CSPFormData>({ ...INITIAL_DATA, boletoUrl: '' });
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [authorizers, setAuthorizers] = useState<string[]>([]);
-  const [paymentAccounts, setPaymentAccounts] = useState<string[]>([]);
+  const [authorizers, setAuthorizers] = useState<{ id: string; name: string }[]>([]);
+  const [paymentAccounts, setPaymentAccounts] = useState<{ id: string; label: string }[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false); 
@@ -40,13 +43,21 @@ function App() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [showTimeInput, setShowTimeInput] = useState(false);
   
-  // Novo estado para o ID do protocolo, gerado ao iniciar o formulário
+  // ID do protocolo, gerado ao iniciar o formulário
   const [currentProtocolId, setCurrentProtocolId] = useState(generateId());
 
   const isUrgent = checkUrgency(formData.dueDate);
 
   const getDateValue = () => formData.dueDate ? formData.dueDate.split('T')[0] : '';
   const getTimeValue = () => formData.dueDate && formData.dueDate.includes('T') ? formData.dueDate.split('T')[1].substring(0, 5) : '';
+
+  // Função para criar o rascunho inicial no DB
+  const createInitialDraft = useCallback(async (protocolId: string) => {
+    const success = await createDraftRequest(protocolId);
+    if (!success) {
+      console.error(`Falha ao criar rascunho inicial para o protocolo ${protocolId}.`);
+    }
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -63,7 +74,10 @@ function App() {
 
     const saved = localStorage.getItem('csp_draft');
     if (saved) setHasSavedDraft(true);
-  }, []);
+    
+    // Cria ou garante que o registro DRAFT exista para este ID
+    createInitialDraft(currentProtocolId);
+  }, [currentProtocolId, createInitialDraft]);
 
   const handleChange = (field: keyof CSPFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -90,8 +104,17 @@ function App() {
       }
 
       try {
-        // Passa o ID do protocolo atual para o serviço de upload
+        // 1. Upload para o Storage usando o protocolo como subpasta
         const url = await uploadInvoice(file, type, currentProtocolId); 
+        
+        // 2. Atualiza o registro DRAFT no DB com a URL
+        const updateSuccess = await updateRequestAttachments(currentProtocolId, type, url);
+
+        if (!updateSuccess) {
+             throw new Error('Falha ao salvar URL do anexo no banco de dados.');
+        }
+
+        // 3. Atualiza o estado local
         if (isInvoice) {
           setFormData(prev => ({ ...prev, invoiceUrl: url }));
         } else {
@@ -157,14 +180,26 @@ function App() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Usa o ID gerado no início do formulário
-    if (await submitRequest(formData, currentProtocolId)) {
+    
+    // Mapeamento de IDs obrigatório para o payload do Supabase
+    const selectedAuthorizer = authorizers.find(a => a.name === formData.authorizer);
+    const selectedAccount = paymentAccounts.find(p => p.label === formData.paymentAccount);
+    const isUrgent = checkUrgency(formData.dueDate);
+
+    if (!selectedAuthorizer || !selectedAccount) {
+        toast.error('Erro de mapeamento: Autorizador ou Conta de Pagamento não encontrados. Tente novamente.');
+        setIsSubmitting(false);
+        return;
+    }
+
+    // Submissão final (Atualiza DRAFT para PENDING)
+    if (await submitRequest(formData, currentProtocolId, selectedAuthorizer.id, selectedAccount.id, isUrgent)) {
       setGeneratedId(currentProtocolId);
       setIsSuccess(true);
       localStorage.removeItem('csp_draft');
       toast.success('Solicitação enviada com sucesso!');
     } else {
-      toast.error('Erro ao enviar solicitação.');
+      toast.error('Erro ao enviar solicitação. Verifique o console para detalhes do erro.');
     }
     setIsSubmitting(false);
   };
@@ -173,7 +208,7 @@ function App() {
     setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setStep(0);
     setIsSuccess(false);
-    setCurrentProtocolId(generateId()); // Gera um novo ID para o próximo formulário
+    setCurrentProtocolId(generateId()); // Gera um novo ID, que dispara o useEffect para criar um novo rascunho
     setView('welcome');
   };
 
@@ -205,7 +240,7 @@ function App() {
       </Select>
       <Select label="Quem autorizou?" value={formData.authorizer} onChange={e => handleChange('authorizer', e.target.value)} required error={errors.authorizer}>
         <option value="">Selecione...</option>
-        {authorizers.map(a => <option key={a} value={a}>{a}</option>)}
+        {authorizers.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
       </Select>
       <div className="md:col-span-2">
         <label className="block text-sm font-medium text-slate-700 mb-1.5">Vencimento do Pagamento <span className="text-accent">*</span></label>
@@ -253,7 +288,7 @@ function App() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Select label="Conta de Pagamento" value={formData.paymentAccount} onChange={e => handleChange('paymentAccount', e.target.value)} required error={errors.paymentAccount}>
         <option value="">Selecione...</option>
-        {paymentAccounts.map(p => <option key={p} value={p}>{p}</option>)}
+        {paymentAccounts.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
       </Select>
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1.5">Verba Específica? <span className="text-accent">*</span></label>
