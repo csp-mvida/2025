@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Search, ChevronLeft, Clock, CheckCircle, X, AlertTriangle, FileText, Download } from './ui/Icons';
+import { Search, ChevronLeft, Clock, CheckCircle, X, AlertTriangle, FileText, Download, RefreshCw } from './ui/Icons';
 import { getRequestByProtocol } from '../services/api';
 import { CSPRequest, RequestStatus, Department } from '../types';
 import { formatCurrency } from '../utils/formatters';
