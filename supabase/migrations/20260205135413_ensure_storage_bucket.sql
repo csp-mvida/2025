@@ -6,17 +6,17 @@ ON CONFLICT (id) DO NOTHING;
 -- Habilita RLS no storage.objects
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
--- Permite leitura pública
+-- Permite leitura pública (para qualquer um ver o anexo)
 DROP POLICY IF EXISTS "Public Access" ON storage.objects;
 CREATE POLICY "Public Access" ON storage.objects
 FOR SELECT USING (bucket_id = 'comprovantes');
 
--- Permite inserção pública (Upload)
+-- Permite inserção pública (Upload) para usuários anônimos
 DROP POLICY IF EXISTS "Public Upload" ON storage.objects;
 CREATE POLICY "Public Upload" ON storage.objects
-FOR INSERT WITH CHECK (bucket_id = 'comprovantes');
+FOR INSERT TO anon WITH CHECK (bucket_id = 'comprovantes');
 
--- Permite atualização pública
+-- Permite atualização pública (se necessário, mas geralmente não para uploads anônimos)
 DROP POLICY IF EXISTS "Public Update" ON storage.objects;
 CREATE POLICY "Public Update" ON storage.objects
 FOR UPDATE USING (bucket_id = 'comprovantes');
