@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 import { INITIAL_DATA, CSPFormData, Department, ValidationErrors } from './types';
 import { URGENCY_THRESHOLD_HOURS, SPECIFIC_BUDGET_OPTIONS } from './constants';
 import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency, generateId } from './utils/formatters';
@@ -13,7 +14,7 @@ import { OrientationDrawer } from './components/OrientationDrawer';
 import { 
   CheckCircle, UploadCloud, FileText, 
   ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, 
-  Home, Lock, Copy, Search, Trash2, Save, Info, Clock
+  Home, Lock, Copy, Search, Trash2, Save, Info, Clock, X
 }
 from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -24,7 +25,7 @@ import { RequestTracker } from './components/RequestTracker';
 function App() {
   const [view, setView] = useState<'welcome' | 'form' | 'login' | 'admin' | 'track'>('welcome');
   const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<CSPFormData>(INITIAL_DATA);
+  const [formData, setFormData] = useState<CSPFormData>({ ...INITIAL_DATA, boletoUrl: '' });
   const [departments, setDepartments] = useState<Department[]>([]);
   const [authorizers, setAuthorizers] = useState<string[]>([]);
   const [paymentAccounts, setPaymentAccounts] = useState<string[]>([]);
@@ -75,6 +76,8 @@ function App() {
       const file = e.target.files[0];
       const isInvoice = type === 'invoice';
       
+      const toastId = toast.loading(isInvoice ? 'Enviando nota fiscal...' : 'Enviando boleto...');
+
       if (isInvoice) {
         setFormData(prev => ({ ...prev, invoiceFileMeta: { name: file.name, size: file.size } }));
         setIsUploading(true);
@@ -89,6 +92,15 @@ function App() {
           setFormData(prev => ({ ...prev, invoiceUrl: url }));
         } else {
           setFormData(prev => ({ ...prev, boletoUrl: url }));
+        }
+        toast.success(isInvoice ? 'Nota fiscal enviada!' : 'Boleto enviado!', { id: toastId });
+      } catch (error) {
+        console.error("Upload error", error);
+        toast.error('Erro no upload. Tente novamente.', { id: toastId });
+        if (isInvoice) {
+           setFormData(prev => ({ ...prev, invoiceFileMeta: undefined, invoiceUrl: '' }));
+        } else {
+           setFormData(prev => ({ ...prev, boletoFileMeta: undefined, boletoUrl: '' }));
         }
       } finally {
         if (isInvoice) setIsUploading(false);
@@ -132,12 +144,15 @@ function App() {
       setGeneratedId(id);
       setIsSuccess(true);
       localStorage.removeItem('csp_draft');
+      toast.success('Solicitação enviada com sucesso!');
+    } else {
+      toast.error('Erro ao enviar solicitação.');
     }
     setIsSubmitting(false);
   };
 
   const resetForm = () => {
-    setFormData(INITIAL_DATA);
+    setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setStep(0);
     setIsSuccess(false);
     setView('welcome');
@@ -147,12 +162,14 @@ function App() {
     const { invoiceFile, ...data } = formData;
     localStorage.setItem('csp_draft', JSON.stringify(data));
     setHasSavedDraft(true);
+    toast.success('Rascunho salvo localmente!');
   };
 
   const clearDraft = () => {
     localStorage.removeItem('csp_draft');
-    setFormData(INITIAL_DATA);
+    setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setHasSavedDraft(false);
+    toast.success('Dados limpos.');
   };
 
   const renderStep1 = () => (
@@ -377,7 +394,7 @@ function App() {
         <p className="text-[10px] uppercase font-black text-slate-300 tracking-[0.3em] mb-4">Código do Protocolo</p>
         <div className="flex flex-col md:flex-row items-center justify-center gap-4">
           <span className="text-2xl md:text-4xl font-mono font-black text-slate-900 tracking-tighter">{generatedId}</span>
-          <button onClick={() => { navigator.clipboard.writeText(generatedId); setIsIdCopied(true); setTimeout(() => setIsIdCopied(false), 2000); }} className={`p-3 rounded-xl md:rounded-2xl transition-all ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-primary/10 hover:text-primary'}`}>
+          <button onClick={() => { navigator.clipboard.writeText(generatedId); setIsIdCopied(true); setTimeout(() => setIsIdCopied(false), 2000); toast.success('Protocolo copiado!'); }} className={`p-3 rounded-xl md:rounded-2xl transition-all ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-primary/10 hover:text-primary'}`}>
             <Copy className="w-5 h-5" />
           </button>
         </div>
@@ -392,6 +409,7 @@ function App() {
 
   if (view === 'welcome') return (
     <div className="min-h-screen relative flex flex-col bg-slate-50 overflow-x-hidden">
+      <Toaster position="top-right" />
       <BackgroundAnimation />
       <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
       
@@ -435,7 +453,7 @@ function App() {
             <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-2xl py-5 md:py-6 text-lg md:text-xl font-black shadow-2xl">Criar Solicitação</Button>
           </div>
           <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-2xl py-5 md:py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-base md:text-lg">Acompanhar Pedido</Button>
-          {hasSavedDraft && <button onClick={() => { setFormData(JSON.parse(localStorage.getItem('csp_draft')!)); setView('form'); }} className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-2 justify-center hover:text-primary transition-colors mt-2"><RefreshCw className="w-3 h-3" /> Continuar rascunho</button>}
+          {hasSavedDraft && <button onClick={() => { setFormData(JSON.parse(localStorage.getItem('csp_draft')!)); setView('form'); toast.success('Rascunho carregado!'); }} className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-2 justify-center hover:text-primary transition-colors mt-2"><RefreshCw className="w-3 h-3" /> Continuar rascunho</button>}
         </div>
       </div>
     </div>
@@ -443,10 +461,11 @@ function App() {
 
   if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
   if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
-  if (view === 'track') return <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6"><BackgroundAnimation />{renderHeader()}<RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
+  if (view === 'track') return <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6"><Toaster position="top-right" /><BackgroundAnimation />{renderHeader()}<RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pt-12 md:pt-16 selection:bg-primary/10">
+      <Toaster position="top-right" />
       <BackgroundAnimation />
       {renderHeader()}
       <main className="flex-1 flex flex-col items-center justify-start md:justify-center p-4 pt-6 md:p-8">
