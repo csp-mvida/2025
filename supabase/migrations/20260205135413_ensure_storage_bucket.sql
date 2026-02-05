@@ -1,20 +1,22 @@
--- Garantir que o bucket 'comprovantes' exista
+-- Cria o bucket 'comprovantes' se ele não existir
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('comprovantes', 'comprovantes', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Definir política para permitir que qualquer pessoa visualize os arquivos (Público)
-CREATE POLICY "Acesso Público para Visualização"
-ON storage.objects FOR SELECT
-USING ( bucket_id = 'comprovantes' );
+-- Habilita RLS no storage.objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
--- Definir política para permitir uploads (por usuários autenticados ou anônimos, dependendo do seu fluxo)
--- Para este sistema, permitiremos inserção anônima para facilitar o uso sem login obrigatório do solicitante
-CREATE POLICY "Permitir Uploads"
-ON storage.objects FOR INSERT
-WITH CHECK ( bucket_id = 'comprovantes' );
+-- Permite leitura pública
+DROP POLICY IF EXISTS "Public Access" ON storage.objects;
+CREATE POLICY "Public Access" ON storage.objects
+FOR SELECT USING (bucket_id = 'comprovantes');
 
--- Permitir exclusão/atualização se necessário (opcional, mas bom para manutenção)
-CREATE POLICY "Permitir Atualização e Exclusão"
-ON storage.objects FOR ALL
-USING ( bucket_id = 'comprovantes' );
+-- Permite inserção pública (Upload)
+DROP POLICY IF EXISTS "Public Upload" ON storage.objects;
+CREATE POLICY "Public Upload" ON storage.objects
+FOR INSERT WITH CHECK (bucket_id = 'comprovantes');
+
+-- Permite atualização pública
+DROP POLICY IF EXISTS "Public Update" ON storage.objects;
+CREATE POLICY "Public Update" ON storage.objects
+FOR UPDATE USING (bucket_id = 'comprovantes');

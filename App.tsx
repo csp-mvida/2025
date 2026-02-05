@@ -439,7 +439,7 @@ function App() {
         </div>
       </header>
 
-      {/* Main container: Adjusted padding and margins for mobile full screen */}
+      {/* Main container: Reverted mobile layout to original, using flex-1 and justify-center */}
       <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-4 pt-8 md:p-8 relative z-10 text-center">
         <img 
           src="/logo.png" 
