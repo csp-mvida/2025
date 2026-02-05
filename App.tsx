@@ -411,7 +411,7 @@ function App() {
         <img 
           src="/logo.png" 
           alt="Logo" 
-          className="h-12 md:h-24 mb-8 md:mb-12 drop-shadow-2xl animate-fade-up" 
+          className="h-12 md:h-24 mb-8 md:mb-12 md:-mt-20 drop-shadow-2xl animate-fade-up" 
         />
         <div className="space-y-4 md:space-y-6 max-w-3xl mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-3xl md:text-7xl font-bold text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic font-black">pagamentos.</span></h1>
