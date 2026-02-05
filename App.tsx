@@ -353,22 +353,14 @@ function App() {
       <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
       
       <header className="relative z-30">
-        <div className="bg-primary py-5 px-6 flex justify-between items-center shadow-lg border-b border-primaryDark">
-          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white/70 font-bold text-[9px] uppercase tracking-[0.2em] hover:text-white transition-colors">
-            <Lock className="w-3.5 h-3.5" /> Administração
+        <div className="bg-primary py-3 px-6 flex justify-between items-center shadow-lg">
+          <div className="w-24 md:w-32" /> {/* Spacer */}
+          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
+            <Lock className="w-4 h-4" /> Acesso Administrativo
           </button>
-          
-          <button 
-            onClick={() => setIsInfoOpen(true)} 
-            className="group flex items-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 rounded-full transition-all active:scale-95 shadow-lg"
-          >
-            <div className="bg-white/10 p-1.5 rounded-full group-hover:bg-white/20 transition-colors">
-               <Info className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-white font-black text-[11px] md:text-xs uppercase tracking-[0.1em]">Regras e Prazos</span>
+          <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
+            <Info className="w-4 h-4" /> Regras e Prazos
           </button>
-
-          <div className="w-24 hidden md:block" /> {/* Spacer for symmetry */}
         </div>
       </header>
 
