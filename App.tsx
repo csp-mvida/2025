@@ -38,7 +38,7 @@ function App() {
   
   // Draft Management State
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
-  const [draftLoaded, setDraftLoaded] = useState(false);
+  // Removed draftLoaded state
 
   // Derived State
   const isUrgent = checkUrgency(formData.dueDate);
@@ -46,6 +46,15 @@ function App() {
   // Helper to get split date/time values safely
   const getDateValue = () => formData.dueDate ? formData.dueDate.split('T')[0] : '';
   const getTimeValue = () => formData.dueDate && formData.dueDate.includes('T') ? formData.dueDate.split('T')[1].substring(0, 5) : '';
+
+  // Helper to check if form is essentially empty (excluding file objects)
+  const isFormEmpty = useCallback((data: CSPFormData) => {
+    const { invoiceFile, boletoFile, invoiceFileMeta, boletoFileMeta, ...dataToCheck } = data;
+    const { invoiceFile: initialInv, boletoFile: initialBol, invoiceFileMeta: initialInvMeta, boletoFileMeta: initialBolMeta, ...initialDataToCheck } = INITIAL_DATA;
+    
+    // Check if all non-file fields match the initial state
+    return JSON.stringify(dataToCheck) === JSON.stringify(initialDataToCheck);
+  }, []);
 
   // Load Initial Data & Check Draft
   useEffect(() => {
@@ -64,19 +73,38 @@ function App() {
 
     const savedDraft = localStorage.getItem('csp_draft');
     if (savedDraft) {
-      setHasSavedDraft(true);
-    } else {
-      setDraftLoaded(true); 
+      try {
+        const parsed = JSON.parse(savedDraft);
+        // Only set hasSavedDraft if the parsed data is not empty
+        if (!isFormEmpty(parsed as CSPFormData)) {
+          setHasSavedDraft(true);
+        } else {
+          // If the saved draft is empty (due to previous auto-save bug), discard it
+          localStorage.removeItem('csp_draft');
+        }
+      } catch (e) {
+        console.error("Failed to parse draft", e);
+        localStorage.removeItem('csp_draft');
+      }
     }
-  }, []);
+  }, [isFormEmpty]);
 
   // Auto-Save Draft Logic
   useEffect(() => {
-    if (!isSuccess && draftLoaded) {
+    // If the form is empty, ensure no draft is saved and hasSavedDraft is false
+    if (isFormEmpty(formData)) {
+        localStorage.removeItem('csp_draft');
+        setHasSavedDraft(false);
+        return;
+    }
+    
+    // Only auto-save if we are not on the success screen AND the form is not empty
+    if (!isSuccess) {
       const { invoiceFile, boletoFile, ...dataToSave } = formData;
       localStorage.setItem('csp_draft', JSON.stringify(dataToSave));
+      setHasSavedDraft(true); // Ensure the welcome screen reflects the new draft
     }
-  }, [formData, isSuccess, draftLoaded]);
+  }, [formData, isSuccess, isFormEmpty]);
 
   // Draft Actions
   const handleRestoreDraft = () => {
@@ -91,7 +119,6 @@ function App() {
       }
     }
     setHasSavedDraft(false); 
-    setDraftLoaded(true);    
     setView('form');   
   };
 
@@ -99,12 +126,16 @@ function App() {
     localStorage.removeItem('csp_draft');
     setFormData(INITIAL_DATA);
     setHasSavedDraft(false);
-    setDraftLoaded(true);
   };
 
   const handleManualSave = () => {
+    if (isFormEmpty(formData)) {
+        alert("Não há dados para salvar.");
+        return;
+    }
     const { invoiceFile, boletoFile, ...dataToSave } = formData;
     localStorage.setItem('csp_draft', JSON.stringify(dataToSave));
+    setHasSavedDraft(true);
     const btn = document.getElementById('btn-save-draft');
     if (btn) {
       const originalText = btn.innerHTML;
@@ -116,6 +147,8 @@ function App() {
   const handleStartRequest = () => {
     setView('form');
     window.scrollTo(0,0);
+    // When starting a new request, we clear the draft flag, as the user is now actively editing.
+    setHasSavedDraft(false);
   };
 
   // Handlers
@@ -219,6 +252,7 @@ function App() {
     if (window.confirm("Tem certeza que deseja limpar o rascunho?")) {
       setFormData(INITIAL_DATA);
       localStorage.removeItem('csp_draft');
+      setHasSavedDraft(false);
       setStep(0);
       setErrors({});
     }
@@ -760,7 +794,7 @@ function App() {
               checked={formData.invoiceSentViaWhatsapp}
               onChange={e => handleChange('invoiceSentViaWhatsapp', e.target.checked)}
              />
-             <span className="text-[11px] text-slate-600">Comprometo-me a enviar via WhatsApp.</span>
+             <span className="text-xs md:text-sm font-medium text-slate-800">Comprometo-me a enviar via WhatsApp.</span>
            </label>
            {errors.invoiceSentViaWhatsapp && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.invoiceSentViaWhatsapp}</p>}
         </div>
@@ -886,7 +920,7 @@ function App() {
             <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
               <button 
                 onClick={() => setView('login')}
-                className="flex items-center gap-1.5 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
+                className="flex items-center gap-1.5 md:gap-2 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
               >
                 <Lock className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
                 Acesso Restrito <span className="text-green-300">Admin</span>
@@ -933,7 +967,8 @@ function App() {
               </div>
 
               <div className="flex justify-center md:justify-end gap-2 mb-3">
-                 {Object.values(formData).some(v => v !== '' && v !== 'no' && v !== false) && (
+                 {/* Check if form is NOT empty to show clear draft button */}
+                 {!isFormEmpty(formData) && (
                    <button onClick={clearDraft} className="text-[10px] text-danger font-bold hover:underline flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 transition-all">
                      <Trash2 className="w-3 h-3" /> Limpar Rascunho
                    </button>

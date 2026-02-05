@@ -9,7 +9,7 @@ export const generatePDF = (data: CSPFormData, departments: Department[]) => {
   const currentTime = new Date().toLocaleTimeString('pt-BR');
 
   // Configuration constants
-  const margin = 20;
+  const margin = 30; // Increased margin for wider accent bar
   let cursorY = 20;
   const lineHeight = 10;
   const pageHeight = doc.internal.pageSize.height;
@@ -17,7 +17,7 @@ export const generatePDF = (data: CSPFormData, departments: Department[]) => {
   // --- HEADER ---
   // Accent Bar
   doc.setFillColor(0, 139, 90); // Brand Primary Color (approximate for #008b5a)
-  doc.rect(0, 0, 10, pageHeight, 'F');
+  doc.rect(0, 0, 15, pageHeight, 'F'); // Increased width to 15
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
@@ -57,7 +57,7 @@ export const generatePDF = (data: CSPFormData, departments: Department[]) => {
 
   // Identification
   printField('Responsável', data.requesterName);
-  printField('Departamento / Núcleo', deptName);
+  printField('Departamento / Núcleo', departments.find(d => d.id === data.departmentId)?.name || 'N/A');
 
   // Payment Details
   printField('Fornecedor', data.supplierName);
