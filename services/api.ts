@@ -67,6 +67,8 @@ export const uploadInvoice = async (file: File): Promise<string> => {
     contentType: file.type || undefined, // Use file.type if available
   };
 
+  console.log(`[storage-upload] Attempting upload to bucket: ${BUCKET_NAME} with path: ${safeFileName}`);
+
   const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
     .upload(safeFileName, file, options);
@@ -74,13 +76,14 @@ export const uploadInvoice = async (file: File): Promise<string> => {
   if (error) {
     console.error('[storage-upload] Detailed Error:', error);
     // Throw the error object itself, which might contain more details
-    throw error;
+    throw new Error(error.message || 'Falha desconhecida no upload do Supabase Storage.');
   }
 
   const { data: publicUrlData } = supabase.storage
     .from(BUCKET_NAME)
     .getPublicUrl(safeFileName);
 
+  console.log(`[storage-upload] Upload successful. Public URL: ${publicUrlData.publicUrl}`);
   return publicUrlData.publicUrl;
 };
 
