@@ -103,6 +103,8 @@ function App() {
           errorMsg = error.message;
         } else if (error.error) {
           errorMsg = error.error;
+        } else if (error.status) {
+          errorMsg = `Erro de rede/servidor: Status ${error.status}`;
         } else if (typeof error === 'string') {
           errorMsg = error;
         }
