@@ -33,6 +33,7 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
                 className={`
                   absolute -bottom-7 text-[10px] font-bold tracking-wider transition-colors duration-300 whitespace-nowrap
                   ${isCurrent ? 'text-primary' : isCompleted ? 'text-slate-500' : 'text-slate-400'}
+                  hidden md:block
                 `}
               >
                 {label}

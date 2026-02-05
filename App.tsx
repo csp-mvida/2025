@@ -296,13 +296,13 @@ function App() {
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex items-center gap-3">
             <FileText className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-slate-800">Resumo da Solicitação</h3>
+            <h3 className="font-bold text-slate-800 text-sm md:text-base">Resumo da Solicitação</h3>
           </div>
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {items.map((item, i) => (
-              <div key={i} className={`p-4 rounded-xl border border-slate-50 ${item.full ? 'md:col-span-2' : ''}`}>
+              <div key={i} className={`p-3 md:p-4 rounded-xl border border-slate-50 ${item.full ? 'md:col-span-2' : ''}`}>
                 <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{item.label}</span>
-                <span className={`block font-bold text-slate-800 ${item.color || ''}`}>{item.value}</span>
+                <span className={`block font-bold text-slate-800 text-sm md:text-base ${item.color || ''}`}>{item.value}</span>
               </div>
             ))}
           </div>
@@ -317,31 +317,31 @@ function App() {
 
   const renderHeader = () => (
     <div className="bg-white border-b border-slate-100 py-3 px-6 flex justify-center fixed top-0 w-full z-50">
-      <div className="text-[12px] font-medium text-slate-400 tracking-tight">CSP | <span className="text-slate-600">Central de Solicitação de Pagamento</span></div>
+      <div className="text-[10px] md:text-[12px] font-medium text-slate-400 tracking-tight">CSP | <span className="text-slate-600">Central de Solicitação de Pagamento</span></div>
     </div>
   );
 
   const renderSuccess = () => (
-    <div className="flex flex-col items-center justify-center py-12 animate-in zoom-in duration-500 max-w-lg mx-auto">
-      <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 ring-8 ring-primary/5">
-        <CheckCircle className="w-10 h-10 text-primary" />
+    <div className="flex flex-col items-center justify-center py-6 md:py-12 animate-in zoom-in duration-500 max-w-lg mx-auto w-full">
+      <div className="w-16 h-16 md:w-20 md:h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 ring-8 ring-primary/5">
+        <CheckCircle className="w-8 h-8 md:w-10 md:h-10 text-primary" />
       </div>
-      <h2 className="text-3xl font-black text-slate-900 mb-2">Solicitação Enviada!</h2>
-      <p className="text-slate-500 mb-10 text-center font-medium">Seu pedido foi registrado e entrará em análise.</p>
+      <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2 text-center">Solicitação Enviada!</h2>
+      <p className="text-sm md:text-base text-slate-500 mb-8 md:mb-10 text-center font-medium">Seu pedido foi registrado e entrará em análise.</p>
       
-      <div className="w-full bg-white rounded-[2.5rem] p-10 mb-10 shadow-2xl shadow-primary/10 border border-slate-50 text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-primary"></div>
+      <div className="w-full bg-white rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 mb-10 shadow-2xl shadow-primary/10 border border-slate-50 text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 md:h-1.5 bg-primary"></div>
         <p className="text-[10px] uppercase font-black text-slate-300 tracking-[0.3em] mb-4">Código do Protocolo</p>
-        <div className="flex items-center justify-center gap-4">
-          <span className="text-3xl md:text-4xl font-mono font-black text-slate-900 tracking-tighter">{generatedId}</span>
-          <button onClick={() => { navigator.clipboard.writeText(generatedId); setIsIdCopied(true); setTimeout(() => setIsIdCopied(false), 2000); }} className={`p-3 rounded-2xl transition-all ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-primary/10 hover:text-primary'}`}>
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+          <span className="text-2xl md:text-4xl font-mono font-black text-slate-900 tracking-tighter">{generatedId}</span>
+          <button onClick={() => { navigator.clipboard.writeText(generatedId); setIsIdCopied(true); setTimeout(() => setIsIdCopied(false), 2000); }} className={`p-3 rounded-xl md:rounded-2xl transition-all ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-primary/10 hover:text-primary'}`}>
             <Copy className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 w-full">
-        <Button onClick={resetForm} fullWidth size="lg" className="rounded-2xl shadow-xl py-5 font-black uppercase tracking-widest">Voltar ao Início</Button>
+        <Button onClick={resetForm} fullWidth size="lg" className="rounded-xl md:rounded-2xl shadow-xl py-4 md:py-5 font-black uppercase tracking-widest text-sm md:text-base">Voltar ao Início</Button>
         <Button variant="ghost" onClick={() => setView('track')} className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Acompanhar Status</Button>
       </div>
     </div>
@@ -353,30 +353,29 @@ function App() {
       <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
       
       <header className="relative z-30">
-        <div className="bg-primary py-3 px-6 flex justify-between items-center shadow-lg">
-          <div className="w-24 md:w-32" /> {/* Spacer */}
-          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
-            <Lock className="w-4 h-4" /> Acesso Administrativo
+        <div className="bg-primary py-3 px-4 md:px-6 flex justify-between items-center shadow-lg">
+          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
+            <Lock className="w-3.5 h-3.5 md:w-4 md:h-4" /> Administração
           </button>
-          <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
-            <Info className="w-4 h-4" /> Regras e Prazos
+          <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
+            <Info className="w-3.5 h-3.5 md:w-4 md:h-4" /> Regras e Prazos
           </button>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-8 relative z-10 text-center">
-        <img src="/logo.png" alt="Logo" className="h-24 md:h-32 mb-12 drop-shadow-2xl animate-fade-up" />
-        <div className="space-y-6 max-w-3xl mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none px-4">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
-          <p className="text-lg md:text-xl text-slate-500 font-medium px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
+      <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-6 md:p-8 relative z-10 text-center">
+        <img src="/logo.png" alt="Logo" className="h-16 md:h-32 mb-8 md:mb-12 drop-shadow-2xl animate-fade-up" />
+        <div className="space-y-4 md:space-y-6 max-w-3xl mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-3xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
+          <p className="text-base md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
         </div>
-        <div className="flex flex-col gap-5 w-full max-w-sm animate-fade-up" style={{ animationDelay: '0.2s' }}>
+        <div className="flex flex-col gap-4 w-full max-w-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-2xl py-6 text-xl font-black shadow-2xl">Criar Solicitação</Button>
+            <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-xl md:rounded-2xl py-5 md:py-6 text-lg md:text-xl font-black shadow-2xl">Criar Solicitação</Button>
           </div>
-          <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-2xl py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50">Acompanhar Pedido</Button>
-          {hasSavedDraft && <button onClick={() => { setFormData(JSON.parse(localStorage.getItem('csp_draft')!)); setView('form'); }} className="text-xs text-slate-400 font-bold flex items-center gap-2 justify-center hover:text-primary transition-colors mt-2"><RefreshCw className="w-3 h-3" /> Continuar preenchimento salvo</button>}
+          <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-xl md:rounded-2xl py-5 md:py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-base md:text-lg">Acompanhar Pedido</Button>
+          {hasSavedDraft && <button onClick={() => { setFormData(JSON.parse(localStorage.getItem('csp_draft')!)); setView('form'); }} className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-2 justify-center hover:text-primary transition-colors mt-2"><RefreshCw className="w-3 h-3" /> Continuar rascunho</button>}
         </div>
       </div>
     </div>
@@ -384,7 +383,7 @@ function App() {
 
   if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
   if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
-  if (view === 'track') return <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-6"><BackgroundAnimation />{renderHeader()}<RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
+  if (view === 'track') return <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6"><BackgroundAnimation />{renderHeader()}<RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pt-16 selection:bg-primary/10">
@@ -394,24 +393,24 @@ function App() {
         {!isSuccess ? (
           <div className="w-full max-w-3xl animate-in fade-in zoom-in-95 duration-700">
             {/* Top Navigation */}
-            <div className="flex justify-between items-center mb-10">
-              <button onClick={() => setView('welcome')} className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-xs font-bold uppercase tracking-widest"><Home className="w-4 h-4" /> Voltar ao Início</button>
-              <div className="flex gap-4">
-                <button onClick={clearDraft} className="flex items-center gap-1.5 text-danger hover:opacity-80 transition-opacity text-[10px] font-bold uppercase"><Trash2 className="w-3.5 h-3.5" /> Limpar rascunho</button>
-                <button onClick={saveDraft} className="flex items-center gap-1.5 text-primary border border-primary/20 bg-primary/5 px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-colors text-[10px] font-bold uppercase"><Save className="w-3.5 h-3.5" /> Salvar rascunho</button>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 md:mb-10">
+              <button onClick={() => setView('welcome')} className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-[10px] md:text-xs font-bold uppercase tracking-widest"><Home className="w-4 h-4" /> Voltar ao Início</button>
+              <div className="flex gap-3 md:gap-4">
+                <button onClick={clearDraft} className="flex items-center gap-1.5 text-danger hover:opacity-80 transition-opacity text-[9px] md:text-[10px] font-bold uppercase"><Trash2 className="w-3.5 h-3.5" /> Limpar</button>
+                <button onClick={saveDraft} className="flex items-center gap-1.5 text-primary border border-primary/20 bg-primary/5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-colors text-[9px] md:text-[10px] font-bold uppercase"><Save className="w-3.5 h-3.5" /> Salvar Rascunho</button>
               </div>
             </div>
 
             {/* Title Section */}
-            <div className="mb-12">
-               <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2 block">Financeiro</span>
-               <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2">Nova Solicitação</h1>
-               <p className="text-slate-500 font-medium">Preencha os dados abaixo para registrar um novo pagamento.</p>
+            <div className="mb-8 md:mb-12 text-center md:text-left">
+               <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2 block">Financeiro</span>
+               <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2">Nova Solicitação</h1>
+               <p className="text-sm md:text-base text-slate-500 font-medium">Preencha os dados abaixo para registrar um novo pagamento.</p>
             </div>
 
             <Stepper currentStep={step} />
 
-            <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-50 mb-10">
+            <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-6 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-50 mb-10">
               {step === 0 && renderStep1()}
               {step === 1 && renderStep2()}
               {step === 2 && renderStep3()}
@@ -422,10 +421,10 @@ function App() {
             <div className="flex justify-between items-center pt-8 border-t border-slate-200">
               <button onClick={prevStep} className={`flex items-center gap-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-all ${step === 0 ? 'invisible' : ''}`}><ChevronLeft className="w-5 h-5" /> Voltar</button>
               {step < 4 ? (
-                <Button onClick={nextStep} size="lg" className="rounded-xl px-10 py-4 shadow-xl">Próximo <ChevronRight className="w-5 h-5 ml-2" /></Button>
+                <Button onClick={nextStep} size="lg" className="rounded-xl px-6 md:px-10 py-3 md:py-4 shadow-xl text-sm md:text-base">Próximo <ChevronRight className="w-5 h-5 ml-2" /></Button>
               ) : (
-                <Button onClick={handleSubmit} size="lg" disabled={isSubmitting} className="rounded-xl px-10 py-4 shadow-xl bg-primaryDark">
-                  {isSubmitting ? 'Enviando...' : <span className="flex items-center gap-2">Confirmar Envio <CheckCircle className="w-5 h-5" /></span>}
+                <Button onClick={handleSubmit} size="lg" disabled={isSubmitting} className="rounded-xl px-6 md:px-10 py-3 md:py-4 shadow-xl bg-primaryDark text-sm md:text-base">
+                  {isSubmitting ? 'Enviando...' : <span className="flex items-center gap-2">Confirmar <CheckCircle className="w-5 h-5" /></span>}
                 </Button>
               )}
             </div>
