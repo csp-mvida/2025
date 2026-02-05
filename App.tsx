@@ -39,6 +39,9 @@ function App() {
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [showTimeInput, setShowTimeInput] = useState(false);
+  
+  // Novo estado para o ID do protocolo, gerado ao iniciar o formulário
+  const [currentProtocolId, setCurrentProtocolId] = useState(generateId());
 
   const isUrgent = checkUrgency(formData.dueDate);
 
@@ -87,8 +90,8 @@ function App() {
       }
 
       try {
-        // Chamada atualizada com o tipo de arquivo
-        const url = await uploadInvoice(file, type); 
+        // Passa o ID do protocolo atual para o serviço de upload
+        const url = await uploadInvoice(file, type, currentProtocolId); 
         if (isInvoice) {
           setFormData(prev => ({ ...prev, invoiceUrl: url }));
         } else {
@@ -154,9 +157,9 @@ function App() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    const id = generateId();
-    if (await submitRequest(formData, id)) {
-      setGeneratedId(id);
+    // Usa o ID gerado no início do formulário
+    if (await submitRequest(formData, currentProtocolId)) {
+      setGeneratedId(currentProtocolId);
       setIsSuccess(true);
       localStorage.removeItem('csp_draft');
       toast.success('Solicitação enviada com sucesso!');
@@ -170,6 +173,7 @@ function App() {
     setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setStep(0);
     setIsSuccess(false);
+    setCurrentProtocolId(generateId()); // Gera um novo ID para o próximo formulário
     setView('welcome');
   };
 
@@ -184,6 +188,7 @@ function App() {
     localStorage.removeItem('csp_draft');
     setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setHasSavedDraft(false);
+    setCurrentProtocolId(generateId()); // Gera um novo ID
     toast.success('Dados limpos.');
   };
 

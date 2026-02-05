@@ -59,14 +59,15 @@ export const fetchPaymentAccounts = async () => {
  * Upload File to Supabase Storage
  * @param file O arquivo a ser enviado.
  * @param type O tipo de anexo ('invoice' ou 'boleto') para definir a subpasta.
+ * @param protocolId O ID do protocolo para criar a pasta de organização.
  * @returns A URL pública do arquivo.
  */
-export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto'): Promise<string> => {
+export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', protocolId: string): Promise<string> => {
   const fileExt = file.name.split('.').pop() || 'bin';
   const subfolder = type === 'invoice' ? 'invoices' : 'boletos';
   
-  // Use a safe, unique path structure: bucket/subfolder/timestamp_random.ext
-  const safeFileName = `${subfolder}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+  // Novo path: subfolder/protocolId/timestamp_random.ext
+  const safeFileName = `${subfolder}/${protocolId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
   const options = {
     cacheControl: '3600',
@@ -74,7 +75,7 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto'): Pro
     contentType: file.type || undefined,
   };
 
-  // Log de depuração (Tarefa 5)
+  // Log de depuração
   if (import.meta.env.DEV) {
     console.log(`[storage-upload] DEV LOG: Bucket: ${STORAGE_BUCKET}, Path: ${safeFileName}, File Type: ${file.type}`);
   }
