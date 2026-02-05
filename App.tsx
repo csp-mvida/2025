@@ -409,17 +409,17 @@ function App() {
       </header>
 
       <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-6 md:p-8 relative z-10 text-center">
-        <img src="/logo.png" alt="Logo" className="h-16 md:h-32 mb-8 md:mb-12 drop-shadow-2xl animate-fade-up" />
+        <img src="/logo.png" alt="Logo" className="h-12 md:h-24 mb-8 md:mb-12 drop-shadow-2xl animate-fade-up" />
         <div className="space-y-4 md:space-y-6 max-w-3xl mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-3xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
           <p className="text-base md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
         </div>
-        <div className="flex flex-col gap-4 w-full max-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
+        <div className="flex flex-col gap-5 w-full max-w-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-xl md:rounded-2xl py-5 md:py-6 text-lg md:text-xl font-black shadow-2xl">Criar Solicitação</Button>
+            <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-2xl py-6 text-xl font-black shadow-2xl">Criar Solicitação</Button>
           </div>
-          <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-xl md:rounded-2xl py-5 md:py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-base md:text-lg">Acompanhar Pedido</Button>
+          <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-2xl py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-lg">Acompanhar Pedido</Button>
           {hasSavedDraft && <button onClick={() => { setFormData(JSON.parse(localStorage.getItem('csp_draft')!)); setView('form'); }} className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-2 justify-center hover:text-primary transition-colors mt-2"><RefreshCw className="w-3 h-3" /> Continuar rascunho</button>}
         </div>
       </div>
