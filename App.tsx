@@ -466,7 +466,7 @@ function App() {
             <div className="absolute -inset-4 bg-primary/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-2xl py-5 md:py-6 text-lg md:text-xl font-black shadow-2xl">Criar Solicitação</Button>
           </div>
-          <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-2xl py-5 md:py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-base md:text-lg">Acompanhar Pedido</Button>
+          <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-2xl py-5 md:py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-base md:text-lg">Acompanhar Solicitação</Button>
           {hasSavedDraft && <button onClick={() => { setFormData(JSON.parse(localStorage.getItem('csp_draft')!)); setView('form'); toast.success('Rascunho carregado!'); }} className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-2 justify-center hover:text-primary transition-colors mt-2"><RefreshCw className="w-3 h-3" /> Continuar rascunho</button>}
         </div>
       </div>
