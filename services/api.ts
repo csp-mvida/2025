@@ -61,12 +61,10 @@ export const uploadInvoice = async (file: File): Promise<string> => {
   // Use a safe, unique path structure: bucket/timestamp_random.ext
   const safeFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
-  // Use file.type only if it's a known type, otherwise let Supabase handle it.
-  // We will rely on the browser's Blob/File object for the content type.
   const options = {
     cacheControl: '3600',
     upsert: false,
-    // Removed explicit contentType setting to avoid conflicts if file.type is unreliable
+    contentType: file.type || undefined, // Use file.type if available
   };
 
   const { data, error } = await supabase.storage
@@ -75,6 +73,7 @@ export const uploadInvoice = async (file: File): Promise<string> => {
 
   if (error) {
     console.error('[storage-upload] Detailed Error:', error);
+    // Throw the error object itself, which might contain more details
     throw error;
   }
 
