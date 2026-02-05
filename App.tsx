@@ -42,6 +42,7 @@ function App() {
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [showTimeInput, setShowTimeInput] = useState(false);
+  const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false); // Novo estado
   
   // ID do protocolo, gerado ao iniciar o formulário
   const [currentProtocolId, setCurrentProtocolId] = useState(generateId());
@@ -167,7 +168,10 @@ function App() {
       if (!formData.paymentMethod) errs.paymentMethod = "Forma é obrigatória";
       if (formData.paymentMethod === 'Boleto' && !formData.boletoUrl) errs.boletoFile = "Anexo do boleto necessário";
     }
-    if (s === 2 && formData.hasInvoice === 'yes' && !formData.invoiceUrl) errs.invoiceFile = "Upload necessário";
+    if (s === 2) {
+      if (formData.hasInvoice === 'yes' && !formData.invoiceUrl) errs.invoiceFile = "Upload necessário";
+      if (formData.hasInvoice === 'no' && !formData.invoiceSentViaWhatsapp) errs.invoiceSentViaWhatsapp = "Você deve se comprometer a enviar o comprovante via WhatsApp.";
+    }
     if (s === 3 && !formData.description) errs.description = "Descrição é obrigatória";
     if (s === 3 && !formData.termsAccepted) errs.termsAccepted = "Você deve aceitar os termos";
 
@@ -225,6 +229,24 @@ function App() {
     setHasSavedDraft(false);
     setCurrentProtocolId(generateId()); // Gera um novo ID
     toast.success('Dados limpos.');
+  };
+
+  const handleInvoiceOptionClick = (option: 'yes' | 'no') => {
+    handleChange('hasInvoice', option);
+    if (option === 'no') {
+      // Se não possui, abre o modal de compromisso
+      setShowInvoiceCommitmentModal(true);
+      // Reseta o compromisso se o usuário voltar para 'sim'
+      handleChange('invoiceSentViaWhatsapp', false);
+    } else {
+      // Se possui, remove o compromisso e o erro
+      handleChange('invoiceSentViaWhatsapp', false);
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next.invoiceSentViaWhatsapp;
+        return next;
+      });
+    }
   };
 
   const renderStep1 = () => (
@@ -324,7 +346,7 @@ function App() {
             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
             <div className="flex items-center justify-center gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                {isUploadingBoleto ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 h-6 text-primary" />}
+                {isUploadingBoleto ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
               </div>
               <div className="text-left">
                 <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px]">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
@@ -343,16 +365,17 @@ function App() {
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-3 md:mb-4 text-center md:text-left">Possui Nota Fiscal? <span className="text-accent">*</span></label>
         <div className="grid grid-cols-2 gap-3 md:gap-4">
-          <button onClick={() => handleChange('hasInvoice', 'yes')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+          <button onClick={() => handleInvoiceOptionClick('yes')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
             <FileText className="w-6 h-6 md:w-8 md:h-8" />
             <span className="font-bold text-xs md:text-base">Sim, possuo</span>
           </button>
-          <button onClick={() => handleChange('hasInvoice', 'no')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+          <button onClick={() => handleInvoiceOptionClick('no')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
             <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />
             <span className="font-bold text-xs md:text-base">Não possuo</span>
           </button>
         </div>
       </div>
+      
       {formData.hasInvoice === 'yes' && (
         <div className="space-y-3 md:space-y-4">
           <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Upload do Anexo <span className="text-accent">*</span></label>
@@ -371,13 +394,65 @@ function App() {
           {errors.invoiceFile && <p className="text-xs text-danger text-center">{errors.invoiceFile}</p>}
         </div>
       )}
+
+      {formData.hasInvoice === 'no' && formData.invoiceSentViaWhatsapp && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 text-primary text-sm animate-in fade-in duration-300">
+          <CheckCircle className="w-5 h-5 shrink-0" />
+          <span className="font-medium">Compromisso de envio via WhatsApp aceito.</span>
+        </div>
+      )}
+      
+      {errors.invoiceSentViaWhatsapp && (
+        <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-danger text-sm animate-in shake">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <span className="font-medium">Você deve aceitar o compromisso para prosseguir.</span>
+        </div>
+      )}
+
+      {/* Modal de Compromisso */}
+      {showInvoiceCommitmentModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 md:p-8 text-center">
+              <AlertTriangle className="w-10 h-10 text-accent mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Compromisso de Envio</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Ao prosseguir sem a Nota Fiscal, você se compromete a enviar o comprovante (ex: recibo, foto) 
+                <strong className="font-bold text-primary block mt-1">imediatamente após o envio desta solicitação</strong> para o WhatsApp do Departamento Financeiro.
+              </p>
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={() => { 
+                  setShowInvoiceCommitmentModal(false); 
+                  handleChange('hasInvoice', 'yes'); // Volta para a opção 'Sim'
+                }}
+              >
+                Voltar
+              </Button>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                onClick={() => { 
+                  handleChange('invoiceSentViaWhatsapp', true); 
+                  setShowInvoiceCommitmentModal(false); 
+                }}
+              >
+                Aceitar e Continuar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
   const renderStep4 = () => (
     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Textarea label="Descrição do Pagamento" required value={formData.description} onChange={e => handleChange('description', e.target.value)} error={errors.description} rows={4} placeholder="Ex: Pagamento referente à compra de materiais de escritório para o mês de Outubro..." />
-      <Input label="Número de Autorização (Opcional)" value={formData.authNumber || ''} onChange={e => handleChange('authNumber', e.target.value)} placeholder="Se houver um código prévio" />
+      {/* Campo 'Número de Autorização (Opcional)' removido conforme solicitado */}
       <div className={`p-4 md:p-6 rounded-2xl border transition-all ${formData.termsAccepted ? 'bg-primary/5 border-primary' : 'bg-slate-50 border-slate-100'}`}>
         <label className="flex items-start gap-3 md:gap-4 cursor-pointer">
           <input type="checkbox" className="mt-1 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" checked={formData.termsAccepted} onChange={e => handleChange('termsAccepted', e.target.checked)} />
@@ -402,7 +477,7 @@ function App() {
       { label: 'Autorizador', value: formData.authorizer },
       { label: 'Verba Específica', value: formData.isSpecificBudget === 'yes' ? formData.specificBudgetName : 'Não' },
       { label: 'Descrição', value: formData.description, full: true },
-      { label: 'Anexo Nota', value: formData.invoiceUrl ? 'Enviado' : 'Não possui', full: false },
+      { label: 'Anexo Nota', value: formData.invoiceUrl ? 'Enviado' : (formData.hasInvoice === 'no' ? 'Pendente via WhatsApp' : 'Não possui'), full: false },
       { label: 'Anexo Boleto', value: formData.boletoUrl ? 'Enviado' : 'N/A', full: false }
     ];
 
