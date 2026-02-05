@@ -324,7 +324,7 @@ function App() {
             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
             <div className="flex items-center justify-center gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                {isUploadingBoleto ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
+                {isUploadingBoleto ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 h-6 text-primary" />}
               </div>
               <div className="text-left">
                 <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px]">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
@@ -516,7 +516,20 @@ function App() {
 
   if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
   if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
-  if (view === 'track') return <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6"><Toaster position="top-right" /><BackgroundAnimation />{renderHeader()}<RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
+  if (view === 'track') return (
+    <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6">
+      <Toaster position="top-right" />
+      <BackgroundAnimation />
+      {renderHeader()}
+      <RequestTracker 
+        initialProtocol={generatedId} 
+        onBack={() => setView('welcome')} 
+        departments={departments}
+        authorizers={authorizers}
+        paymentAccounts={paymentAccounts}
+      />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pt-12 md:pt-16 selection:bg-primary/10">

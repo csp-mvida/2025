@@ -3,12 +3,15 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Search, ChevronLeft, Clock, CheckCircle, X, AlertTriangle, FileText, Download } from './ui/Icons';
 import { getRequestByProtocol } from '../services/api';
-import { CSPRequest, RequestStatus } from '../types';
+import { CSPRequest, RequestStatus, Department } from '../types';
 import { formatCurrency } from '../utils/formatters';
 
 interface RequestTrackerProps {
   initialProtocol?: string;
   onBack: () => void;
+  departments: Department[];
+  authorizers: { id: string; name: string }[];
+  paymentAccounts: { id: string; label: string }[];
 }
 
 const STATUS_MAP: Record<RequestStatus, { label: string; color: string; icon: React.ReactNode; desc: string }> = {
@@ -36,9 +39,15 @@ const STATUS_MAP: Record<RequestStatus, { label: string; color: string; icon: Re
     icon: <X className="w-5 h-5" />,
     desc: 'Houve um problema com sua solicitação. Verifique os dados ou contate o financeiro.'
   },
+  draft: {
+    label: 'Rascunho',
+    color: 'bg-slate-200/50 text-slate-600 border-slate-300/50',
+    icon: <FileText className="w-5 h-5" />,
+    desc: 'Esta solicitação ainda está em rascunho e não foi enviada para análise.'
+  }
 };
 
-export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol = '', onBack }) => {
+export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol = '', onBack, departments, authorizers, paymentAccounts }) => {
   const [protocol, setProtocol] = useState(initialProtocol);
   const [request, setRequest] = useState<CSPRequest | null>(null);
   const [loading, setLoading] = useState(false);
@@ -71,6 +80,10 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
       handleSearch();
     }
   }, [initialProtocol]);
+
+  const getDepartmentName = (id: string) => departments.find(d => d.id === id)?.name || 'N/A';
+  const getAuthorizerName = (id: string) => authorizers.find(a => a.id === id)?.name || 'N/A';
+  const getPaymentAccountLabel = (id: string) => paymentAccounts.find(p => p.id === id)?.label || 'N/A';
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -132,6 +145,7 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
                    </div>
                    <div className="text-right">
                      <span className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Valor</span>
+                     {/* O valor é armazenado em centavos (string) no request, formatamos para BRL */}
                      <p className="font-black text-primary text-xl">{formatCurrency(request.value)}</p>
                    </div>
                    <div>
@@ -142,6 +156,22 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
                      <span className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Criado em</span>
                      <p className="font-medium text-slate-700">{new Date(request.createdAt!).toLocaleDateString('pt-BR')}</p>
                    </div>
+                   
+                   {/* Novos campos de detalhe */}
+                   <div>
+                     <span className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Departamento</span>
+                     <p className="font-medium text-slate-700">{getDepartmentName(request.departmentId)}</p>
+                   </div>
+                   <div className="text-right">
+                     <span className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Conta de Pagamento</span>
+                     {/* O paymentAccount no request é o ID, precisamos do Label */}
+                     <p className="font-medium text-slate-700">{getPaymentAccountLabel(request.paymentAccount)}</p>
+                   </div>
+                   <div className="col-span-2">
+                     <span className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Autorizador</span>
+                     {/* O authorizer no request é o ID, precisamos do Name */}
+                     <p className="font-medium text-slate-700">{getAuthorizerName(request.authorizer)}</p>
+                   </div>
                 </div>
 
                 <div className="pt-6 border-t border-slate-50">
@@ -149,17 +179,30 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
                    <p className="text-sm text-slate-600 leading-relaxed italic">"{request.description}"</p>
                 </div>
 
-                {request.invoiceUrl && (
-                  <div className="pt-4">
-                     <a 
-                       href={request.invoiceUrl} 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 text-primary font-bold text-xs border border-slate-100 hover:bg-primary hover:text-white transition-all group"
-                     >
-                       <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-                       Visualizar Anexo Enviado
-                     </a>
+                {(request.invoiceUrl || request.boletoUrl) && (
+                  <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                     {request.invoiceUrl && request.invoiceUrl !== 'Pendente via WhatsApp' && (
+                       <a 
+                         href={request.invoiceUrl} 
+                         target="_blank" 
+                         rel="noopener noreferrer"
+                         className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 text-primary font-bold text-xs border border-slate-100 hover:bg-primary hover:text-white transition-all group"
+                       >
+                         <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                         Visualizar Nota Fiscal
+                       </a>
+                     )}
+                     {request.boletoUrl && (
+                       <a 
+                         href={request.boletoUrl} 
+                         target="_blank" 
+                         rel="noopener noreferrer"
+                         className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 text-primary font-bold text-xs border border-slate-100 hover:bg-primary hover:text-white transition-all group"
+                       >
+                         <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                         Visualizar Boleto
+                       </a>
+                     )}
                   </div>
                 )}
              </div>

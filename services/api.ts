@@ -240,16 +240,15 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     return null;
   }
 
-  // Nota: authorizer e paymentAccount são strings no CSPFormData, mas o DB armazena IDs.
-  // Para simplificar, mantemos strings vazias aqui, pois o RequestTracker não exibe esses campos.
+  // Retornamos os IDs para que o RequestTracker possa mapear para nomes/labels
   return {
     id: data.protocol,
     requesterName: data.requester_name,
     whatsapp: data.requester_whatsapp,
     departmentId: data.department_id,
-    authorizer: '', // Não mapeado de volta para nome aqui
+    authorizer: data.authorizer_id, // Retornando ID
     dueDate: data.due_date,
-    paymentAccount: '', // Não mapeado de volta para label aqui
+    paymentAccount: data.payment_account_id, // Retornando ID
     isSpecificBudget: data.is_budget_specific ? 'yes' : 'no',
     supplierName: data.vendor_name,
     value: data.amount_cents.toString(),
@@ -282,9 +281,9 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     requesterName: req.requester_name,
     whatsapp: req.requester_whatsapp,
     departmentId: req.department_id,
-    authorizer: '',
+    authorizer: req.authorizer_id, // Retornando ID
     dueDate: req.due_date,
-    paymentAccount: '',
+    paymentAccount: req.payment_account_id, // Retornando ID
     isSpecificBudget: req.is_budget_specific ? 'yes' : 'no',
     supplierName: req.vendor_name,
     value: req.amount_cents.toString(),
