@@ -386,7 +386,7 @@ function App() {
       <header className="relative z-30">
         <div className="bg-primary py-2 px-4 md:px-6 flex items-center shadow-lg relative h-10 md:h-14">
           <div className="flex md:hidden justify-between w-full">
-            <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[9px] uppercase tracking-[0.2em]">
+            <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[11px] uppercase tracking-[0.2em]">
               <Lock className="w-3.5 h-3.5" /> Administração
             </button>
             <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[9px] uppercase tracking-[0.2em]">
@@ -396,7 +396,7 @@ function App() {
 
           <div className="hidden md:flex items-center w-full justify-between">
             <div className="w-40" />
-            <button onClick={() => setView('login')} className="flex items-center gap-2 text-emerald-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
+            <button onClick={() => setView('login')} className="flex items-center gap-2 text-emerald-400 font-black text-xs uppercase tracking-[0.2em] hover:text-white transition-colors">
               <Lock className="w-4 h-4" /> Administração
             </button>
             <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity w-40 justify-end">
@@ -414,7 +414,7 @@ function App() {
           className="h-12 md:h-24 mb-8 md:mb-12 drop-shadow-2xl animate-fade-up" 
         />
         <div className="space-y-4 md:space-y-6 max-w-3xl mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <h1 className="text-3xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
+          <h1 className="text-3xl md:text-7xl font-bold text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic font-black">pagamentos.</span></h1>
           <p className="text-sm md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
         </div>
         <div className="flex flex-col gap-4 w-full max-w-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
@@ -452,7 +452,7 @@ function App() {
             {/* Title Section - Reduced gaps */}
             <div className="mb-6 md:mb-12 text-center md:text-left">
                <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1 block">Financeiro</span>
-               <h1 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tighter mb-1">Nova Solicitação</h1>
+               <h1 className="text-2xl md:text-5xl font-bold text-slate-900 tracking-tighter mb-1">Nova Solicitação</h1>
                <p className="text-xs md:text-base text-slate-500 font-medium">Preencha os dados para registrar o pagamento.</p>
             </div>
 
