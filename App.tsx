@@ -13,7 +13,7 @@ import { OrientationDrawer } from './components/OrientationDrawer';
 import { 
   CheckCircle, UploadCloud, FileText, 
   ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, 
-  Home, Lock, Copy, Search, Trash2, Save, Info
+  Home, Lock, Copy, Search, Trash2, Save, Info, Clock
 }
 from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -37,6 +37,7 @@ function App() {
   const [isIdCopied, setIsIdCopied] = useState(false); 
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [showTimeInput, setShowTimeInput] = useState(false);
 
   const isUrgent = checkUrgency(formData.dueDate);
 
@@ -170,9 +171,39 @@ function App() {
       </Select>
       <div className="md:col-span-2">
         <label className="block text-sm font-medium text-slate-700 mb-1.5">Vencimento do Pagamento <span className="text-accent">*</span></label>
-        <div className="flex gap-2">
-          <input type="date" className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 outline-none" value={getDateValue()} onChange={e => handleChange('dueDate', `${e.target.value}T${getTimeValue() || '12:00'}`)} />
-          <input type="time" className="w-32 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 outline-none" value={getTimeValue()} onChange={e => handleChange('dueDate', `${getDateValue()}T${e.target.value}`)} />
+        <div className="flex flex-col md:flex-row gap-4">
+          <input 
+            type="date" 
+            className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+            value={getDateValue()} 
+            onChange={e => handleChange('dueDate', `${e.target.value}T${getTimeValue() || '12:00'}`)} 
+          />
+          
+          {showTimeInput ? (
+            <div className="flex-1 flex gap-2 animate-in slide-in-from-left-2 duration-300">
+              <input 
+                type="time" 
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary/20 outline-none bg-primary/5 border-primary/30" 
+                value={getTimeValue()} 
+                onChange={e => handleChange('dueDate', `${getDateValue()}T${e.target.value}`)} 
+              />
+              <button 
+                onClick={() => { setShowTimeInput(false); handleChange('dueDate', `${getDateValue()}T12:00`); }}
+                className="p-3 text-slate-400 hover:text-danger transition-colors"
+                title="Remover horário"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowTimeInput(true)}
+              className="flex-1 px-4 py-3 rounded-xl border border-dashed border-slate-300 text-slate-400 text-sm font-bold flex items-center justify-center gap-2 hover:border-primary/50 hover:text-primary transition-all group"
+            >
+              <Clock className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              Definir horário específico?
+            </button>
+          )}
         </div>
         {errors.dueDate && <p className="text-xs text-danger mt-1">{errors.dueDate}</p>}
         <UrgencyAlert isUrgent={isUrgent} />
@@ -353,13 +384,27 @@ function App() {
       <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
       
       <header className="relative z-30">
-        <div className="bg-primary py-3 px-4 md:px-6 flex justify-between items-center shadow-lg">
-          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
-            <Lock className="w-3.5 h-3.5 md:w-4 md:h-4" /> Administração
-          </button>
-          <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
-            <Info className="w-3.5 h-3.5 md:w-4 md:h-4" /> Regras e Prazos
-          </button>
+        <div className="bg-primary py-3 px-4 md:px-6 flex items-center shadow-lg relative h-12 md:h-14">
+          {/* Mobile Layout: Just buttons */}
+          <div className="flex md:hidden justify-between w-full">
+            <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[9px] uppercase tracking-[0.2em]">
+              <Lock className="w-3.5 h-3.5" /> Administração
+            </button>
+            <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[9px] uppercase tracking-[0.2em]">
+              <Info className="w-3.5 h-3.5" /> Regras e Prazos
+            </button>
+          </div>
+
+          {/* Desktop Layout: Centralized Admin */}
+          <div className="hidden md:flex items-center w-full justify-between">
+            <div className="w-40" /> {/* Symmetry balancer */}
+            <button onClick={() => setView('login')} className="flex items-center gap-2 text-emerald-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
+              <Lock className="w-4 h-4" /> Administração
+            </button>
+            <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity w-40 justify-end">
+              <Info className="w-4 h-4" /> Regras e Prazos
+            </button>
+          </div>
         </div>
       </header>
 
@@ -369,7 +414,7 @@ function App() {
           <h1 className="text-3xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
           <p className="text-base md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
         </div>
-        <div className="flex flex-col gap-4 w-full max-w-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
+        <div className="flex flex-col gap-4 w-full max-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-xl md:rounded-2xl py-5 md:py-6 text-lg md:text-xl font-black shadow-2xl">Criar Solicitação</Button>
