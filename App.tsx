@@ -453,13 +453,13 @@ function App() {
 
   if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
   if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
-  if (view === 'track') return <div className="min-h-screen relative bg-slate-50"><BackgroundAnimation /><RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
+  if (view === 'track') return <div className="min-h-screen relative bg-slate-50 flex flex-col justify-center"><BackgroundAnimation /><RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
   if (view === 'welcome') return renderWelcome();
 
   return (
-    <div className="min-h-screen bg-slate-50 selection:bg-primary/20">
+    <div className="min-h-screen bg-slate-50 selection:bg-primary/20 flex flex-col justify-center">
       <BackgroundAnimation />
-      <main className="max-w-2xl mx-auto p-4 md:p-8 relative z-10">
+      <main className="max-w-2xl mx-auto p-4 md:p-8 relative z-10 w-full">
         {!isSuccess ? (
           <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white">
             <h1 className="text-2xl font-bold text-center mb-6">Nova Solicitação</h1>
