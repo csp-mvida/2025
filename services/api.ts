@@ -111,26 +111,48 @@ export const submitRequest = async (data: CSPFormData, requestId: string): Promi
       return false;
     }
 
-    const newRequest: CSPRequest = {
-      ...data,
-      id: requestId,
-      createdAt: new Date().toISOString(),
-      status: 'pending',
-      invoiceUrl: url_anexo,
-      history: [{ date: new Date().toISOString(), action: 'Criado', user: data.requesterName }]
-    };
-
-    const existing = localStorage.getItem(DB_KEY);
-    const db = existing ? JSON.parse(existing) : [];
-    db.push(newRequest);
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-    
     return true;
 
   } catch (e) {
     console.error("Save failed", e);
     return false;
   }
+};
+
+export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .select('*')
+    .eq('protocol', protocol.trim())
+    .single();
+
+  if (error || !data) {
+    console.error('Error fetching request by protocol:', error);
+    return null;
+  }
+
+  return {
+    id: data.protocol,
+    requesterName: data.requester_name,
+    whatsapp: data.requester_whatsapp,
+    departmentId: data.department_id,
+    authorizer: '',
+    dueDate: data.due_date,
+    paymentAccount: '',
+    isSpecificBudget: data.is_budget_specific ? 'yes' : 'no',
+    supplierName: data.vendor_name,
+    value: data.amount_cents.toString(),
+    paymentMethod: data.payment_method,
+    hasInvoice: data.invoice_attachment_path ? 'yes' : 'no',
+    invoiceSentViaWhatsapp: false,
+    description: data.description,
+    termsAccepted: true,
+    createdAt: data.created_at,
+    status: data.status as RequestStatus,
+    invoiceUrl: data.invoice_attachment_path,
+    boletoUrl: data.boleto_attachment_path,
+    history: []
+  };
 };
 
 export const getRequests = async (): Promise<CSPRequest[]> => {

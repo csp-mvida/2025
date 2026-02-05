@@ -13,16 +13,17 @@ import { UrgencyAlert } from './components/UrgencyAlert';
 import { 
   Save, Trash2, CheckCircle, UploadCloud, FileText, 
   ChevronRight, ChevronLeft, AlertTriangle, RefreshCw, 
-  Home, Lock, Download, Copy, Clock, LayoutDashboard 
+  Home, Lock, Download, Copy, Clock, LayoutDashboard, Search
 }
 from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
 import { BackgroundAnimation } from './components/BackgroundAnimation';
+import { RequestTracker } from './components/RequestTracker';
 
 function App() {
   // State
-  const [view, setView] = useState<'welcome' | 'form' | 'login' | 'admin'>('welcome');
+  const [view, setView] = useState<'welcome' | 'form' | 'login' | 'admin' | 'track'>('welcome');
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<CSPFormData>(INITIAL_DATA);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -38,7 +39,6 @@ function App() {
   
   // Draft Management State
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
-  // Removed draftLoaded state
 
   // Derived State
   const isUrgent = checkUrgency(formData.dueDate);
@@ -75,11 +75,9 @@ function App() {
     if (savedDraft) {
       try {
         const parsed = JSON.parse(savedDraft);
-        // Only set hasSavedDraft if the parsed data is not empty
         if (!isFormEmpty(parsed as CSPFormData)) {
           setHasSavedDraft(true);
         } else {
-          // If the saved draft is empty (due to previous auto-save bug), discard it
           localStorage.removeItem('csp_draft');
         }
       } catch (e) {
@@ -91,18 +89,16 @@ function App() {
 
   // Auto-Save Draft Logic
   useEffect(() => {
-    // If the form is empty, ensure no draft is saved and hasSavedDraft is false
     if (isFormEmpty(formData)) {
         localStorage.removeItem('csp_draft');
         setHasSavedDraft(false);
         return;
     }
     
-    // Only auto-save if we are not on the success screen AND the form is not empty
     if (!isSuccess) {
       const { invoiceFile, boletoFile, ...dataToSave } = formData;
       localStorage.setItem('csp_draft', JSON.stringify(dataToSave));
-      setHasSavedDraft(true); // Ensure the welcome screen reflects the new draft
+      setHasSavedDraft(true);
     }
   }, [formData, isSuccess, isFormEmpty]);
 
@@ -122,12 +118,6 @@ function App() {
     setView('form');   
   };
 
-  const handleDiscardDraft = () => {
-    localStorage.removeItem('csp_draft');
-    setFormData(INITIAL_DATA);
-    setHasSavedDraft(false);
-  };
-
   const handleManualSave = () => {
     if (isFormEmpty(formData)) {
         alert("Não há dados para salvar.");
@@ -136,19 +126,17 @@ function App() {
     const { invoiceFile, boletoFile, ...dataToSave } = formData;
     localStorage.setItem('csp_draft', JSON.stringify(dataToSave));
     setHasSavedDraft(true);
-    const btn = document.getElementById('btn-save-draft');
-    if (btn) {
-      const originalText = btn.innerHTML;
-      btn.innerText = "Salvo!";
-      setTimeout(() => btn.innerHTML = originalText, 2000);
-    }
   };
 
   const handleStartRequest = () => {
     setView('form');
     window.scrollTo(0,0);
-    // When starting a new request, we clear the draft flag, as the user is now actively editing.
     setHasSavedDraft(false);
+  };
+
+  const handleTrackRequest = () => {
+    setView('track');
+    window.scrollTo(0,0);
   };
 
   // Handlers
@@ -188,16 +176,9 @@ function App() {
           ...prev,
           invoiceUrl: publicUrl
         }));
-        if (errors.invoiceFile) {
-          setErrors(prev => {
-            const newErrors = {...prev};
-            delete newErrors.invoiceFile;
-            return newErrors;
-          });
-        }
       } catch (error) {
         console.error("Upload failed", error);
-        alert("Erro ao fazer upload do arquivo. Verifique sua conexão ou tente novamente.");
+        alert("Erro ao fazer upload do arquivo.");
         setFormData(prev => ({
           ...prev,
           invoiceFile: null,
@@ -226,16 +207,9 @@ function App() {
           ...prev,
           boletoUrl: publicUrl
         }));
-        if (errors.boletoFile) {
-          setErrors(prev => {
-            const newErrors = {...prev};
-            delete newErrors.boletoFile;
-            return newErrors;
-          });
-        }
       } catch (error) {
         console.error("Boleto upload failed", error);
-        alert("Erro ao fazer upload do boleto. Tente novamente.");
+        alert("Erro ao fazer upload do boleto.");
         setFormData(prev => ({
           ...prev,
           boletoFile: null,
@@ -276,12 +250,6 @@ function App() {
       `📝 Descrição: ${formData.description}`;
     
     navigator.clipboard.writeText(text);
-    const btn = document.getElementById('btn-copy-resume');
-    if (btn) {
-      const originalText = btn.innerText;
-      btn.innerText = "Copiado para WhatsApp!";
-      setTimeout(() => btn.innerText = originalText, 2000);
-    }
   };
 
   // Validation Logic per Step
@@ -294,37 +262,28 @@ function App() {
       if (!formData.whatsapp) {
         newErrors.whatsapp = "WhatsApp inválido";
       } else if (!isValidPhone(formData.whatsapp)) {
-        newErrors.whatsapp = "Número inválido. Digite 10 ou 11 dígitos com DDD.";
+        newErrors.whatsapp = "Número inválido.";
       }
-      if (!formData.departmentId) newErrors.departmentId = "Departamento obrigatório";
+      if (!formData.departmentId) newErrors.departmentId = "Depto obrigatório";
       if (!formData.authorizer) newErrors.authorizer = "Autorizador obrigatório";
-      if (!formData.dueDate) newErrors.dueDate = "Data de vencimento obrigatória";
+      if (!formData.dueDate) newErrors.dueDate = "Vencimento obrigatório";
     }
 
     if (currentStep === 1) { 
       if (!formData.paymentAccount) newErrors.paymentAccount = "Conta obrigatória";
-      if (formData.isSpecificBudget === 'yes' && !formData.specificBudgetName) newErrors.specificBudgetName = "Nome da verba obrigatório";
       if (!formData.supplierName) newErrors.supplierName = "Fornecedor obrigatório";
       if (!formData.value || parseInt(formData.value) === 0) newErrors.value = "Valor obrigatório";
-      if (!formData.paymentMethod) newErrors.paymentMethod = "Forma de pagamento obrigatória";
-      if (formData.paymentMethod === 'PIX' && !formData.pixKey) newErrors.pixKey = "Chave PIX obrigatória";
-      if (formData.paymentMethod === 'Boleto' && !formData.boletoCode && !formData.boletoUrl) newErrors.boletoCode = "Código de barras ou anexo necessário";
+      if (!formData.paymentMethod) newErrors.paymentMethod = "Forma obrigatória";
     }
 
     if (currentStep === 2) { 
-      if (formData.hasInvoice === 'yes') {
-         if (!formData.invoiceFileMeta) {
-           newErrors.invoiceFile = "Anexo da nota fiscal é obrigatório";
-         } else if (!formData.invoiceUrl && !isUploading) {
-           newErrors.invoiceFile = "Falha no upload. Tente anexar novamente.";
-         }
-      }
-      if (formData.hasInvoice === 'no' && !formData.invoiceSentViaWhatsapp) newErrors.invoiceSentViaWhatsapp = "Confirmação de envio via WhatsApp necessária";
+      if (formData.hasInvoice === 'yes' && !formData.invoiceFileMeta) newErrors.invoiceFile = "Anexo obrigatório";
+      if (formData.hasInvoice === 'no' && !formData.invoiceSentViaWhatsapp) newErrors.invoiceSentViaWhatsapp = "Aviso necessário";
     }
 
     if (currentStep === 3) { 
       if (!formData.description) newErrors.description = "Descrição obrigatória";
-      if (!formData.termsAccepted) newErrors.termsAccepted = "Você deve concordar com os prazos";
+      if (!formData.termsAccepted) newErrors.termsAccepted = "Concordância obrigatória";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -337,10 +296,6 @@ function App() {
 
   const nextStep = () => {
     if (validateStep(step)) {
-      if ((step === 2 && isUploading) || (step === 1 && isUploadingBoleto)) {
-        alert("Aguarde o término do upload do arquivo.");
-        return;
-      }
       setStep(prev => prev + 1);
       window.scrollTo(0, 0);
     }
@@ -356,16 +311,14 @@ function App() {
 
     setIsSubmitting(true);
     const newId = generateId();
-    
     const success = await submitRequest(formData, newId);
     
     if (success) {
       setGeneratedId(newId);
       setIsSuccess(true);
       localStorage.removeItem('csp_draft');
-      window.scrollTo(0, 0);
     } else {
-      alert("Erro ao enviar solicitação. Tente novamente.");
+      alert("Erro ao enviar.");
     }
     setIsSubmitting(false);
   };
@@ -375,40 +328,31 @@ function App() {
     setIsSuccess(false);
     setStep(0);
     setGeneratedId('');
-    setHasSavedDraft(false);
     setView('welcome'); 
+  };
+
+  const goToTrackingFromSuccess = () => {
+    setView('track');
+    setIsSuccess(false);
+    window.scrollTo(0,0);
   };
 
   // --- RENDER WELCOME SCREEN ---
   const renderWelcome = () => (
     <div className="min-h-screen relative flex flex-col bg-slate-50">
       <BackgroundAnimation />
-
-      {/* Institutional Top Header - Always fully revealed at the top */}
       <header className="relative z-30">
-        {/* Superior Green Utility Bar - Centralized Button */}
         <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
-          <button 
-            onClick={() => setView('login')}
-            className="flex items-center gap-2 text-white font-bold hover:scale-105 transition-all group"
-          >
+          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-bold hover:scale-105 transition-all group">
             <Lock className="w-4 h-4" />
-            <span className="text-[11px] md:text-sm uppercase tracking-widest">
-              Acesso Restrito <span className="text-green-300">Admin</span>
-            </span>
+            <span className="text-[11px] md:text-sm uppercase tracking-widest">Acesso Restrito <span className="text-green-300">Admin</span></span>
           </button>
         </div>
       </header>
 
       <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
-        
-        {/* Header Section - Logo and Status */}
         <div className="mt-4 mb-8 md:mb-10 text-center animate-fade-up">
-           <img 
-             src="/logo.png" 
-             alt="Missão Vida" 
-             className="h-16 md:h-24 object-contain mx-auto mb-6 drop-shadow-md" 
-           />
+           <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-24 object-contain mx-auto mb-6 drop-shadow-md" />
            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mx-auto">
              <span className="relative flex h-2 w-2">
                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -418,7 +362,6 @@ function App() {
            </div>
         </div>
 
-        {/* Hero Title */}
         <div className="text-center mb-8 md:mb-10 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-4xl md:text-6xl text-slate-900 mb-4 tracking-tighter leading-[1.1] max-w-4xl px-2">
             <span className="font-light block md:inline text-2xl md:text-4xl">Sua ponte direta com o</span>{' '}
@@ -429,8 +372,7 @@ function App() {
           </p>
         </div>
 
-        {/* Primary CTA */}
-        <div className="mb-10 md:mb-12 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+        <div className="mb-10 md:mb-12 animate-fade-up flex flex-col items-center gap-4" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-[2.5rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
             <button 
@@ -442,427 +384,51 @@ function App() {
             </button>
           </div>
           
+          <button 
+            onClick={handleTrackRequest}
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:text-primary hover:border-primary/30 rounded-2xl font-bold text-sm transition-all shadow-sm hover:shadow-md"
+          >
+            <Search className="w-4 h-4" />
+            Acompanhar Solicitação
+          </button>
+
           {hasSavedDraft && (
-            <button 
-              onClick={handleRestoreDraft}
-              className="mt-6 flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors py-1 px-4 rounded-full hover:bg-white shadow-sm"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Retomar rascunho salvo
+            <button onClick={handleRestoreDraft} className="flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors py-1 px-4 rounded-full hover:bg-white shadow-sm">
+              <RefreshCw className="w-3.5 h-3.5" /> Retomar rascunho salvo
             </button>
           )}
         </div>
 
-        {/* Professional Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full px-4 mb-12 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-          
           <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
             <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <FileText className="w-6 h-6 text-primary" />
             </div>
             <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Protocolo Digital</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
-              Geração automática de ID para rastreamento imediato de cada pedido realizado.
-            </p>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">Geração automática de ID para rastreamento imediato de cada pedido realizado.</p>
           </div>
-
           <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
             <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <Clock className="w-6 h-6 text-accent" />
             </div>
             <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Agilidade Real</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
-              Detecção de urgência e avisos automáticos para garantir prazos críticos.
-            </p>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">Detecção de urgência e avisos automáticos para garantir prazos críticos.</p>
           </div>
-
           <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
             <div className="w-12 h-12 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <CheckCircle className="w-6 h-6 text-slate-900" />
             </div>
             <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Padronização</h3>
-            <p className="text-slate-500 text-xs leading-relaxed font-medium">
-              Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.
-            </p>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.</p>
           </div>
-
         </div>
         
         <footer className="mt-auto pt-3 pb-8 border-t border-slate-200 w-full text-center">
-          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-            Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
-          </p>
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento</p>
         </footer>
       </div>
     </div>
   );
-
-  // --- RENDER STEPS ---
-  const renderStep1 = () => (
-    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Input 
-          label="Responsável" 
-          value={formData.requesterName} 
-          onChange={e => handleChange('requesterName', e.target.value)} 
-          required 
-          placeholder="Seu nome"
-          error={errors.requesterName}
-        />
-        <Input 
-          label="WhatsApp" 
-          value={formData.whatsapp} 
-          onChange={handlePhoneChange} 
-          required 
-          placeholder="(00) 00000-0000"
-          error={errors.whatsapp}
-        />
-        <Select 
-          label="Núcleo / Depto" 
-          value={formData.departmentId} 
-          onChange={e => handleChange('departmentId', e.target.value)} 
-          required
-          error={errors.departmentId}
-        >
-          <option value="">Selecione...</option>
-          {departments.map(dept => (
-            <option key={dept.id} value={dept.id}>{dept.name}</option>
-          ))}
-        </Select>
-        <Select 
-          label="Autorizador" 
-          value={formData.authorizer} 
-          onChange={e => handleChange('authorizer', e.target.value)} 
-          required
-          error={errors.authorizer}
-        >
-          <option value="">Selecione...</option>
-          {authorizers.map(auth => (
-            <option key={auth} value={auth}>{auth}</option>
-          ))}
-        </Select>
-        
-        <div className="md:col-span-2">
-           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1 text-center md:text-left">
-             Vencimento <span className="text-accent">*</span>
-           </label>
-           <div className="flex gap-2 justify-center md:justify-start">
-             <div className="flex-1">
-               <input 
-                 type="date"
-                 className={`w-full px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base text-center md:text-left ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
-                 value={getDateValue()} 
-                 onChange={e => {
-                   const newDate = e.target.value;
-                   const currentTime = getTimeValue() || '00:00';
-                   if (!newDate) handleChange('dueDate', '');
-                   else handleChange('dueDate', `${newDate}T${currentTime}`);
-                 }} 
-                 required 
-               />
-             </div>
-             <div className="w-1/3">
-               <input 
-                 type="time"
-                 className={`w-full px-3 py-2 md:px-4 md:py-2.5 rounded-lg bg-white border shadow-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base text-center md:text-left ${errors.dueDate ? 'border-danger' : isUrgent ? 'border-amber-500 text-amber-600' : 'border-slate-300 focus:border-primary'}`}
-                 value={getTimeValue()} 
-                 onChange={e => {
-                   const newTime = e.target.value;
-                   const currentDate = getDateValue();
-                   if (currentDate) {
-                     handleChange('dueDate', `${currentDate}T${newTime || '00:00'}`);
-                   }
-                 }} 
-               />
-             </div>
-           </div>
-           {errors.dueDate && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.dueDate}</p>}
-           <UrgencyAlert isUrgent={isUrgent} />
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Select 
-          label="Conta de Pagamento" 
-          value={formData.paymentAccount} 
-          onChange={e => handleChange('paymentAccount', e.target.value)} 
-          required
-          error={errors.paymentAccount}
-        >
-          <option value="">Selecione...</option>
-          {paymentAccounts.map(acc => (
-            <option key={acc} value={acc}>{acc}</option>
-          ))}
-        </Select>
-        
-        <div className="md:col-span-1">
-          <label className="block text-sm md:text-base font-medium text-slate-700 mb-1 text-center md:text-left">Verba Específica? <span className="text-accent">*</span></label>
-          <div className="flex gap-2 justify-center md:justify-start">
-             <label className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
-                <input type="radio" name="budget" className="hidden" checked={formData.isSpecificBudget === 'yes'} onChange={() => handleChange('isSpecificBudget', 'yes')} />
-                Sim
-             </label>
-             <label className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg border cursor-pointer transition-all text-xs md:text-sm ${formData.isSpecificBudget === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50'}`}>
-                <input type="radio" name="budget" className="hidden" checked={formData.isSpecificBudget === 'no'} onChange={() => handleChange('isSpecificBudget', 'no')} />
-                Não
-             </label>
-          </div>
-        </div>
-
-        {formData.isSpecificBudget === 'yes' && (
-           <Input 
-            label="Qual Verba?" 
-            value={formData.specificBudgetName || ''} 
-            onChange={e => handleChange('specificBudgetName', e.target.value)} 
-            required 
-            className="md:col-span-2 animate-in fade-in"
-            error={errors.specificBudgetName}
-          />
-        )}
-
-        <Input 
-          label="Fornecedor / Recebedor" 
-          value={formData.supplierName} 
-          onChange={e => handleChange('supplierName', e.target.value)} 
-          required 
-          error={errors.supplierName}
-        />
-        
-        <Input 
-          label="Valor (R$)" 
-          value={formatCurrency(formData.value)} 
-          onChange={handleCurrencyChange} 
-          required 
-          placeholder="R$ 0,00"
-          error={errors.value}
-        />
-
-        <Select 
-          label="Forma de Pagamento" 
-          value={formData.paymentMethod} 
-          onChange={e => handleChange('paymentMethod', e.target.value)} 
-          required
-          error={errors.paymentMethod}
-        >
-          <option value="">Selecione...</option>
-          <option value="PIX">PIX</option>
-          <option value="Boleto">Boleto</option>
-          <option value="Transferência">Transferência</option>
-        </Select>
-
-        {formData.paymentMethod === 'PIX' && (
-          <Input 
-            label="Chave PIX" 
-            value={formData.pixKey || ''} 
-            onChange={e => handleChange('pixKey', e.target.value)} 
-            required 
-            className="animate-in fade-in"
-            error={errors.pixKey}
-          />
-        )}
-
-        {formData.paymentMethod === 'Boleto' && (
-          <div className="md:col-span-2 space-y-3 animate-in fade-in">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-               <Input 
-                label={<>Cód. de Barras <span className="text-[10px] font-bold text-slate-400 inline ml-1">(Opcional se anexar)</span></>} 
-                value={formData.boletoCode || ''} 
-                onChange={e => handleChange('boletoCode', e.target.value)} 
-                error={errors.boletoCode}
-              />
-              <Input 
-                type="date"
-                label="Vencimento Boleto" 
-                value={formData.boletoDueDate || ''} 
-                onChange={e => handleChange('boletoDueDate', e.target.value)} 
-              />
-             </div>
-             
-             <div>
-               <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left">Anexar Código de Barras / Boleto</label>
-               <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-colors ${isUploadingBoleto ? 'border-primary bg-primary/5 cursor-wait' : 'border-slate-300 hover:border-primary bg-slate-50'}`}>
-                  <input type="file" id="boleto-upload" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleBoletoFileChange} disabled={isUploadingBoleto} />
-                  
-                  {!formData.boletoFileMeta && !isUploadingBoleto ? (
-                    <label htmlFor="boleto-upload" className="cursor-pointer flex flex-col items-center gap-1">
-                      <UploadCloud className="w-5 h-5 text-primary" />
-                      <span className="text-primary font-bold text-xs uppercase tracking-wider">Selecionar Arquivo</span>
-                      <p className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200 mt-1">
-                        AVISO: O código deve estar COMPLETAMENTE LEGÍVEL.
-                      </p>
-                    </label>
-                  ) : isUploadingBoleto ? (
-                     <div className="flex flex-col items-center gap-1">
-                       <RefreshCw className="w-5 h-5 text-primary animate-spin" />
-                       <span className="text-primary font-medium text-xs">Carregando...</span>
-                     </div>
-                  ) : (
-                    <div className="flex items-center justify-between bg-white border border-slate-200 p-2 rounded-lg shadow-sm">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="text-primary w-4 h-4" />
-                        <span className="text-[10px] font-medium text-slate-900 truncate max-w-[150px]">{formData.boletoFileMeta?.name}</span>
-                      </div>
-                      <button onClick={() => setFormData(prev => ({...prev, boletoFile: null, boletoFileMeta: undefined, boletoUrl: undefined}))} className="text-slate-400 hover:text-danger">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-               </div>
-             </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderStep3 = () => (
-    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
-      <div>
-        <label className="block text-sm md:text-base font-medium text-slate-700 mb-2 text-center md:text-left">Possui Nota Fiscal? <span className="text-accent">*</span></label>
-        <div className="flex gap-2 justify-center md:justify-start">
-            <button 
-              onClick={() => handleChange('hasInvoice', 'yes')}
-              className={`flex-1 py-3 px-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
-            >
-              <FileText className="w-5 h-5" />
-              <span className="font-medium text-xs md:text-sm">Sim, possuo</span>
-            </button>
-            <button 
-              onClick={() => handleChange('hasInvoice', 'no')}
-              className={`flex-1 py-3 px-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50'}`}
-            >
-              <AlertTriangle className="w-5 h-5" />
-              <span className="font-medium text-xs md:text-sm">Não possuo</span>
-            </button>
-        </div>
-      </div>
-
-      {formData.hasInvoice === 'yes' ? (
-        <div className="animate-in fade-in">
-           <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left">Upload do Anexo <span className="text-accent">*</span></label>
-           <div className={`border-2 border-dashed rounded-xl p-4 md:p-6 text-center transition-colors ${errors.invoiceFile ? 'border-danger bg-red-50' : isUploading ? 'border-primary bg-primary/5 cursor-wait' : 'border-slate-300 hover:border-primary bg-slate-50'}`}>
-              <input type="file" id="file-upload" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} disabled={isUploading} />
-              
-              {!formData.invoiceFileMeta && !isUploading ? (
-                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                  <div className="p-2 bg-white border border-slate-200 rounded-full shadow-sm">
-                    <UploadCloud className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <span className="text-primary font-medium hover:underline text-xs">Clique para selecionar</span>
-                    <p className="text-slate-500 text-[9px] mt-0.5">PDF, JPG ou PNG</p>
-                  </div>
-                </label>
-              ) : isUploading ? (
-                 <div className="flex flex-col items-center gap-2">
-                   <RefreshCw className="w-5 h-5 text-primary animate-spin" />
-                   <span className="text-primary font-medium text-xs">Enviando...</span>
-                 </div>
-              ) : (
-                <div className="flex items-center justify-between bg-white border border-slate-200 p-2 rounded-lg shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <FileText className="text-primary w-4 h-4" />
-                    <div className="text-left">
-                      <p className="text-[10px] font-medium text-slate-900 truncate max-w-[120px]">{formData.invoiceFileMeta?.name}</p>
-                      <p className="text-[9px] text-green-600 font-bold">Enviado</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setFormData(prev => ({...prev, invoiceFile: null, invoiceFileMeta: undefined, invoiceUrl: undefined}))}
-                    className="p-1 text-slate-400 hover:text-danger"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-           </div>
-           {errors.invoiceFile && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.invoiceFile}</p>}
-        </div>
-      ) : (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 animate-in fade-in text-center md:text-left">
-           <p className="text-amber-800 text-[11px] mb-2">
-             É obrigatório enviar posteriormente pelo WhatsApp para o financeiro.
-           </p>
-           <label className="flex items-center gap-2 cursor-pointer group justify-center md:justify-start">
-             <input 
-              type="checkbox" 
-              className="peer appearance-none w-4 h-4 border-2 border-amber-500 rounded bg-white checked:bg-amber-500"
-              checked={formData.invoiceSentViaWhatsapp}
-              onChange={e => handleChange('invoiceSentViaWhatsapp', e.target.checked)}
-             />
-             <span className="text-xs md:text-sm font-medium text-slate-800">Comprometo-me a enviar via WhatsApp.</span>
-           </label>
-           {errors.invoiceSentViaWhatsapp && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.invoiceSentViaWhatsapp}</p>}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderStep4 = () => (
-    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
-      <Textarea 
-        label="Descrição do Pagamento" 
-        value={formData.description} 
-        onChange={e => handleChange('description', e.target.value)} 
-        required 
-        rows={3}
-        placeholder="Ex: Compra de materiais..."
-        error={errors.description}
-      />
-      
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-        <label className="flex items-start gap-2.5 cursor-pointer justify-center md:justify-start text-center md:text-left">
-           <input 
-            type="checkbox" 
-            className="peer appearance-none w-5 h-5 border-2 border-primary rounded bg-white checked:bg-primary shrink-0 mt-0.5"
-            checked={formData.termsAccepted}
-            onChange={e => handleChange('termsAccepted', e.target.checked)}
-           />
-           <div>
-             <span className="text-xs md:text-sm font-medium text-slate-800">Concordo com os prazos e regras.</span>
-             {errors.termsAccepted && <p className="mt-1 text-xs text-danger text-center md:text-left">{errors.termsAccepted}</p>}
-           </div>
-        </label>
-      </div>
-    </div>
-  );
-
-  const renderReview = () => {
-    const deptName = departments.find(d => d.id === formData.departmentId)?.name || 'N/A';
-    
-    const reviewItem = (label: string, value: string | React.ReactNode, full: boolean = false) => (
-      <div className={`${full ? 'col-span-2' : ''} bg-white p-2 rounded-lg border border-slate-200 shadow-sm text-center md:text-left`}>
-        <span className="block text-[8px] uppercase tracking-wider text-slate-500 mb-0.5">{label}</span>
-        <div className="text-[10px] md:text-sm font-medium text-slate-800 truncate mx-auto md:mx-0">{value || '-'}</div>
-      </div>
-    );
-
-    return (
-      <div className="space-y-3 animate-in slide-in-from-right-4 duration-500">
-        <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
-          <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2 justify-center md:justify-start">
-            <FileText className="text-primary w-4 h-4" /> Resumo
-          </h3>
-          
-          <div className="grid grid-cols-2 gap-2">
-             {reviewItem("Responsável", formData.requesterName, true)}
-             {reviewItem("Depto", deptName)}
-             {reviewItem("Vencimento", new Date(formData.dueDate).toLocaleDateString('pt-BR'))}
-             {reviewItem("Fornecedor", formData.supplierName)}
-             {reviewItem("Valor", <span className="text-primary font-bold">{formatCurrency(formData.value)}</span>)}
-             {reviewItem("Autorizador", formData.authorizer)}
-             {reviewItem("Descrição", formData.description, true)}
-          </div>
-        </div>
-        
-        <UrgencyAlert isUrgent={isUrgent} />
-      </div>
-    );
-  };
 
   const renderSuccess = () => (
     <div className="flex flex-col items-center justify-center py-6 text-center animate-in zoom-in duration-500 max-w-2xl mx-auto px-2">
@@ -877,10 +443,7 @@ function App() {
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Protocolo</p>
         <div className="flex items-center justify-center gap-3">
            <p className="text-xl md:text-3xl font-mono text-slate-900 font-bold tracking-tight">{generatedId}</p>
-           <button 
-             onClick={handleCopyId}
-             className={`p-1.5 rounded-full transition-all duration-300 ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-primary'}`}
-           >
+           <button onClick={handleCopyId} className={`p-1.5 rounded-full transition-all duration-300 ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-primary'}`}>
              {isIdCopied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
            </button>
         </div>
@@ -890,60 +453,41 @@ function App() {
         <Button id="btn-copy-resume" variant="outline" fullWidth onClick={handleCopyResume} className="border-slate-300 text-slate-700 py-3 text-xs md:text-sm">
           Copiar Resumo
         </Button>
+        <Button onClick={goToTrackingFromSuccess} variant="secondary" fullWidth size="md" className="py-3 text-xs md:text-sm">
+          Ver Status em Tempo Real
+        </Button>
         <Button onClick={handleReset} fullWidth size="md" className="shadow-xl py-3 text-xs md:text-sm">
-          Nova Solicitação
+          Página Inicial
         </Button>
       </div>
     </div>
   );
 
-  if (view === 'login') {
-    return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
-  }
-
-  if (view === 'admin') {
-    return <AdminDashboard onBack={() => setView('welcome')} />;
-  }
-
-  if (view === 'welcome') {
-    return renderWelcome();
-  }
+  if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
+  if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
+  if (view === 'track') return <div className="min-h-screen relative bg-slate-50"><BackgroundAnimation /><RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
+  if (view === 'welcome') return renderWelcome();
 
   return (
     <div className="min-h-screen bg-background text-slate-800 selection:bg-primary/20">
       <BackgroundAnimation />
-
       <main className="min-h-screen flex flex-col relative z-10">
         {!isSuccess && (
           <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
-            {/* Superior Utility Green Bar - Static at the top */}
             <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
-              <button 
-                onClick={() => setView('login')}
-                className="flex items-center gap-1.5 md:gap-2 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group"
-              >
+              <button onClick={() => setView('login')} className="flex items-center gap-1.5 md:gap-2 text-white font-bold hover:scale-105 transition-all text-[11px] md:text-sm uppercase tracking-widest group">
                 <Lock className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
                 Acesso Restrito <span className="text-green-300">Admin</span>
               </button>
             </div>
-            
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
-              {/* Left: Brand Identity */}
               <div className="flex items-center gap-3 md:gap-4 shrink-0">
-                <div 
-                  className="cursor-pointer transition-opacity hover:opacity-80"
-                  onClick={() => setView('welcome')}
-                >
+                <div className="cursor-pointer transition-opacity hover:opacity-80" onClick={() => setView('welcome')}>
                   <img src="/logo.png" alt="Missão Vida" className="h-8 md:h-12 w-auto object-contain" />
                 </div>
               </div>
-
-              {/* Right: Actions */}
               <div className="flex items-center">
-                <button
-                  onClick={() => setView('welcome')}
-                  className="flex items-center gap-1.5 md:gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-all text-[10px] md:text-xs font-bold"
-                >
+                <button onClick={() => setView('welcome')} className="flex items-center gap-1.5 md:gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-all text-[10px] md:text-xs font-bold">
                   <Home className="w-3.5 h-3.5 md:w-4 md:h-4" /> 
                   <span className="uppercase tracking-wider">Início</span>
                 </button>
@@ -953,30 +497,21 @@ function App() {
         )}
 
         <div className="w-full max-w-2xl mx-auto p-4 md:p-8 flex-1 flex flex-col relative z-10">
-          
           {!isSuccess ? (
             <>
               <div className="mb-4 md:mb-6 text-center animate-in fade-in duration-700">
-                <div className="inline-block p-1.5 bg-primary/5 rounded-2xl mb-2">
-                  <FileText className="w-6 h-6 text-primary" />
-                </div>
-                <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-1 tracking-tight">
-                  Solicitação de Pagamento
-                </h1>
+                <div className="inline-block p-1.5 bg-primary/5 rounded-2xl mb-2"><FileText className="w-6 h-6 text-primary" /></div>
+                <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-1 tracking-tight">Solicitação de Pagamento</h1>
                 <p className="text-slate-500 text-[10px] md:text-sm font-medium">Preencha os dados com atenção para agilizar o processo.</p>
               </div>
-
               <div className="flex justify-center md:justify-end gap-2 mb-3">
-                 {/* Check if form is NOT empty to show clear draft button */}
                  {!isFormEmpty(formData) && (
                    <button onClick={clearDraft} className="text-[10px] text-danger font-bold hover:underline flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 transition-all">
                      <Trash2 className="w-3 h-3" /> Limpar Rascunho
                    </button>
                  )}
               </div>
-
               <Stepper currentStep={step} />
-
               <div className="flex-1 mt-4">
                 {step === 0 && renderStep1()}
                 {step === 1 && renderStep2()}
@@ -984,50 +519,25 @@ function App() {
                 {step === 3 && renderStep4()}
                 {step === 4 && renderReview()}
               </div>
-
               <div className="mt-6 pt-2 border-t border-slate-100 flex justify-between items-center sticky bottom-0 bg-white/80 backdrop-blur-md py-3 -mx-4 px-4 md:-mx-8 md:px-8 z-10">
-                <Button 
-                  variant="ghost" 
-                  onClick={prevStep} 
-                  disabled={step === 0 || isSubmitting}
-                  size="md"
-                  className={step === 0 ? 'invisible' : 'text-xs px-4'}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" /> Voltar
-                </Button>
-
+                <Button variant="ghost" onClick={prevStep} disabled={step === 0 || isSubmitting} size="md" className={step === 0 ? 'invisible' : 'text-xs px-4'}><ChevronLeft className="w-4 h-4 mr-1" /> Voltar</Button>
                 {step < 4 ? (
                   <Button onClick={nextStep} size="md" className="px-6 text-xs font-bold shadow-lg shadow-primary/20" disabled={isUploading || isUploadingBoleto}>
-                    {isUploading || isUploadingBoleto ? 'Enviando...' : (
-                      <>Próximo Passo <ChevronRight className="w-4 h-4 ml-1" /></>
-                    )}
+                    {isUploading || isUploadingBoleto ? 'Enviando...' : <>{'Próximo Passo'} <ChevronRight className="w-4 h-4 ml-1" /></>}
                   </Button>
                 ) : (
-                  <Button 
-                    variant={isUrgent ? "accent" : "primary"} 
-                    onClick={handleSubmit} 
-                    disabled={isSubmitting}
-                    size="md"
-                    className="px-8 text-xs font-black shadow-xl shadow-primary/30"
-                  >
-                    {isSubmitting ? 'Processando...' : (
-                      <>Finalizar e Enviar <CheckCircle className="w-4 h-4 ml-1" /></>
-                    )}
+                  <Button variant={isUrgent ? "accent" : "primary"} onClick={handleSubmit} disabled={isSubmitting} size="md" className="px-8 text-xs font-black shadow-xl shadow-primary/30">
+                    {isSubmitting ? 'Processando...' : <>{'Finalizar e Enviar'} <CheckCircle className="w-4 h-4 ml-1" /></>}
                   </Button>
                 )}
               </div>
             </>
-          ) : (
-            renderSuccess()
-          )}
+          ) : renderSuccess()}
         </div>
       </main>
-      
       {!isSuccess && view === 'form' && (
         <footer className="w-full pt-3 pb-8 border-t border-slate-200 text-center relative z-10">
-          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
-            Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento
-          </p>
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento</p>
         </footer>
       )}
     </div>
