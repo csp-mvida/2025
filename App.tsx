@@ -409,7 +409,12 @@ function App() {
       </header>
 
       <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-6 md:p-8 relative z-10 text-center">
-        <img src="/logo.png" alt="Logo" className="h-12 md:h-24 mb-8 md:mb-12 drop-shadow-2xl animate-fade-up" />
+        {/* Logo reduced by 10% from last state and shifted up for perfect vertical centering between header and title */}
+        <img 
+          src="/logo.png" 
+          alt="Logo" 
+          className="h-11 md:h-21 mb-4 md:mb-8 -mt-10 md:-mt-16 drop-shadow-2xl animate-fade-up" 
+        />
         <div className="space-y-4 md:space-y-6 max-w-3xl mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-3xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
           <p className="text-base md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
