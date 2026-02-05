@@ -87,7 +87,8 @@ function App() {
       }
 
       try {
-        const url = await uploadInvoice(file);
+        // Chamada atualizada com o tipo de arquivo
+        const url = await uploadInvoice(file, type); 
         if (isInvoice) {
           setFormData(prev => ({ ...prev, invoiceUrl: url }));
         } else {

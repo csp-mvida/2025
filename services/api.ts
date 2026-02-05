@@ -1,7 +1,7 @@
 import { supabase } from '../src/integrations/supabase/client';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
-const BUCKET_NAME = 'comprovantes';
+const STORAGE_BUCKET = 'uploads'; // Nome do bucket centralizado
 const TABLE_NAME = 'payment_requests';
 
 // Fetch Departments from Supabase
@@ -55,22 +55,32 @@ export const fetchPaymentAccounts = async () => {
   return data.map(a => a.label);
 };
 
-// Upload File to Supabase Storage
-export const uploadInvoice = async (file: File): Promise<string> => {
+/**
+ * Upload File to Supabase Storage
+ * @param file O arquivo a ser enviado.
+ * @param type O tipo de anexo ('invoice' ou 'boleto') para definir a subpasta.
+ * @returns A URL pública do arquivo.
+ */
+export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto'): Promise<string> => {
   const fileExt = file.name.split('.').pop() || 'bin';
-  // Use a safe, unique path structure: bucket/timestamp_random.ext
-  const safeFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+  const subfolder = type === 'invoice' ? 'invoices' : 'boletos';
+  
+  // Use a safe, unique path structure: bucket/subfolder/timestamp_random.ext
+  const safeFileName = `${subfolder}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
   const options = {
     cacheControl: '3600',
     upsert: false,
-    contentType: file.type || undefined, // Use file.type if available
+    contentType: file.type || undefined,
   };
 
-  console.log(`[storage-upload] Attempting upload to bucket: ${BUCKET_NAME} with path: ${safeFileName}`);
+  // Log de depuração (Tarefa 5)
+  if (import.meta.env.DEV) {
+    console.log(`[storage-upload] DEV LOG: Bucket: ${STORAGE_BUCKET}, Path: ${safeFileName}, File Type: ${file.type}`);
+  }
 
   const { data, error } = await supabase.storage
-    .from(BUCKET_NAME)
+    .from(STORAGE_BUCKET)
     .upload(safeFileName, file, options);
 
   if (error) {
@@ -80,7 +90,7 @@ export const uploadInvoice = async (file: File): Promise<string> => {
   }
 
   const { data: publicUrlData } = supabase.storage
-    .from(BUCKET_NAME)
+    .from(STORAGE_BUCKET)
     .getPublicUrl(safeFileName);
 
   console.log(`[storage-upload] Upload successful. Public URL: ${publicUrlData.publicUrl}`);
