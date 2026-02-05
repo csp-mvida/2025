@@ -155,7 +155,7 @@ function App() {
   };
 
   const renderStep1 = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Input label="Responsável pela solicitação" value={formData.requesterName} onChange={e => handleChange('requesterName', e.target.value)} required error={errors.requesterName} placeholder="Seu nome completo" />
       <div className="space-y-1">
         <Input label="WhatsApp para contato" value={formData.whatsapp} onChange={e => handleChange('whatsapp', formatPhone(e.target.value))} required error={errors.whatsapp} placeholder="(00) 00000-0000" />
@@ -212,7 +212,7 @@ function App() {
   );
 
   const renderStep2 = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Select label="Conta de Pagamento" value={formData.paymentAccount} onChange={e => handleChange('paymentAccount', e.target.value)} required error={errors.paymentAccount}>
         <option value="">Selecione...</option>
         {paymentAccounts.map(p => <option key={p} value={p}>{p}</option>)}
@@ -237,15 +237,15 @@ function App() {
       {formData.paymentMethod === 'Boleto' && (
         <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300">
           <label className="block text-sm font-medium text-slate-700 mb-2">Anexo do Boleto <span className="text-accent">*</span></label>
-          <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+          <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-4 md:p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
             <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                {isUploadingBoleto ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                {isUploadingBoleto ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
               </div>
               <div className="text-left">
-                <p className="font-bold text-primary text-sm">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
-                <p className="text-[10px] text-slate-400">PDF ou Imagem</p>
+                <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px]">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
+                <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem</p>
               </div>
             </div>
           </div>
@@ -256,32 +256,32 @@ function App() {
   );
 
   const renderStep3 = () => (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-4">Possui Nota Fiscal? <span className="text-accent">*</span></label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button onClick={() => handleChange('hasInvoice', 'yes')} className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
-            <FileText className="w-8 h-8" />
-            <span className="font-bold">Sim, possuo</span>
+        <label className="block text-sm font-medium text-slate-700 mb-3 md:mb-4 text-center md:text-left">Possui Nota Fiscal? <span className="text-accent">*</span></label>
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          <button onClick={() => handleChange('hasInvoice', 'yes')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+            <FileText className="w-6 h-6 md:w-8 md:h-8" />
+            <span className="font-bold text-xs md:text-base">Sim, possuo</span>
           </button>
-          <button onClick={() => handleChange('hasInvoice', 'no')} className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
-            <AlertTriangle className="w-8 h-8" />
-            <span className="font-bold">Não possuo agora</span>
+          <button onClick={() => handleChange('hasInvoice', 'no')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+            <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />
+            <span className="font-bold text-xs md:text-base">Não possuo</span>
           </button>
         </div>
       </div>
       {formData.hasInvoice === 'yes' && (
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-slate-700">Upload do Anexo <span className="text-accent">*</span></label>
-          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+        <div className="space-y-3 md:space-y-4">
+          <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Upload do Anexo <span className="text-accent">*</span></label>
+          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 md:p-12 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'invoice')} />
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                {isUploading ? <RefreshCw className="w-8 h-8 text-primary animate-spin" /> : <UploadCloud className="w-8 h-8 text-primary" />}
+            <div className="flex flex-col items-center gap-2 md:gap-3">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                {isUploading ? <RefreshCw className="w-6 h-6 md:w-8 md:h-8 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 md:w-8 md:h-8 text-primary" />}
               </div>
               <div className="space-y-1">
-                <p className="font-bold text-primary">{formData.invoiceFileMeta?.name || "Clique para selecionar"}</p>
-                <p className="text-xs text-slate-400">PDF, JPG ou PNG</p>
+                <p className="font-bold text-primary text-xs md:text-base truncate max-w-[200px]">{formData.invoiceFileMeta?.name || "Clique para selecionar"}</p>
+                <p className="text-[10px] md:text-xs text-slate-400">PDF, JPG ou PNG</p>
               </div>
             </div>
           </div>
@@ -292,15 +292,15 @@ function App() {
   );
 
   const renderStep4 = () => (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Textarea label="Descrição do Pagamento" required value={formData.description} onChange={e => handleChange('description', e.target.value)} error={errors.description} rows={4} placeholder="Ex: Pagamento referente à compra de materiais de escritório para o mês de Outubro..." />
       <Input label="Número de Autorização (Opcional)" value={formData.authNumber || ''} onChange={e => handleChange('authNumber', e.target.value)} placeholder="Se houver um código prévio" />
-      <div className={`p-6 rounded-2xl border transition-all ${formData.termsAccepted ? 'bg-primary/5 border-primary' : 'bg-slate-50 border-slate-100'}`}>
-        <label className="flex items-start gap-4 cursor-pointer">
-          <input type="checkbox" className="mt-1.5 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" checked={formData.termsAccepted} onChange={e => handleChange('termsAccepted', e.target.checked)} />
+      <div className={`p-4 md:p-6 rounded-2xl border transition-all ${formData.termsAccepted ? 'bg-primary/5 border-primary' : 'bg-slate-50 border-slate-100'}`}>
+        <label className="flex items-start gap-3 md:gap-4 cursor-pointer">
+          <input type="checkbox" className="mt-1 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" checked={formData.termsAccepted} onChange={e => handleChange('termsAccepted', e.target.checked)} />
           <div className="space-y-1">
-            <p className="font-bold text-slate-800 text-sm">Confirmo que li e concordo com os prazos e regras.</p>
-            <p className="text-xs text-slate-500 leading-relaxed">Entendo que solicitações urgentes devem ser comunicadas via WhatsApp.</p>
+            <p className="font-bold text-slate-800 text-xs md:text-sm">Confirmo que li e concordo com os prazos e regras.</p>
+            <p className="text-[10px] md:text-xs text-slate-500 leading-relaxed">Entendo que solicitações urgentes devem ser comunicadas via WhatsApp.</p>
           </div>
         </label>
       </div>
@@ -323,24 +323,24 @@ function App() {
     ];
 
     return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex items-center gap-3">
+      <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-4 md:p-6 bg-slate-50/50 border-b border-slate-100 flex items-center gap-3">
             <FileText className="w-5 h-5 text-primary" />
-            <h3 className="font-bold text-slate-800 text-sm md:text-base">Resumo da Solicitação</h3>
+            <h3 className="font-bold text-slate-800 text-xs md:text-base">Resumo da Solicitação</h3>
           </div>
-          <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          <div className="p-3 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
             {items.map((item, i) => (
               <div key={i} className={`p-3 md:p-4 rounded-xl border border-slate-50 ${item.full ? 'md:col-span-2' : ''}`}>
-                <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{item.label}</span>
-                <span className={`block font-bold text-slate-800 text-sm md:text-base ${item.color || ''}`}>{item.value}</span>
+                <span className="block text-[9px] md:text-[10px] uppercase font-bold text-slate-400 mb-1">{item.label}</span>
+                <span className={`block font-bold text-slate-800 text-xs md:text-base ${item.color || ''}`}>{item.value}</span>
               </div>
             ))}
           </div>
         </div>
-        <div className="bg-slate-50 p-4 rounded-2xl flex items-start gap-4 border border-slate-100">
-          <AlertTriangle className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
-          <p className="text-xs text-slate-500 leading-relaxed">Verifique todas as informações antes de enviar. Após o envio, você receberá um ID de protocolo.</p>
+        <div className="bg-slate-50 p-4 rounded-2xl flex items-start gap-3 border border-slate-100">
+          <AlertTriangle className="w-5 h-5 text-slate-400 shrink-0" />
+          <p className="text-[10px] md:text-xs text-slate-500 leading-relaxed">Verifique todas as informações antes de enviar. Após o envio, você receberá um ID de protocolo.</p>
         </div>
       </div>
     );
@@ -371,7 +371,7 @@ function App() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 w-full">
+      <div className="grid grid-cols-1 gap-4 w-full px-4">
         <Button onClick={resetForm} fullWidth size="lg" className="rounded-xl md:rounded-2xl shadow-xl py-4 md:py-5 font-black uppercase tracking-widest text-sm md:text-base">Voltar ao Início</Button>
         <Button variant="ghost" onClick={() => setView('track')} className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Acompanhar Status</Button>
       </div>
@@ -385,7 +385,6 @@ function App() {
       
       <header className="relative z-30">
         <div className="bg-primary py-3 px-4 md:px-6 flex items-center shadow-lg relative h-12 md:h-14">
-          {/* Mobile Layout: Just buttons */}
           <div className="flex md:hidden justify-between w-full">
             <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[9px] uppercase tracking-[0.2em]">
               <Lock className="w-3.5 h-3.5" /> Administração
@@ -395,9 +394,8 @@ function App() {
             </button>
           </div>
 
-          {/* Desktop Layout: Centralized Admin */}
           <div className="hidden md:flex items-center w-full justify-between">
-            <div className="w-40" /> {/* Symmetry balancer */}
+            <div className="w-40" />
             <button onClick={() => setView('login')} className="flex items-center gap-2 text-emerald-400 font-black text-[10px] uppercase tracking-[0.2em] hover:text-white transition-colors">
               <Lock className="w-4 h-4" /> Administração
             </button>
@@ -409,22 +407,22 @@ function App() {
       </header>
 
       <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-6 md:p-8 relative z-10 text-center">
-        {/* Logo reduced by 10% from last state and shifted up for perfect vertical centering between header and title */}
+        {/* Adjusted margins for perfect vertical centering */}
         <img 
           src="/logo.png" 
           alt="Logo" 
-          className="h-11 md:h-21 mb-4 md:mb-8 -mt-10 md:-mt-16 drop-shadow-2xl animate-fade-up" 
+          className="h-12 md:h-24 mb-6 md:mb-12 drop-shadow-2xl animate-fade-up" 
         />
-        <div className="space-y-4 md:space-y-6 max-w-3xl mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+        <div className="space-y-3 md:space-y-6 max-w-3xl mb-8 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-3xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
-          <p className="text-base md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
+          <p className="text-sm md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
         </div>
-        <div className="flex flex-col gap-5 w-full max-w-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
+        <div className="flex flex-col gap-4 w-full max-w-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
             <div className="absolute -inset-4 bg-primary/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-2xl py-6 text-xl font-black shadow-2xl">Criar Solicitação</Button>
+            <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-2xl py-5 md:py-6 text-lg md:text-xl font-black shadow-2xl">Criar Solicitação</Button>
           </div>
-          <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-2xl py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-lg">Acompanhar Pedido</Button>
+          <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-2xl py-5 md:py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-base md:text-lg">Acompanhar Pedido</Button>
           {hasSavedDraft && <button onClick={() => { setFormData(JSON.parse(localStorage.getItem('csp_draft')!)); setView('form'); }} className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-2 justify-center hover:text-primary transition-colors mt-2"><RefreshCw className="w-3 h-3" /> Continuar rascunho</button>}
         </div>
       </div>
@@ -436,31 +434,31 @@ function App() {
   if (view === 'track') return <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6"><BackgroundAnimation />{renderHeader()}<RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pt-16 selection:bg-primary/10">
+    <div className="min-h-screen bg-slate-50 flex flex-col pt-14 md:pt-16 selection:bg-primary/10">
       <BackgroundAnimation />
       {renderHeader()}
-      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+      <main className="flex-1 flex flex-col items-center justify-center p-3 md:p-8">
         {!isSuccess ? (
           <div className="w-full max-w-3xl animate-in fade-in zoom-in-95 duration-700">
-            {/* Top Navigation */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 md:mb-10">
-              <button onClick={() => setView('welcome')} className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors text-[10px] md:text-xs font-bold uppercase tracking-widest"><Home className="w-4 h-4" /> Voltar ao Início</button>
-              <div className="flex gap-3 md:gap-4">
-                <button onClick={clearDraft} className="flex items-center gap-1.5 text-danger hover:opacity-80 transition-opacity text-[9px] md:text-[10px] font-bold uppercase"><Trash2 className="w-3.5 h-3.5" /> Limpar</button>
-                <button onClick={saveDraft} className="flex items-center gap-1.5 text-primary border border-primary/20 bg-primary/5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-colors text-[9px] md:text-[10px] font-bold uppercase"><Save className="w-3.5 h-3.5" /> Salvar Rascunho</button>
+            {/* Top Navigation - Reduced Spacing */}
+            <div className="flex flex-row justify-between items-center gap-4 mb-6 md:mb-10 px-1">
+              <button onClick={() => setView('welcome')} className="flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-[9px] md:text-xs font-bold uppercase tracking-widest"><Home className="w-3.5 h-3.5 md:w-4 md:h-4" /> Início</button>
+              <div className="flex gap-2 md:gap-4">
+                <button onClick={clearDraft} className="flex items-center gap-1.5 text-danger hover:opacity-80 transition-opacity text-[8px] md:text-[10px] font-bold uppercase"><Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5" /> Limpar</button>
+                <button onClick={saveDraft} className="flex items-center gap-1.5 text-primary border border-primary/20 bg-primary/5 px-2 py-1 md:py-1.5 rounded-lg hover:bg-primary/10 transition-colors text-[8px] md:text-[10px] font-bold uppercase"><Save className="w-3 h-3 md:w-3.5 md:h-3.5" /> Salvar</button>
               </div>
             </div>
 
-            {/* Title Section */}
-            <div className="mb-8 md:mb-12 text-center md:text-left">
-               <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2 block">Financeiro</span>
-               <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter mb-2">Nova Solicitação</h1>
-               <p className="text-sm md:text-base text-slate-500 font-medium">Preencha os dados abaixo para registrar um novo pagamento.</p>
+            {/* Title Section - Reduced Spacing */}
+            <div className="mb-6 md:mb-12 text-center md:text-left">
+               <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1.5 block">Financeiro</span>
+               <h1 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tighter mb-1.5">Nova Solicitação</h1>
+               <p className="text-xs md:text-base text-slate-500 font-medium">Preencha os dados para registrar o pagamento.</p>
             </div>
 
             <Stepper currentStep={step} />
 
-            <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-6 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-50 mb-10">
+            <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-5 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-50 mb-6 md:mb-10">
               {step === 0 && renderStep1()}
               {step === 1 && renderStep2()}
               {step === 2 && renderStep3()}
@@ -468,13 +466,13 @@ function App() {
               {step === 4 && renderReview()}
             </div>
 
-            <div className="flex justify-between items-center pt-8 border-t border-slate-200">
-              <button onClick={prevStep} className={`flex items-center gap-2 text-slate-400 hover:text-slate-600 font-bold text-sm transition-all ${step === 0 ? 'invisible' : ''}`}><ChevronLeft className="w-5 h-5" /> Voltar</button>
+            <div className="flex justify-between items-center pt-6 md:pt-8 border-t border-slate-200">
+              <button onClick={prevStep} className={`flex items-center gap-1.5 md:gap-2 text-slate-400 hover:text-slate-600 font-bold text-xs md:text-sm transition-all ${step === 0 ? 'invisible' : ''}`}><ChevronLeft className="w-4 h-4 md:w-5 md:h-5" /> Voltar</button>
               {step < 4 ? (
-                <Button onClick={nextStep} size="lg" className="rounded-xl px-6 md:px-10 py-3 md:py-4 shadow-xl text-sm md:text-base">Próximo <ChevronRight className="w-5 h-5 ml-2" /></Button>
+                <Button onClick={nextStep} size="md" className="rounded-xl px-6 md:px-10 py-3 md:py-4 shadow-xl text-xs md:text-base">Próximo <ChevronRight className="w-4 h-4 md:w-5 md:h-5 ml-1.5" /></Button>
               ) : (
-                <Button onClick={handleSubmit} size="lg" disabled={isSubmitting} className="rounded-xl px-6 md:px-10 py-3 md:py-4 shadow-xl bg-primaryDark text-sm md:text-base">
-                  {isSubmitting ? 'Enviando...' : <span className="flex items-center gap-2">Confirmar <CheckCircle className="w-5 h-5" /></span>}
+                <Button onClick={handleSubmit} size="md" disabled={isSubmitting} className="rounded-xl px-6 md:px-10 py-3 md:py-4 shadow-xl bg-primaryDark text-xs md:text-base">
+                  {isSubmitting ? 'Enviando...' : <span className="flex items-center gap-1.5">Confirmar <CheckCircle className="w-4 h-4 md:w-5 md:h-5" /></span>}
                 </Button>
               )}
             </div>
