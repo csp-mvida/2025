@@ -164,26 +164,6 @@ function App() {
     }
   };
 
-  const handleBoletoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFormData(prev => ({
-        ...prev,
-        boletoFile: file, 
-        boletoFileMeta: { name: file.name, size: file.size }
-      }));
-      setIsUploadingBoleto(true);
-      try {
-        const publicUrl = await uploadInvoice(file);
-        setFormData(prev => ({ ...prev, boletoUrl: publicUrl }));
-      } catch (error) {
-        alert("Erro no upload.");
-      } finally {
-        setIsUploadingBoleto(false);
-      }
-    }
-  };
-
   const validateStep = (currentStep: number): boolean => {
     const newErrors: ValidationErrors = {};
     if (currentStep === 0) { 
@@ -248,6 +228,12 @@ function App() {
     const dept = departments.find(d => d.id === formData.departmentId)?.name || 'N/A';
     const text = `*SOLICITAÇÃO CSP*\n📄 Protocolo: ${generatedId}\n👤 Solicitante: ${formData.requesterName}\n🏢 Depto: ${dept}\n🤝 Fornecedor: ${formData.supplierName}\n💰 Valor: ${formatCurrency(formData.value)}\n📅 Vencimento: ${new Date(formData.dueDate).toLocaleDateString('pt-BR')}\n📝 Descrição: ${formData.description}`;
     navigator.clipboard.writeText(text);
+  };
+
+  const goToTrackingFromSuccess = () => {
+    setView('track');
+    setIsSuccess(false);
+    window.scrollTo(0,0);
   };
 
   // --- Step Renders ---
@@ -341,16 +327,34 @@ function App() {
   );
 
   const renderSuccess = () => (
-    <div className="text-center animate-in zoom-in duration-500 py-10">
-      <CheckCircle className="w-16 h-16 text-primary mx-auto mb-4" />
-      <h2 className="text-2xl font-bold">Enviada com Sucesso!</h2>
-      <div className="my-6 p-6 bg-white border border-slate-200 rounded-2xl shadow-lg">
-        <span className="text-[10px] uppercase font-bold text-slate-400">Protocolo</span>
-        <div className="text-2xl font-mono font-black text-slate-900 mt-1">{generatedId}</div>
+    <div className="flex flex-col items-center justify-center py-10 text-center animate-in zoom-in duration-500 max-w-2xl mx-auto px-4">
+      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 ring-8 ring-primary/5">
+        <CheckCircle className="w-8 h-8 text-primary" />
       </div>
-      <div className="space-y-2">
-        <Button variant="outline" fullWidth onClick={handleCopyResume}>Copiar Resumo</Button>
-        <Button fullWidth onClick={handleReset}>Voltar ao Início</Button>
+      <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-1">Enviada!</h2>
+      <p className="text-slate-500 mb-6 text-sm">Solicitação processada com sucesso.</p>
+      
+      <div className="w-full bg-white border border-slate-200 rounded-2xl p-6 mb-8 shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primaryDark"></div>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Protocolo</p>
+        <div className="flex items-center justify-center gap-3">
+           <p className="text-xl md:text-3xl font-mono text-slate-900 font-bold tracking-tight">{generatedId}</p>
+           <button onClick={handleCopyId} className={`p-1.5 rounded-full transition-all duration-300 ${isIdCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-primary'}`}>
+             {isIdCopied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+           </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+        <Button variant="outline" onClick={handleCopyResume} className="border-slate-300 text-slate-700 py-4 text-xs font-bold uppercase tracking-wider">
+          Copiar Resumo
+        </Button>
+        <Button onClick={goToTrackingFromSuccess} variant="secondary" className="py-4 text-xs font-bold uppercase tracking-wider border-slate-200">
+          Acompanhar Status
+        </Button>
+        <Button onClick={handleReset} fullWidth className="md:col-span-2 shadow-xl py-4 text-sm font-black uppercase tracking-[0.2em]">
+          Voltar para o Início
+        </Button>
       </div>
     </div>
   );
@@ -359,25 +363,97 @@ function App() {
     <div className="min-h-screen relative flex flex-col bg-slate-50">
       <BackgroundAnimation />
       <header className="relative z-30">
-        <div className="bg-primary py-2.5 px-4 flex justify-center">
-          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest"><Lock className="w-4 h-4" /> Acesso Admin</button>
+        <div className="bg-primary py-2.5 px-4 flex justify-center shadow-md">
+          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-bold hover:scale-105 transition-all group">
+            <Lock className="w-4 h-4" />
+            <span className="text-[11px] md:text-sm uppercase tracking-widest">Acesso Restrito <span className="text-green-300">Admin</span></span>
+          </button>
         </div>
       </header>
-      <div className="max-w-4xl mx-auto flex-1 flex flex-col items-center justify-center p-8 relative z-10 text-center">
-        <img src="/logo.png" alt="Logo" className="h-20 mb-10" />
-        <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 leading-tight">Gestão de <span className="text-primary italic">Pagamentos.</span></h1>
-        <div className="flex flex-col gap-4 w-full max-w-sm">
-          <Button size="lg" onClick={handleStartRequest} className="rounded-2xl">Criar Solicitação</Button>
-          <Button variant="outline" size="lg" onClick={handleTrackRequest} className="rounded-2xl bg-white">Acompanhar Pedido</Button>
-          {hasSavedDraft && <button onClick={handleRestoreDraft} className="text-xs text-slate-400 font-bold flex items-center gap-2 justify-center"><RefreshCw className="w-3 h-3" /> Continuar rascunho</button>}
+
+      <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10">
+        <div className="mt-4 mb-8 md:mb-10 text-center animate-fade-up">
+           <img src="/logo.png" alt="Missão Vida" className="h-16 md:h-24 object-contain mx-auto mb-6 drop-shadow-md" />
+           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mx-auto">
+             <span className="relative flex h-2 w-2">
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+             </span>
+             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Central de Solicitação de Pagamentos</span>
+           </div>
         </div>
+
+        <div className="text-center mb-8 md:mb-10 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+          <h1 className="text-4xl md:text-6xl text-slate-900 mb-4 tracking-tighter leading-[1.1] max-w-4xl px-2">
+            <span className="font-light block md:inline text-2xl md:text-4xl">Sua ponte direta com o</span>{' '}
+            <span className="font-black text-primary italic">Financeiro.</span>
+          </h1>
+          <p className="text-sm md:text-lg text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed px-4">
+            Solicite pagamentos de forma padronizada, segura e com total transparência em cada etapa.
+          </p>
+        </div>
+
+        <div className="mb-10 md:mb-12 animate-fade-up flex flex-col items-center gap-4" style={{ animationDelay: '0.2s' }}>
+          <div className="relative group">
+            <div className="absolute -inset-4 bg-primary/20 rounded-[2.5rem] blur-2xl group-hover:bg-primary/30 transition duration-500"></div>
+            <button 
+              onClick={handleStartRequest} 
+              className="relative px-8 py-4 md:px-12 md:py-5 bg-primary hover:bg-primaryHover text-lg md:text-xl font-bold text-white rounded-3xl shadow-2xl transition-all duration-300 transform group-hover:scale-[1.03] flex items-center gap-4 mx-auto"
+            >
+              Criar Solicitação
+              <ChevronRight className="w-6 h-6 group-hover:translate-x-1.5 transition-transform" />
+            </button>
+          </div>
+          
+          <button 
+            onClick={handleTrackRequest}
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:text-primary hover:border-primary/30 rounded-2xl font-bold text-sm transition-all shadow-sm hover:shadow-md"
+          >
+            <Search className="w-4 h-4" />
+            Acompanhar Solicitação
+          </button>
+
+          {hasSavedDraft && (
+            <button onClick={handleRestoreDraft} className="flex items-center gap-2 mx-auto text-slate-400 hover:text-primary font-bold text-xs transition-colors py-1 px-4 rounded-full hover:bg-white shadow-sm">
+              <RefreshCw className="w-3.5 h-3.5" /> Retomar rascunho salvo
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full px-4 mb-12 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+          <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <FileText className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Protocolo Digital</h3>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">Geração automática de ID para rastreamento imediato de cada pedido realizado.</p>
+          </div>
+          <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Clock className="w-6 h-6 text-accent" />
+            </div>
+            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Agilidade Real</h3>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">Detecção de urgência e avisos automáticos para garantir prazos críticos.</p>
+          </div>
+          <div className="bg-white/50 backdrop-blur-xl p-6 rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 hover:bg-white transition-all duration-500 group flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="w-12 h-12 bg-slate-900/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <CheckCircle className="w-6 h-6 text-slate-900" />
+            </div>
+            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-2">Padronização</h3>
+            <p className="text-slate-500 text-xs leading-relaxed font-medium">Fluxo guiado que evita erros de preenchimento e agiliza a aprovação.</p>
+          </div>
+        </div>
+        
+        <footer className="mt-auto pt-3 pb-8 border-t border-slate-200 w-full text-center">
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">Missão Vida &bull; {new Date().getFullYear()} &bull; Central de Pagamento</p>
+        </footer>
       </div>
     </div>
   );
 
   if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
   if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
-  if (view === 'track') return <div className="min-h-screen relative bg-slate-50"><BackgroundAnimation /><RequestTracker onBack={() => setView('welcome')} /></div>;
+  if (view === 'track') return <div className="min-h-screen relative bg-slate-50"><BackgroundAnimation /><RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
   if (view === 'welcome') return renderWelcome();
 
   return (
