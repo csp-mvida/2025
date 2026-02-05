@@ -1,7 +1,6 @@
 import { supabase } from '../src/integrations/supabase/client';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
-const DB_KEY = 'csp_db_requests';
 const BUCKET_NAME = 'comprovantes';
 const TABLE_NAME = 'payment_requests';
 
@@ -59,21 +58,25 @@ export const fetchPaymentAccounts = async () => {
 // Upload File to Supabase Storage
 export const uploadInvoice = async (file: File): Promise<string> => {
   const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-  const filePath = `${fileName}`;
+  // Sanitizing file name and adding timestamp to avoid collisions
+  const cleanName = file.name.replace(/[^\w.-]/g, '_');
+  const fileName = `${Date.now()}_${cleanName}`;
 
   const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(filePath, file);
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
 
   if (error) {
-    console.error('Error uploading file:', error);
-    throw new Error('Falha no upload do arquivo.');
+    console.error('Detailed Upload Error:', error);
+    throw error; // Let the component catch and show the message
   }
 
   const { data: publicUrlData } = supabase.storage
     .from(BUCKET_NAME)
-    .getPublicUrl(filePath);
+    .getPublicUrl(fileName);
 
   return publicUrlData.publicUrl;
 };
@@ -127,7 +130,6 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     .single();
 
   if (error || !data) {
-    console.error('Error fetching request by protocol:', error);
     return null;
   }
 
