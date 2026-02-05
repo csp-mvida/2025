@@ -155,7 +155,7 @@ function App() {
   };
 
   const renderStep1 = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Input label="Responsável pela solicitação" value={formData.requesterName} onChange={e => handleChange('requesterName', e.target.value)} required error={errors.requesterName} placeholder="Seu nome completo" />
       <div className="space-y-1">
         <Input label="WhatsApp para contato" value={formData.whatsapp} onChange={e => handleChange('whatsapp', formatPhone(e.target.value))} required error={errors.whatsapp} placeholder="(00) 00000-0000" />
@@ -212,7 +212,7 @@ function App() {
   );
 
   const renderStep2 = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Select label="Conta de Pagamento" value={formData.paymentAccount} onChange={e => handleChange('paymentAccount', e.target.value)} required error={errors.paymentAccount}>
         <option value="">Selecione...</option>
         {paymentAccounts.map(p => <option key={p} value={p}>{p}</option>)}
@@ -273,10 +273,10 @@ function App() {
       {formData.hasInvoice === 'yes' && (
         <div className="space-y-3 md:space-y-4">
           <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Upload do Anexo <span className="text-accent">*</span></label>
-          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 md:p-12 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-12 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'invoice')} />
             <div className="flex flex-col items-center gap-2 md:gap-3">
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                 {isUploading ? <RefreshCw className="w-6 h-6 md:w-8 md:h-8 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 md:w-8 md:h-8 text-primary" />}
               </div>
               <div className="space-y-1">
@@ -347,8 +347,8 @@ function App() {
   };
 
   const renderHeader = () => (
-    <div className="bg-white border-b border-slate-100 py-3 px-6 flex justify-center fixed top-0 w-full z-50">
-      <div className="text-[10px] md:text-[12px] font-medium text-slate-400 tracking-tight">CSP | <span className="text-slate-600">Central de Solicitação de Pagamento</span></div>
+    <div className="bg-white border-b border-slate-100 py-2 md:py-3 px-6 flex justify-center fixed top-0 w-full z-50">
+      <div className="text-[9px] md:text-[12px] font-medium text-slate-400 tracking-tight">CSP | <span className="text-slate-600">Central de Solicitação de Pagamento</span></div>
     </div>
   );
 
@@ -384,7 +384,7 @@ function App() {
       <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
       
       <header className="relative z-30">
-        <div className="bg-primary py-3 px-4 md:px-6 flex items-center shadow-lg relative h-12 md:h-14">
+        <div className="bg-primary py-2 px-4 md:px-6 flex items-center shadow-lg relative h-10 md:h-14">
           <div className="flex md:hidden justify-between w-full">
             <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[9px] uppercase tracking-[0.2em]">
               <Lock className="w-3.5 h-3.5" /> Administração
@@ -406,14 +406,14 @@ function App() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-6 md:p-8 relative z-10 text-center">
-        {/* Adjusted margins for perfect vertical centering */}
+      {/* Main container with justify-start on mobile to remove big white spaces */}
+      <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-start md:justify-center p-6 pt-12 md:p-8 relative z-10 text-center">
         <img 
           src="/logo.png" 
           alt="Logo" 
-          className="h-12 md:h-24 mb-6 md:mb-12 drop-shadow-2xl animate-fade-up" 
+          className="h-12 md:h-24 mb-8 md:mb-12 drop-shadow-2xl animate-fade-up" 
         />
-        <div className="space-y-3 md:space-y-6 max-w-3xl mb-8 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+        <div className="space-y-4 md:space-y-6 max-w-3xl mb-10 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-3xl md:text-7xl font-black text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
           <p className="text-sm md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
         </div>
@@ -434,13 +434,13 @@ function App() {
   if (view === 'track') return <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6"><BackgroundAnimation />{renderHeader()}<RequestTracker initialProtocol={generatedId} onBack={() => setView('welcome')} /></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pt-14 md:pt-16 selection:bg-primary/10">
+    <div className="min-h-screen bg-slate-50 flex flex-col pt-12 md:pt-16 selection:bg-primary/10">
       <BackgroundAnimation />
       {renderHeader()}
-      <main className="flex-1 flex flex-col items-center justify-center p-3 md:p-8">
+      <main className="flex-1 flex flex-col items-center justify-start md:justify-center p-4 pt-6 md:p-8">
         {!isSuccess ? (
           <div className="w-full max-w-3xl animate-in fade-in zoom-in-95 duration-700">
-            {/* Top Navigation - Reduced Spacing */}
+            {/* Top Navigation - Tighter on mobile */}
             <div className="flex flex-row justify-between items-center gap-4 mb-6 md:mb-10 px-1">
               <button onClick={() => setView('welcome')} className="flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-[9px] md:text-xs font-bold uppercase tracking-widest"><Home className="w-3.5 h-3.5 md:w-4 md:h-4" /> Início</button>
               <div className="flex gap-2 md:gap-4">
@@ -449,10 +449,10 @@ function App() {
               </div>
             </div>
 
-            {/* Title Section - Reduced Spacing */}
+            {/* Title Section - Reduced gaps */}
             <div className="mb-6 md:mb-12 text-center md:text-left">
-               <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1.5 block">Financeiro</span>
-               <h1 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tighter mb-1.5">Nova Solicitação</h1>
+               <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1 block">Financeiro</span>
+               <h1 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tighter mb-1">Nova Solicitação</h1>
                <p className="text-xs md:text-base text-slate-500 font-medium">Preencha os dados para registrar o pagamento.</p>
             </div>
 
