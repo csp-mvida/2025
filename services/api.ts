@@ -58,9 +58,8 @@ export const fetchPaymentAccounts = async () => {
 // Upload File to Supabase Storage
 export const uploadInvoice = async (file: File): Promise<string> => {
   const fileExt = file.name.split('.').pop();
-  // Sanitizing file name and adding timestamp to avoid collisions
-  const cleanName = file.name.replace(/[^\w.-]/g, '_');
-  const fileName = `${Date.now()}_${cleanName}`;
+  // Extremely safe filename: timestamp + random string
+  const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
   const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
@@ -70,8 +69,8 @@ export const uploadInvoice = async (file: File): Promise<string> => {
     });
 
   if (error) {
-    console.error('Detailed Upload Error:', error);
-    throw error; // Let the component catch and show the message
+    console.error('[storage-upload] Detailed Error:', error);
+    throw error;
   }
 
   const { data: publicUrlData } = supabase.storage
