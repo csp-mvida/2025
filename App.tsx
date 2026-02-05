@@ -31,6 +31,7 @@ function App() {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false); 
+  const [isUploadingBoleto, setIsUploadingBoleto] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [generatedId, setGeneratedId] = useState('');
   const [isIdCopied, setIsIdCopied] = useState(false); 
@@ -68,16 +69,29 @@ function App() {
     });
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'invoice' | 'boleto') => {
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
-      setFormData(prev => ({ ...prev, invoiceFileMeta: { name: file.name, size: file.size } }));
-      setIsUploading(true);
+      const isInvoice = type === 'invoice';
+      
+      if (isInvoice) {
+        setFormData(prev => ({ ...prev, invoiceFileMeta: { name: file.name, size: file.size } }));
+        setIsUploading(true);
+      } else {
+        setFormData(prev => ({ ...prev, boletoFileMeta: { name: file.name, size: file.size } }));
+        setIsUploadingBoleto(true);
+      }
+
       try {
         const url = await uploadInvoice(file);
-        setFormData(prev => ({ ...prev, invoiceUrl: url }));
+        if (isInvoice) {
+          setFormData(prev => ({ ...prev, invoiceUrl: url }));
+        } else {
+          setFormData(prev => ({ ...prev, boletoUrl: url }));
+        }
       } finally {
-        setIsUploading(false);
+        if (isInvoice) setIsUploading(false);
+        else setIsUploadingBoleto(false);
       }
     }
   };
@@ -96,6 +110,7 @@ function App() {
       if (!formData.supplierName) errs.supplierName = "Fornecedor é obrigatório";
       if (!formData.value || parseInt(formData.value) === 0) errs.value = "Valor é obrigatório";
       if (!formData.paymentMethod) errs.paymentMethod = "Forma é obrigatória";
+      if (formData.paymentMethod === 'Boleto' && !formData.boletoUrl) errs.boletoFile = "Anexo do boleto necessário";
     }
     if (s === 2 && formData.hasInvoice === 'yes' && !formData.invoiceUrl) errs.invoiceFile = "Upload necessário";
     if (s === 3 && !formData.description) errs.description = "Descrição é obrigatória";
@@ -188,6 +203,24 @@ function App() {
           <option value="Transferência">Transferência</option>
         </Select>
       </div>
+      {formData.paymentMethod === 'Boleto' && (
+        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Anexo do Boleto <span className="text-accent">*</span></label>
+          <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                {isUploadingBoleto ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-primary text-sm">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
+                <p className="text-[10px] text-slate-400">PDF ou Imagem</p>
+              </div>
+            </div>
+          </div>
+          {errors.boletoFile && <p className="text-xs text-danger mt-1">{errors.boletoFile}</p>}
+        </div>
+      )}
     </div>
   );
 
@@ -210,7 +243,7 @@ function App() {
         <div className="space-y-4">
           <label className="block text-sm font-medium text-slate-700">Upload do Anexo <span className="text-accent">*</span></label>
           <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
-            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} />
+            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'invoice')} />
             <div className="flex flex-col items-center gap-3">
               <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                 {isUploading ? <RefreshCw className="w-8 h-8 text-primary animate-spin" /> : <UploadCloud className="w-8 h-8 text-primary" />}
@@ -254,7 +287,8 @@ function App() {
       { label: 'Forma Pagto', value: formData.paymentMethod },
       { label: 'Autorizador', value: formData.authorizer },
       { label: 'Descrição', value: formData.description, full: true },
-      { label: 'Anexo', value: formData.invoiceUrl ? 'Enviado' : 'Enviará via WhatsApp', full: true }
+      { label: 'Anexo Nota', value: formData.invoiceUrl ? 'Enviado' : 'Não possui', full: false },
+      { label: 'Anexo Boleto', value: formData.boletoUrl ? 'Enviado' : 'N/A', full: false }
     ];
 
     return (
@@ -319,19 +353,27 @@ function App() {
       <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
       
       <header className="relative z-30">
-        <div className="bg-primary py-3 px-6 flex justify-between items-center shadow-lg">
-          <div className="w-24 md:w-32" /> {/* Spacer */}
-          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
-            <Lock className="w-4 h-4" /> Acesso Administrativo
+        <div className="bg-primary py-5 px-6 flex justify-between items-center shadow-lg border-b border-primaryDark">
+          <button onClick={() => setView('login')} className="flex items-center gap-2 text-white/70 font-bold text-[9px] uppercase tracking-[0.2em] hover:text-white transition-colors">
+            <Lock className="w-3.5 h-3.5" /> Administração
           </button>
-          <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] hover:opacity-80 transition-opacity">
-            <Info className="w-4 h-4" /> Regras e Prazos
+          
+          <button 
+            onClick={() => setIsInfoOpen(true)} 
+            className="group flex items-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 rounded-full transition-all active:scale-95 shadow-lg"
+          >
+            <div className="bg-white/10 p-1.5 rounded-full group-hover:bg-white/20 transition-colors">
+               <Info className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-white font-black text-[11px] md:text-xs uppercase tracking-[0.1em]">Regras e Prazos</span>
           </button>
+
+          <div className="w-24 hidden md:block" /> {/* Spacer for symmetry */}
         </div>
       </header>
 
       <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-8 relative z-10 text-center">
-        <img src="/logo.png" alt="Logo" className="h-20 md:h-28 mb-12 drop-shadow-2xl animate-fade-up" />
+        <img src="/logo.png" alt="Logo" className="h-24 md:h-32 mb-12 drop-shadow-2xl animate-fade-up" />
         <div className="space-y-6 max-w-3xl mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none px-4">Sua plataforma de <span className="text-primary italic">pagamentos.</span></h1>
           <p className="text-lg md:text-xl text-slate-500 font-medium px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
