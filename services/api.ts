@@ -67,6 +67,7 @@ export const submitRequest = async (
     invoice_commitment: data.invoiceSentViaWhatsapp,
   };
 
+  // Aqui está a correção: solicitamos o retorno da coluna 'protocol' gerada pelo trigger do Postgres
   const { data: inserted, error } = await supabase
     .from(TABLE_NAME)
     .insert([dbPayload])
