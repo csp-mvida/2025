@@ -63,6 +63,7 @@ function App() {
     }
   }, []);
 
+  // Efeito para carregar dados de lookup
   useEffect(() => {
     const loadData = async () => {
       const [depts, auths, accounts] = await Promise.all([
@@ -74,19 +75,37 @@ function App() {
       setAuthorizers(auths);
       setPaymentAccounts(accounts);
       setIsDataLoaded(true);
-      
-      // Se os dados de lookup foram carregados e não há protocolo, crie o rascunho.
-      if (depts.length > 0 && auths.length > 0 && accounts.length > 0 && !currentProtocolId) {
-        // Usamos o primeiro ID válido de cada lista para o rascunho inicial
-        createInitialDraft(depts[0].id, auths[0].id, accounts[0].id);
-      }
     };
     loadData();
 
     const saved = localStorage.getItem('csp_draft');
     if (saved) setHasSavedDraft(true);
     
-  }, [createInitialDraft, currentProtocolId]);
+  }, []); // Executa apenas uma vez ao montar
+
+  // Efeito para criar o rascunho quando os dados estiverem prontos E a view for 'form'
+  useEffect(() => {
+    if (isDataLoaded && view === 'form' && !currentProtocolId && departments.length > 0 && authorizers.length > 0 && paymentAccounts.length > 0) {
+      // Se houver rascunho salvo, carregamos ele, caso contrário, criamos um novo.
+      const savedDraft = localStorage.getItem('csp_draft');
+      if (savedDraft) {
+        const loadedData: CSPFormData = JSON.parse(savedDraft);
+        
+        // Se o rascunho salvo tiver um protocolo, usamos ele.
+        if (loadedData.id) {
+          setCurrentProtocolId(loadedData.id);
+          setFormData(loadedData);
+          setHasSavedDraft(true);
+          toast.success('Rascunho carregado!');
+          return;
+        }
+      }
+      
+      // Se não houver rascunho válido ou protocolo, criamos um novo rascunho no DB.
+      createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
+    }
+  }, [isDataLoaded, view, currentProtocolId, departments, authorizers, paymentAccounts, createInitialDraft]);
+
 
   const handleChange = (field: keyof CSPFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -270,7 +289,9 @@ function App() {
   };
 
   const saveDraft = () => {
-    localStorage.setItem('csp_draft', JSON.stringify(formData));
+    // Adiciona o ID do protocolo ao rascunho antes de salvar
+    const draftToSave = { ...formData, id: currentProtocolId };
+    localStorage.setItem('csp_draft', JSON.stringify(draftToSave));
     setHasSavedDraft(true);
     toast.success('Rascunho salvo localmente!');
   };
@@ -584,6 +605,24 @@ function App() {
     </div>
   );
 
+  if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
+  if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
+  if (view === 'track') return (
+    <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6">
+      <Toaster position="top-right" />
+      <BackgroundAnimation />
+      {renderHeader()}
+      <RequestTracker 
+        initialProtocol={generatedId} 
+        onBack={() => setView('welcome')} 
+        departments={departments}
+        authorizers={authorizers}
+        paymentAccounts={paymentAccounts}
+      />
+    </div>
+  );
+
+  // Se a view for 'welcome', renderiza a tela de boas-vindas
   if (view === 'welcome') return (
     <div className="min-h-screen relative flex flex-col bg-slate-50 overflow-x-hidden">
       <Toaster position="top-right" />
@@ -630,23 +669,7 @@ function App() {
     </div>
   );
 
-  if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
-  if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
-  if (view === 'track') return (
-    <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-4 md:p-6">
-      <Toaster position="top-right" />
-      <BackgroundAnimation />
-      {renderHeader()}
-      <RequestTracker 
-        initialProtocol={generatedId} 
-        onBack={() => setView('welcome')} 
-        departments={departments}
-        authorizers={authorizers}
-        paymentAccounts={paymentAccounts}
-      />
-    </div>
-  );
-
+  // Se a view for 'form', renderiza o formulário
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pt-12 md:pt-16 selection:bg-primary/10">
       <Toaster position="top-right" />
