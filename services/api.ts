@@ -3,7 +3,6 @@ import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
 const STORAGE_BUCKET = 'uploads'; 
 const TABLE_NAME = 'payment_requests';
-const PLACEHOLDER_UUID = '00000000-0000-0000-0000-000000000000';
 
 // Fetch Departments from Supabase
 export const fetchDepartments = async (): Promise<Department[]> => {
@@ -77,7 +76,7 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
 
   if (error) {
     console.error('[storage-upload] Detailed Error:', error);
-    throw new Error(error.message || 'Falha desconhecida no upload do Supabase Storage.');
+    throw new Error(error.message || 'Falha no upload do arquivo.');
   }
 
   const { data: publicUrlData } = supabase.storage
@@ -88,52 +87,54 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
 };
 
 /**
- * Cria um registro inicial no banco de dados e retorna o protocolo gerado pelo banco.
+ * Cria um registro inicial no banco de dados. 
+ * Agora essa função só será chamada quando tivermos os dados mínimos necessários.
  */
-export const createDraftRequest = async (): Promise<string | null> => {
+export const createDraftRequest = async (data: CSPFormData, authorizerId: string): Promise<string | null> => {
   const dbPayload = {
     status: 'draft',
-    requester_name: 'Iniciando...',
-    requester_whatsapp: '(00) 00000-0000',
-    department_id: PLACEHOLDER_UUID,
-    authorizer_id: PLACEHOLDER_UUID,
-    due_date: new Date().toISOString().split('T')[0],
-    payment_account_id: PLACEHOLDER_UUID,
-    vendor_name: 'Pendente',
-    amount_cents: 0,
-    payment_method: 'PIX',
-    description: 'Rascunho em preenchimento',
-    invoice_commitment: false,
-    agreed_terms: false,
+    requester_name: data.requesterName || 'Rascunho',
+    requester_whatsapp: data.whatsapp || '(00) 00000-0000',
+    department_id: data.departmentId,
+    authorizer_id: authorizerId,
+    due_date: data.dueDate ? data.dueDate.split('T')[0] : new Date().toISOString().split('T')[0],
+    payment_account_id: null, // Será preenchido depois
+    vendor_name: data.supplierName || 'Pendente',
+    amount_cents: data.value ? parseInt(data.value) : 0,
+    payment_method: data.paymentMethod || 'PIX',
+    description: data.description || 'Rascunho em preenchimento',
+    invoice_commitment: data.invoiceSentViaWhatsapp,
+    agreed_terms: data.termsAccepted,
     urgent: false,
   };
 
   try {
-    const { data, error } = await supabase
+    const { data: inserted, error } = await supabase
       .from(TABLE_NAME)
       .insert([dbPayload])
       .select('protocol')
       .single();
 
     if (error) {
-      console.error('[createDraftRequest] Supabase DB Insert Error:', JSON.stringify(error, null, 2));
+      console.error('[createDraftRequest] Error:', error);
       return null;
     }
-    return data.protocol;
+    return inserted.protocol;
   } catch (e) {
-    console.error("[createDraftRequest] Draft creation failed", e);
     return null;
   }
 };
 
 /**
- * Atualiza o registro DRAFT com a URL do anexo.
+ * Atualiza o registro com anexos.
  */
 export const updateRequestAttachments = async (
   protocolId: string, 
   type: 'invoice' | 'boleto', 
   url: string
 ): Promise<boolean> => {
+  if (!protocolId) return true; // Se não houver protocolo no banco ainda, ignoramos (será salvo no final)
+
   const payload = type === 'invoice' 
     ? { invoice_attachment_path: url } 
     : { boleto_attachment_path: url };
@@ -143,11 +144,7 @@ export const updateRequestAttachments = async (
     .update(payload)
     .eq('protocol', protocolId);
 
-  if (error) {
-    console.error('[updateRequestAttachments] Supabase DB Update Error:', JSON.stringify(error, null, 2));
-    return false;
-  }
-  return true;
+  return !error;
 };
 
 
@@ -156,7 +153,7 @@ export const updateRequestAttachments = async (
  */
 export const submitRequest = async (
   data: CSPFormData, 
-  requestId: string, 
+  protocolId: string, 
   authorizerId: string, 
   paymentAccountId: string, 
   isUrgent: boolean
@@ -180,7 +177,6 @@ export const submitRequest = async (
     invoice_attachment_path: url_anexo,
     boleto_attachment_path: data.paymentMethod === 'Boleto' ? data.boletoUrl : null,
     is_budget_specific: data.isSpecificBudget === 'yes',
-    budget_id: null,
     authorization_number: data.authNumber || null,
     authorizer_id: authorizerId,
     payment_account_id: paymentAccountId,
@@ -190,20 +186,30 @@ export const submitRequest = async (
   };
 
   try {
-    const { error } = await supabase
-      .from(TABLE_NAME)
-      .update(dbPayload)
-      .eq('protocol', requestId);
+    let result;
+    
+    if (protocolId) {
+      // Se já existe um protocolo (criado como rascunho), atualizamos
+      result = await supabase
+        .from(TABLE_NAME)
+        .update(dbPayload)
+        .eq('protocol', protocolId);
+    } else {
+      // Se não existe, criamos um novo agora (o trigger gera o protocolo)
+      result = await supabase
+        .from(TABLE_NAME)
+        .insert([dbPayload])
+        .select('protocol')
+        .single();
+    }
 
-    if (error) {
-      console.error('Supabase DB Update Error (Final Submission):', JSON.stringify(error, null, 2));
+    if (result.error) {
+      console.error('Submission Error:', result.error);
       return false;
     }
 
     return true;
-
   } catch (e) {
-    console.error("Final submission failed", e);
     return false;
   }
 };
@@ -215,9 +221,7 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     .eq('protocol', protocol.trim())
     .single();
 
-  if (error || !data) {
-    return null;
-  }
+  if (error || !data) return null;
 
   return {
     id: data.protocol,
@@ -249,10 +253,7 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching requests:', error);
-    return [];
-  }
+  if (error) return [];
 
   return data.map(req => ({
     id: req.protocol,
@@ -284,10 +285,5 @@ export const updateRequestStatus = async (id: string, status: RequestStatus): Pr
     .update({ status })
     .eq('protocol', id);
 
-  if (error) {
-    console.error('Error updating status:', error);
-    return false;
-  }
-
-  return true;
+  return !error;
 };
