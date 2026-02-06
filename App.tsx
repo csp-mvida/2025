@@ -356,9 +356,9 @@ function App() {
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
                 {isUploadingBoleto ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
               </div>
-              <div className="text-left">
-                <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px]">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
-                <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem</p>
+              <div className="text-left overflow-hidden">
+                <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px] md:max-w-xs">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
+                <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem (Máx 100MB)</p>
               </div>
             </div>
           </div>
