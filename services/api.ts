@@ -1,5 +1,5 @@
 import { supabase } from '../src/integrations/supabase/client';
-import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
+import { Department, CSPFormData, CSPRequest, RequestStatus, AttachmentMeta } from '../types';
 
 const STORAGE_BUCKET = 'uploads'; // Nome do bucket centralizado
 const TABLE_NAME = 'payment_requests';
@@ -59,16 +59,15 @@ export const fetchPaymentAccounts = async (): Promise<{ id: string; label: strin
 /**
  * Upload File to Supabase Storage
  * @param file O arquivo a ser enviado.
- * @param type O tipo de anexo ('invoice' ou 'boleto') para definir a subpasta.
+ * @param type O tipo de anexo ('invoice', 'boleto', 'other') para definir a subpasta.
  * @param protocolId O ID do protocolo para criar a pasta de organização.
  * @returns A URL pública do arquivo.
  */
-export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', protocolId: string): Promise<string> => {
+export const uploadAttachment = async (file: File, type: 'invoice' | 'boleto' | 'other', protocolId: string): Promise<string> => {
   const fileExt = file.name.split('.').pop() || 'bin';
-  // Usando 'notas_fiscais' para invoices e 'boletos' para boletos
-  const subfolder = type === 'invoice' ? 'notas_fiscais' : 'boletos'; 
+  const subfolder = 'anexos'; // Pasta genérica para todos os anexos
   
-  // Novo path: subfolder/protocolId/timestamp_random.ext
+  // Novo path: anexos/protocolId/timestamp_random.ext
   const safeFileName = `${subfolder}/${protocolId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
   const options = {
@@ -77,7 +76,6 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
     contentType: file.type || undefined,
   };
 
-  // Log de depuração
   if (import.meta.env.DEV) {
     console.log(`[storage-upload] DEV LOG: Bucket: ${STORAGE_BUCKET}, Path: ${safeFileName}, File Type: ${file.type}`);
   }
@@ -100,8 +98,32 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
 };
 
 /**
+ * Remove um arquivo do Supabase Storage.
+ */
+export const removeAttachment = async (url: string): Promise<boolean> => {
+  // A URL pública é: https://[project_id].supabase.co/storage/v1/object/public/uploads/anexos/protocolId/filename
+  // Precisamos extrair o caminho a partir de 'uploads/'
+  const path = url.split(`${STORAGE_BUCKET}/`)[1];
+
+  if (!path) {
+    console.error('[storage-remove] URL inválida para remoção:', url);
+    return false;
+  }
+
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .remove([path]);
+
+  if (error) {
+    console.error('[storage-remove] Erro ao remover arquivo:', error);
+    return false;
+  }
+  return true;
+};
+
+
+/**
  * Cria um registro inicial no banco de dados com status DRAFT.
- * Isso garante que o protocolo exista antes de qualquer upload.
  */
 export const createDraftRequest = async (requestId: string): Promise<boolean> => {
   const dbPayload = {
@@ -121,10 +143,11 @@ export const createDraftRequest = async (requestId: string): Promise<boolean> =>
     invoice_commitment: false,
     agreed_terms: false,
     urgent: false,
+    // Inicializa o campo de anexos como JSON vazio
+    attachments_json: '[]', 
   };
 
   try {
-    // Usamos upsert para garantir que se o rascunho já existir (ex: refresh), ele não falhe
     const { error } = await supabase
       .from(TABLE_NAME)
       .upsert([dbPayload], { onConflict: 'protocol' });
@@ -141,16 +164,15 @@ export const createDraftRequest = async (requestId: string): Promise<boolean> =>
 };
 
 /**
- * Atualiza o registro DRAFT com a URL do anexo após um upload bem-sucedido.
+ * Atualiza o registro DRAFT com o array de anexos.
  */
 export const updateRequestAttachments = async (
   protocolId: string, 
-  type: 'invoice' | 'boleto', 
-  url: string
+  attachments: AttachmentMeta[]
 ): Promise<boolean> => {
-  const payload = type === 'invoice' 
-    ? { invoice_attachment_path: url } 
-    : { boleto_attachment_path: url };
+  const payload = { 
+    attachments_json: JSON.stringify(attachments)
+  };
 
   const { error } = await supabase
     .from(TABLE_NAME)
@@ -176,12 +198,13 @@ export const submitRequest = async (
   isUrgent: boolean
 ): Promise<boolean> => {
   
-  // Nota: invoice_attachment_path e boleto_attachment_path já devem estar preenchidos
-  // via updateRequestAttachments, mas incluímos aqui para garantir que o valor final
-  // (se for 'Pendente via WhatsApp') seja salvo corretamente.
-  const url_anexo = data.hasInvoice === 'yes' && data.invoiceUrl 
-    ? data.invoiceUrl 
-    : 'Pendente via WhatsApp';
+  // Verifica se há pelo menos uma nota fiscal anexada ou se o compromisso foi aceito
+  const hasInvoiceAttached = data.attachments.some(a => a.type === 'invoice');
+  const invoiceStatus = hasInvoiceAttached 
+    ? 'Anexado' 
+    : data.invoiceSentViaWhatsapp 
+      ? 'Pendente via WhatsApp' 
+      : 'Não possui';
 
   const dbPayload = {
     requester_name: data.requesterName,
@@ -194,8 +217,14 @@ export const submitRequest = async (
     payment_method: data.paymentMethod,
     pix_key: data.pixKey || null,
     status: 'pending', // Status final
-    invoice_attachment_path: url_anexo,
-    boleto_attachment_path: data.boletoUrl || null,
+    
+    // Novo campo de anexos (JSON)
+    attachments_json: JSON.stringify(data.attachments),
+    
+    // Campos antigos de anexo (mantidos para compatibilidade com a tabela atual, mas com valores simplificados)
+    invoice_attachment_path: invoiceStatus, 
+    boleto_attachment_path: data.attachments.find(a => a.type === 'boleto')?.url || null,
+    
     is_budget_specific: data.isSpecificBudget === 'yes',
     budget_id: null, // budget_id é nullable
     authorization_number: data.authNumber || null,
@@ -214,7 +243,6 @@ export const submitRequest = async (
       .eq('protocol', requestId);
 
     if (error) {
-      // Log detalhado do erro (Tarefa 1)
       console.error('Supabase DB Update Error (Final Submission):', JSON.stringify(error, null, 2));
       return false;
     }
@@ -229,18 +257,19 @@ export const submitRequest = async (
 
 // Funções de leitura (mantidas, mas agora os dados de autorizador/conta virão do DB)
 
-export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select('*')
-    .eq('protocol', protocol.trim())
-    .single();
-
-  if (error || !data) {
-    return null;
+const mapDbToCSPRequest = (data: any): CSPRequest => {
+  let attachments: AttachmentMeta[] = [];
+  try {
+    if (data.attachments_json) {
+      attachments = JSON.parse(data.attachments_json);
+    }
+  } catch (e) {
+    console.error("Failed to parse attachments_json:", e);
   }
 
-  // Retornamos os IDs para que o RequestTracker possa mapear para nomes/labels
+  // Determina hasInvoice baseado nos anexos ou no compromisso
+  const hasInvoice = attachments.some(a => a.type === 'invoice') || data.invoice_commitment ? 'yes' : 'no';
+
   return {
     id: data.protocol,
     requesterName: data.requester_name,
@@ -253,16 +282,32 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     supplierName: data.vendor_name,
     value: data.amount_cents.toString(),
     paymentMethod: data.payment_method,
-    hasInvoice: data.invoice_attachment_path ? 'yes' : 'no',
+    pixKey: data.pix_key,
+    
+    attachments: attachments, // Novo campo
+    hasInvoice: hasInvoice,
     invoiceSentViaWhatsapp: data.invoice_commitment, // Mapeando de volta
+    
     description: data.description,
     termsAccepted: data.agreed_terms, // Mapeando de volta
     createdAt: data.created_at,
     status: data.status as RequestStatus,
-    invoiceUrl: data.invoice_attachment_path,
-    boletoUrl: data.boleto_attachment_path,
     history: []
   };
+};
+
+export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .select('*')
+    .eq('protocol', protocol.trim())
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return mapDbToCSPRequest(data);
 };
 
 export const getRequests = async (): Promise<CSPRequest[]> => {
@@ -276,27 +321,7 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     return [];
   }
 
-  return data.map(req => ({
-    id: req.protocol,
-    requesterName: req.requester_name,
-    whatsapp: req.requester_whatsapp,
-    departmentId: req.department_id,
-    authorizer: req.authorizer_id, // Retornando ID
-    dueDate: req.due_date,
-    paymentAccount: req.payment_account_id, // Retornando ID
-    isSpecificBudget: req.is_budget_specific ? 'yes' : 'no',
-    supplierName: req.vendor_name,
-    value: req.amount_cents.toString(),
-    paymentMethod: req.payment_method,
-    hasInvoice: req.invoice_attachment_path ? 'yes' : 'no',
-    invoiceSentViaWhatsapp: req.invoice_commitment,
-    description: req.description,
-    termsAccepted: req.agreed_terms,
-    createdAt: req.created_at,
-    status: req.status as RequestStatus,
-    boletoUrl: req.boleto_attachment_path,
-    history: []
-  }));
+  return data.map(mapDbToCSPRequest);
 };
 
 export const updateRequestStatus = async (id: string, status: RequestStatus): Promise<boolean> => {
