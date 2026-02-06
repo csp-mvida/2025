@@ -1,3 +1,4 @@
+0 e log do payload final antes do PATCH.">
 import { supabase } from '../src/integrations/supabase/client';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
@@ -195,6 +196,7 @@ export const submitRequest = async (
     : 'Pendente via WhatsApp';
 
   // Mapeamento do payment_method para minúsculas, conforme esperado pelo DB
+  // Adicionando 'cash' como opção, caso seja implementado futuramente, mas mantendo o foco nos 3 principais.
   const mappedPaymentMethod = data.paymentMethod.toLowerCase().replace('transferência', 'transferencia');
   
   // amount_cents deve ser um número inteiro > 0
@@ -231,7 +233,7 @@ export const submitRequest = async (
     transfer_attachment_path: isTransfer ? data.transferUrl : null, // Garantindo que o path seja salvo
 
     // Comuns
-    status: 'pending' as RequestStatus, 
+    status: 'pending' as RequestStatus, // Garantindo status 'pending'
     invoice_attachment_path: url_anexo,
     is_budget_specific: data.isSpecificBudget === 'yes',
     budget_id: null, 
@@ -243,15 +245,25 @@ export const submitRequest = async (
     invoice_commitment: data.invoiceSentViaWhatsapp,
   };
 
+  // Validação e Log (Requisito)
+  if (!requestId) {
+    console.error('[submitRequest] Erro de validação: Protocolo (requestId) não fornecido.');
+    return false;
+  }
+  if (!dbPayload.payment_method || dbPayload.amount_cents <= 0) {
+    console.error('[submitRequest] Erro de validação: Método de pagamento ou valor inválido.', { method: dbPayload.payment_method, amount: dbPayload.amount_cents });
+    return false;
+  }
+
+  // Logar o payload completo para conferência (Requisito)
+  console.log('[submitRequest] Final Payload:', dbPayload);
+  
   try {
-    // Logar o payload completo para conferência (Tarefa 5)
-    console.log('[submitRequest] Final Payload:', dbPayload);
-    
-    // Garantir que é um UPDATE no registro existente
+    // Garantir que é um UPDATE no registro existente usando o protocolo
     const { error, status } = await supabase
       .from(TABLE_NAME)
       .update(dbPayload)
-      .eq('protocol', requestId);
+      .eq('protocol', requestId); // Filtro correto
 
     if (error) {
       // Log detalhado do erro do Supabase
