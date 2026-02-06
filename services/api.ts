@@ -93,7 +93,7 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
  * @returns O protocolo gerado pelo banco de dados, ou null em caso de falha.
  */
 export const createDraftRequest = async (departmentId: string, authorizerId: string, paymentAccountId: string): Promise<string | null> => {
-  // Ajuste para amount_cents: 1 para evitar a violação da constraint de checagem (amount_cents > 0)
+  // Removendo amount_cents e payment_method para evitar violação de CHECK constraints no DRAFT
   const dbPayload = {
     status: 'draft',
     requester_name: 'Rascunho',
@@ -103,12 +103,11 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
     due_date: new Date().toISOString().split('T')[0],
     payment_account_id: paymentAccountId,
     vendor_name: 'Rascunho',
-    amount_cents: 1, // Valor mínimo para satisfazer a constraint de checagem
-    payment_method: 'PIX',
     description: 'Rascunho de solicitação',
     invoice_commitment: false,
     agreed_terms: false,
     urgent: false,
+    // amount_cents e payment_method removidos
   };
 
   try {
@@ -251,8 +250,8 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     paymentAccount: data.payment_account_id,
     isSpecificBudget: data.is_budget_specific ? 'yes' : 'no',
     supplierName: data.vendor_name,
-    value: data.amount_cents.toString(),
-    paymentMethod: data.payment_method,
+    value: data.amount_cents ? data.amount_cents.toString() : '0', // Adicionado fallback para '0'
+    paymentMethod: data.payment_method || '', // Adicionado fallback para string vazia
     hasInvoice: data.invoice_attachment_path ? 'yes' : 'no',
     invoiceSentViaWhatsapp: data.invoice_commitment,
     description: data.description,
@@ -286,8 +285,8 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     paymentAccount: req.payment_account_id,
     isSpecificBudget: req.is_budget_specific ? 'yes' : 'no',
     supplierName: req.vendor_name,
-    value: req.amount_cents.toString(),
-    paymentMethod: req.payment_method,
+    value: req.amount_cents ? req.amount_cents.toString() : '0', // Adicionado fallback para '0'
+    paymentMethod: req.payment_method || '', // Adicionado fallback para string vazia
     hasInvoice: req.invoice_attachment_path ? 'yes' : 'no',
     invoiceSentViaWhatsapp: req.invoice_commitment,
     description: req.description,
