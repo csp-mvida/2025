@@ -5,7 +5,7 @@ import { URGENCY_THRESHOLD_HOURS, SPECIFIC_BUDGET_OPTIONS } from './constants';
 import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency } from './utils/formatters';
 import { 
   fetchDepartments, fetchAuthorizers, fetchPaymentAccounts, 
-  submitRequest, uploadInvoice, createDraftRequest, updateRequestAttachments 
+  submitRequest, uploadInvoice, createDraftRequest, updateRequestAttachments, getRequestByProtocol 
 } from './services/api';
 
 // Components
@@ -44,24 +44,29 @@ function App() {
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false);
   
-  const [currentProtocolId, setCurrentProtocolId] = useState(''); // Inicializa vazio, será preenchido pelo DB
+  const [currentProtocolId, setCurrentProtocolId] = useState(''); // Protocolo/ID do rascunho no DB
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [initializationAttempts, setInitializationAttempts] = useState(0); // Tarefa 3: Contar tentativas
 
   const isUrgent = checkUrgency(formData.dueDate);
 
   const getDateValue = () => formData.dueDate ? formData.dueDate.split('T')[0] : '';
   const getTimeValue = () => formData.dueDate && formData.dueDate.includes('T') ? formData.dueDate.split('T')[1].substring(0, 5) : '';
 
+  // Tarefa 2: Função para criar o rascunho no DB
   const createInitialDraft = useCallback(async (deptId: string, authId: string, accountId: string) => {
     const protocol = await createDraftRequest(deptId, authId, accountId);
     if (protocol) {
       setCurrentProtocolId(protocol);
+      // Atualiza o rascunho local com o novo protocolo
+      localStorage.setItem('csp_draft', JSON.stringify({ ...formData, id: protocol }));
       console.log(`[App] Draft created with DB protocol: ${protocol}`);
     } else {
       console.error(`Falha ao criar rascunho inicial.`);
-      toast.error('Falha ao iniciar o formulário. Tente recarregar.');
+      // Se falhar, incrementa a tentativa para o useEffect decidir o que fazer
+      setInitializationAttempts(prev => prev + 1);
     }
-  }, []);
+  }, [formData]);
 
   // Efeito para carregar dados de lookup
   useEffect(() => {
@@ -83,28 +88,58 @@ function App() {
     
   }, []); // Executa apenas uma vez ao montar
 
-  // Efeito para criar o rascunho quando os dados estiverem prontos E a view for 'form'
+  // Efeito para inicializar o protocolo (Tarefa 1, 2, 3)
   useEffect(() => {
-    if (isDataLoaded && view === 'form' && !currentProtocolId && departments.length > 0 && authorizers.length > 0 && paymentAccounts.length > 0) {
-      // Se houver rascunho salvo, carregamos ele, caso contrário, criamos um novo.
+    if (!isDataLoaded || view !== 'form' || currentProtocolId || departments.length === 0 || authorizers.length === 0 || paymentAccounts.length === 0) {
+      return;
+    }
+
+    const initializeProtocol = async () => {
       const savedDraft = localStorage.getItem('csp_draft');
+      let protocolToUse = '';
+      let loadedData: CSPFormData | null = null;
+
       if (savedDraft) {
-        const loadedData: CSPFormData = JSON.parse(savedDraft);
-        
-        // Se o rascunho salvo tiver um protocolo, usamos ele.
+        loadedData = JSON.parse(savedDraft);
         if (loadedData.id) {
-          setCurrentProtocolId(loadedData.id);
-          setFormData(loadedData);
-          setHasSavedDraft(true);
-          toast.success('Rascunho carregado!');
-          return;
+          // 2. OU recupera um draft existente e valida se ele ainda existe no DB
+          const existingRequest = await getRequestByProtocol(loadedData.id);
+          if (existingRequest && existingRequest.status === 'draft') {
+            protocolToUse = existingRequest.id;
+            setFormData(loadedData);
+            setHasSavedDraft(true);
+            toast.success('Rascunho carregado!');
+          } else {
+            // Draft local existe, mas não é válido/não está no DB (ou foi submetido)
+            localStorage.removeItem('csp_draft');
+            setHasSavedDraft(false);
+            loadedData = null;
+          }
         }
       }
-      
-      // Se não houver rascunho válido ou protocolo, criamos um novo rascunho no DB.
-      createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
+
+      if (!protocolToUse) {
+        // 2. Crie um novo registro DRAFT
+        console.log('[App] Creating new draft...');
+        await createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
+      } else {
+        setCurrentProtocolId(protocolToUse);
+      }
+    };
+
+    // Tarefa 3: Tenta re-inicializar automaticamente uma vez se falhar
+    if (initializationAttempts === 0) {
+      initializeProtocol();
+    } else if (initializationAttempts === 1) {
+      // Segunda tentativa (re-inicialização automática)
+      console.warn('[App] Retrying draft creation...');
+      initializeProtocol();
+    } else if (initializationAttempts >= 2) {
+      // Se falhar duas vezes, mostra a mensagem de erro
+      toast.error('Falha ao iniciar o formulário. Tente recarregar.');
     }
-  }, [isDataLoaded, view, currentProtocolId, departments, authorizers, paymentAccounts, createInitialDraft]);
+
+  }, [isDataLoaded, view, currentProtocolId, departments, authorizers, paymentAccounts, createInitialDraft, initializationAttempts]);
 
 
   const handleChange = (field: keyof CSPFormData, value: any) => {
@@ -117,7 +152,10 @@ function App() {
   };
 
   const handleRemoveFile = async (idx: number, type: 'invoice' | 'boleto') => {
-    if (!currentProtocolId) return; // Não remove se não houver protocolo
+    if (!currentProtocolId) {
+      toast.error('Erro: Protocolo não definido para remover arquivo.');
+      return;
+    }
     
     const isInvoice = type === 'invoice';
     const updatedMeta = [...(isInvoice ? (formData.invoiceFilesMeta || []) : (formData.boletoFilesMeta || []))];
@@ -150,7 +188,12 @@ function App() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'invoice' | 'boleto') => {
     const files = e.target.files;
-    if (!files || files.length === 0 || !currentProtocolId) return;
+    // Tarefa 3: Não permitir upload se o protocolo não estiver inicializado
+    if (!files || files.length === 0) return;
+    if (!currentProtocolId) {
+      toast.error('Erro: Protocolo não inicializado. Tente recarregar o formulário.');
+      return;
+    }
 
     const isInvoice = type === 'invoice';
     const MAX_FILES = 10;
@@ -180,6 +223,7 @@ function App() {
           throw new Error('File too large');
         }
 
+        // Tarefa 5: uploadInvoice usa currentProtocolId
         const url = await uploadInvoice(file, type, currentProtocolId);
         newUrls.push(url);
         newMeta.push({ name: file.name, size: file.size, url });
@@ -249,9 +293,15 @@ function App() {
   const prevStep = () => setStep(s => s - 1);
 
   const handleSubmit = async () => {
+    // Tarefa 3 & 6: Validação e re-inicialização se necessário
     if (!currentProtocolId) {
-      toast.error('Erro: Protocolo não inicializado.');
-      return;
+      toast.error('Erro: Protocolo não inicializado. Tentando re-inicializar...');
+      // Tenta re-inicializar automaticamente (Tarefa 3)
+      if (departments.length > 0 && authorizers.length > 0 && paymentAccounts.length > 0) {
+        await createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
+      }
+      // Se ainda não tiver protocolo após a tentativa, retorna
+      if (!currentProtocolId) return;
     }
     
     setIsSubmitting(true);
@@ -265,6 +315,7 @@ function App() {
         return;
     }
 
+    // Tarefa 6: Atualiza o registro DRAFT para o status final (pending)
     if (await submitRequest(formData, currentProtocolId, selectedAuthorizer.id, selectedAccount.id, isUrgent)) {
       setGeneratedId(currentProtocolId);
       setIsSuccess(true);
@@ -281,14 +332,17 @@ function App() {
     setStep(0);
     setIsSuccess(false);
     setCurrentProtocolId(''); // Limpa o protocolo
-    // Recria o rascunho se os dados de lookup já estiverem carregados
-    if (isDataLoaded && departments.length > 0 && authorizers.length > 0 && paymentAccounts.length > 0) {
-      createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
-    }
+    setInitializationAttempts(0); // Reseta tentativas
+    localStorage.removeItem('csp_draft');
+    // O useEffect de inicialização cuidará de criar um novo rascunho
     setView('welcome');
   };
 
   const saveDraft = () => {
+    if (!currentProtocolId) {
+      toast.error('Não é possível salvar: Protocolo não inicializado.');
+      return;
+    }
     // Adiciona o ID do protocolo ao rascunho antes de salvar
     const draftToSave = { ...formData, id: currentProtocolId };
     localStorage.setItem('csp_draft', JSON.stringify(draftToSave));
@@ -301,10 +355,8 @@ function App() {
     setFormData({ ...INITIAL_DATA });
     setHasSavedDraft(false);
     setCurrentProtocolId(''); // Limpa o protocolo
-    // Recria o rascunho se os dados de lookup já estiverem carregados
-    if (isDataLoaded && departments.length > 0 && authorizers.length > 0 && paymentAccounts.length > 0) {
-      createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
-    }
+    setInitializationAttempts(0); // Reseta tentativas
+    // O useEffect de inicialização cuidará de criar um novo rascunho
     toast.success('Dados limpos.');
   };
 

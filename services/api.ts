@@ -63,6 +63,7 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
   const fileExt = file.name.split('.').pop() || 'bin';
   const subfolder = type === 'invoice' ? 'notas_fiscais' : 'boletos'; 
   
+  // Tarefa 5: Usar protocolId (que agora é garantido) no path
   const safeFileName = `${subfolder}/${protocolId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
   const options = {
@@ -118,7 +119,14 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
       .single();
 
     if (error) {
-      console.error('[createDraftRequest] Supabase DB Insert Error:', JSON.stringify(error, null, 2));
+      // Tarefa 4: Log detalhado do erro do Supabase
+      console.error('[createDraftRequest] Supabase DB Insert Error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        status: error.status,
+        payload: dbPayload // Log do payload que falhou
+      });
       return null;
     }
     
@@ -129,7 +137,7 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
     
     return null;
   } catch (e) {
-    console.error("[createDraftRequest] Save failed", e);
+    console.error("[createDraftRequest] Save failed (Exception)", e);
     return null;
   }
 };
