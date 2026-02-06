@@ -6,13 +6,6 @@ export interface Department {
 
 export type RequestStatus = 'pending' | 'approved' | 'paid' | 'rejected' | 'draft';
 
-export interface AttachmentMeta {
-  name: string;
-  size: number; // Tamanho em bytes
-  url: string; // URL pública do Supabase
-  type: 'invoice' | 'boleto' | 'other';
-}
-
 export interface CSPFormData {
   // Step 1: Identification
   requesterName: string;
@@ -29,10 +22,17 @@ export interface CSPFormData {
   value: string; // Raw string, parsed later
   paymentMethod: 'PIX' | 'Boleto' | 'Transferência' | '';
   pixKey?: string;
+  boletoCode?: string;
+  boletoDueDate?: string;
+  boletoFile?: File | null;
+  boletoFileMeta?: { name: string; size: number };
+  boletoUrl?: string;
 
-  // Step 3: Proof (Agora usa um array de anexos)
-  attachments: AttachmentMeta[];
+  // Step 3: Proof
   hasInvoice: 'yes' | 'no';
+  invoiceFile?: File | null;
+  invoiceFileMeta?: { name: string; size: number }; // For display after "upload"
+  invoiceUrl?: string; // Stored Public URL from Supabase
   invoiceSentViaWhatsapp: boolean;
 
   // Step 4: Description
@@ -59,11 +59,11 @@ export const INITIAL_DATA: CSPFormData = {
   supplierName: '',
   value: '',
   paymentMethod: '',
-  attachments: [], // Novo array de anexos
   hasInvoice: 'yes',
   invoiceSentViaWhatsapp: false,
   description: '',
   termsAccepted: false,
+  invoiceUrl: ''
 };
 
 export interface ValidationErrors {

@@ -6,7 +6,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { 
   Search, Filter, Eye, CheckCircle, AlertTriangle, X, 
-  Clock, LayoutDashboard, RefreshCw, FileText, Download 
+  Clock, LayoutDashboard, RefreshCw, FileText 
 } from './ui/Icons';
 import { BackgroundAnimation } from './BackgroundAnimation';
 
@@ -77,8 +77,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   });
 
   const totalValue = filteredRequests.reduce((acc, req) => {
-    // O valor é armazenado como string de centavos no CSPRequest
-    const val = parseFloat(req.value) / 100; 
+    const val = parseFloat(req.value.replace(/[^0-9]/g, '')) / 100;
     return acc + val;
   }, 0);
 
@@ -280,21 +279,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                   <div className="space-y-4">
                     <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">Solicitante</h3>
                     <div><span className="block text-xs text-slate-500">Nome</span> <span className="font-medium text-slate-900">{selectedRequest.requesterName}</span></div>
-                    <div><span className="block text-xs text-slate-500">WhatsApp</span> <span className="text-slate-700">{formatPhone(selectedRequest.whatsapp)}</span></div>
-                    <div><span className="block text-xs text-slate-500">Autorizador ID</span> <span className="text-slate-700">{selectedRequest.authorizer}</span></div>
+                    <div><span className="block text-xs text-slate-500">WhatsApp</span> <span className="text-slate-700">{selectedRequest.whatsapp}</span></div>
+                    <div><span className="block text-xs text-slate-500">Autorizador</span> <span className="text-slate-700">{selectedRequest.authorizer}</span></div>
                     <div><span className="block text-xs text-slate-500">Departamento ID</span> <span className="text-slate-700">{selectedRequest.departmentId}</span></div>
                     <div>
-                      <span className="block text-xs text-slate-500 mb-1">Status NF</span> 
-                      {selectedRequest.attachments.some(a => a.type === 'invoice') ? (
-                        <span className="text-primary text-sm font-medium flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3" /> Anexada
-                        </span>
-                      ) : selectedRequest.invoiceSentViaWhatsapp ? (
-                        <span className="text-accent text-sm italic flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> Pendente (Compromisso via Zap)
-                        </span>
+                      <span className="block text-xs text-slate-500 mb-1">Anexo</span> 
+                      {selectedRequest.invoiceFileMeta ? (
+                        <div className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-200 text-sm text-primary">
+                          <FileText className="w-4 h-4" /> {selectedRequest.invoiceFileMeta.name}
+                        </div>
                       ) : (
-                        <span className="text-slate-500 text-sm italic">Não possui NF</span>
+                        <span className="text-accent text-sm italic flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" /> Pendente (Enviar via Zap)
+                        </span>
                       )}
                     </div>
                   </div>
@@ -304,30 +301,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                  <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">Descrição</h3>
                  <p className="text-slate-700 text-sm leading-relaxed">{selectedRequest.description}</p>
                </div>
-
-               {/* Lista de Anexos */}
-               {selectedRequest.attachments.length > 0 && (
-                 <div className="pt-4 border-t border-slate-100">
-                   <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3">Anexos ({selectedRequest.attachments.length})</h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                     {selectedRequest.attachments.map((attachment, index) => (
-                       <a 
-                         key={index}
-                         href={attachment.url} 
-                         target="_blank" 
-                         rel="noopener noreferrer"
-                         className="flex items-center justify-between gap-2 p-3 rounded-xl bg-white text-slate-700 font-medium text-xs border border-slate-200 hover:bg-slate-100 transition-all group"
-                       >
-                         <div className="flex items-center gap-2 truncate">
-                           <FileText className={`w-4 h-4 shrink-0 ${attachment.type === 'boleto' ? 'text-accent' : 'text-primary'}`} />
-                           <span className="truncate">{attachment.name}</span>
-                         </div>
-                         <Download className="w-4 h-4 text-slate-400 group-hover:text-primary shrink-0" />
-                       </a>
-                     ))}
-                   </div>
-                 </div>
-               )}
              </div>
 
              {/* Modal Footer Actions */}

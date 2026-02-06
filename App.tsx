@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { INITIAL_DATA, CSPFormData, Department, ValidationErrors, AttachmentMeta } from './types';
+import { INITIAL_DATA, CSPFormData, Department, ValidationErrors } from './types';
 import { URGENCY_THRESHOLD_HOURS, SPECIFIC_BUDGET_OPTIONS } from './constants';
 import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency, generateId } from './utils/formatters';
 import { 
   fetchDepartments, fetchAuthorizers, fetchPaymentAccounts, 
-  submitRequest, uploadAttachment, createDraftRequest, updateRequestAttachments, removeAttachment
+  submitRequest, uploadInvoice, createDraftRequest, updateRequestAttachments 
 } from './services/api';
 
 // Components
@@ -24,25 +24,25 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
 import { BackgroundAnimation } from './components/BackgroundAnimation';
 import { RequestTracker } from './components/RequestTracker';
-import { MultiFileUpload } from './components/MultiFileUpload';
 
 function App() {
   const [view, setView] = useState<'welcome' | 'form' | 'login' | 'admin' | 'track'>('welcome');
   const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<CSPFormData>(INITIAL_DATA);
+  const [formData, setFormData] = useState<CSPFormData>({ ...INITIAL_DATA, boletoUrl: '' });
   const [departments, setDepartments] = useState<Department[]>([]);
   const [authorizers, setAuthorizers] = useState<{ id: string; name: string }[]>([]);
   const [paymentAccounts, setPaymentAccounts] = useState<{ id: string; label: string }[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false); 
+  const [isUploadingBoleto, setIsUploadingBoleto] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [generatedId, setGeneratedId] = useState('');
   const [isIdCopied, setIsIdCopied] = useState(false); 
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [showTimeInput, setShowTimeInput] = useState(false);
-  const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false);
+  const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false); // Novo estado
   
   // ID do protocolo, gerado ao iniciar o formulário
   const [currentProtocolId, setCurrentProtocolId] = useState(generateId());
@@ -89,87 +89,67 @@ function App() {
     });
   };
 
-  // --- Lógica de Múltiplos Anexos ---
-
-  const handleUploadAttachment = async (file: File, type: 'invoice' | 'boleto' | 'other') => {
-    // Validação de tamanho (100MB)
-    const MAX_FILE_SIZE_MB = 100;
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      toast.error(`O arquivo "${file.name}" excede o limite de ${MAX_FILE_SIZE_MB}MB.`);
-      return;
-    }
-
-    if (formData.attachments.length >= 10) {
-      toast.error('Limite de 10 anexos atingido.');
-      return;
-    }
-
-    setIsUploading(true);
-    const toastId = toast.loading(`Enviando ${file.name}...`);
-
-    try {
-      // 1. Upload para o Storage
-      const url = await uploadAttachment(file, type, currentProtocolId); 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'invoice' | 'boleto') => {
+    if (e.target.files?.[0]) {
+      const file = e.target.files[0];
+      const isInvoice = type === 'invoice';
       
-      const newAttachment: AttachmentMeta = {
-        name: file.name,
-        size: file.size,
-        url: url,
-        type: type
-      };
+      const toastId = toast.loading(isInvoice ? 'Enviando nota fiscal...' : 'Enviando boleto...');
 
-      // 2. Atualiza o estado local
-      const updatedAttachments = [...formData.attachments, newAttachment];
-      setFormData(prev => ({ ...prev, attachments: updatedAttachments }));
-
-      // 3. Atualiza o registro DRAFT no DB com o array completo
-      const updateSuccess = await updateRequestAttachments(currentProtocolId, updatedAttachments);
-
-      if (!updateSuccess) {
-           throw new Error('Falha ao salvar URL do anexo no banco de dados.');
+      if (isInvoice) {
+        setFormData(prev => ({ ...prev, invoiceFileMeta: { name: file.name, size: file.size } }));
+        setIsUploading(true);
+      } else {
+        setFormData(prev => ({ ...prev, boletoFileMeta: { name: file.name, size: file.size } }));
+        setIsUploadingBoleto(true);
       }
 
-      toast.success(`Anexo "${file.name}" enviado!`, { id: toastId });
-    } catch (error: any) {
-      console.error("Upload error", error);
-      toast.error(`Falha no upload de ${file.name}: ${error.message || 'Erro desconhecido'}`, { id: toastId });
-    } finally {
-      setIsUploading(false);
+      try {
+        // 1. Upload para o Storage usando o protocolo como subpasta
+        const url = await uploadInvoice(file, type, currentProtocolId); 
+        
+        // 2. Atualiza o registro DRAFT no DB com a URL
+        const updateSuccess = await updateRequestAttachments(currentProtocolId, type, url);
+
+        if (!updateSuccess) {
+             throw new Error('Falha ao salvar URL do anexo no banco de dados.');
+        }
+
+        // 3. Atualiza o estado local
+        if (isInvoice) {
+          setFormData(prev => ({ ...prev, invoiceUrl: url }));
+        } else {
+          setFormData(prev => ({ ...prev, boletoUrl: url }));
+        }
+        toast.success(isInvoice ? 'Nota fiscal enviada!' : 'Boleto enviado!', { id: toastId });
+      } catch (error: any) {
+        console.error("Upload error", error);
+        
+        // Improved error message extraction
+        let errorMsg = 'Erro desconhecido';
+        if (error.message) {
+          errorMsg = error.message;
+        } else if (error.error) {
+          errorMsg = error.error;
+        } else if (error.status) {
+          errorMsg = `Erro de rede/servidor: Status ${error.status}`;
+        } else if (typeof error === 'string') {
+          errorMsg = error;
+        }
+        
+        toast.error(`Falha no upload: ${errorMsg}`, { id: toastId });
+        
+        if (isInvoice) {
+           setFormData(prev => ({ ...prev, invoiceFileMeta: undefined, invoiceUrl: '' }));
+        } else {
+           setFormData(prev => ({ ...prev, boletoFileMeta: undefined, boletoUrl: '' }));
+        }
+      } finally {
+        if (isInvoice) setIsUploading(false);
+        else setIsUploadingBoleto(false);
+      }
     }
   };
-
-  const handleRemoveAttachment = async (url: string) => {
-    const toastId = toast.loading('Removendo anexo...');
-    
-    try {
-      // 1. Remove do Storage
-      const storageSuccess = await removeAttachment(url);
-      
-      if (!storageSuccess) {
-        // Se falhar no storage, ainda tentamos remover localmente/DB para evitar inconsistência, mas avisamos
-        console.warn('Falha ao remover arquivo do Storage, mas removendo do DB/estado.');
-      }
-
-      // 2. Atualiza o estado local
-      const updatedAttachments = formData.attachments.filter(a => a.url !== url);
-      setFormData(prev => ({ ...prev, attachments: updatedAttachments }));
-
-      // 3. Atualiza o registro DRAFT no DB com o array filtrado
-      const updateSuccess = await updateRequestAttachments(currentProtocolId, updatedAttachments);
-
-      if (!updateSuccess) {
-        throw new Error('Falha ao atualizar lista de anexos no banco de dados.');
-      }
-
-      toast.success('Anexo removido com sucesso!', { id: toastId });
-    } catch (error: any) {
-      console.error("Removal error", error);
-      toast.error(`Falha ao remover anexo: ${error.message || 'Erro desconhecido'}`, { id: toastId });
-    }
-  };
-
-  // --- Fim Lógica de Múltiplos Anexos ---
-
 
   const validateStep = (s: number) => {
     const errs: ValidationErrors = {};
@@ -186,22 +166,11 @@ function App() {
       if (!formData.supplierName) errs.supplierName = "Fornecedor é obrigatório";
       if (!formData.value || parseInt(formData.value) === 0) errs.value = "Valor é obrigatório";
       if (!formData.paymentMethod) errs.paymentMethod = "Forma é obrigatória";
-      
-      // Validação de Boleto: Se for Boleto, deve haver pelo menos 1 anexo do tipo 'boleto'
-      if (formData.paymentMethod === 'Boleto' && !formData.attachments.some(a => a.type === 'boleto')) {
-        errs.attachments = "Anexo do boleto necessário";
-      }
+      if (formData.paymentMethod === 'Boleto' && !formData.boletoUrl) errs.boletoFile = "Anexo do boleto necessário";
     }
     if (s === 2) {
-      const hasInvoiceAttached = formData.attachments.some(a => a.type === 'invoice');
-      
-      if (formData.hasInvoice === 'yes' && !hasInvoiceAttached) {
-        errs.attachments = "É necessário anexar a Nota Fiscal.";
-      }
-      
-      if (formData.hasInvoice === 'no' && !formData.invoiceSentViaWhatsapp) {
-        errs.invoiceSentViaWhatsapp = "Você deve se comprometer a enviar o comprovante via WhatsApp.";
-      }
+      if (formData.hasInvoice === 'yes' && !formData.invoiceUrl) errs.invoiceFile = "Upload necessário";
+      if (formData.hasInvoice === 'no' && !formData.invoiceSentViaWhatsapp) errs.invoiceSentViaWhatsapp = "Você deve se comprometer a enviar o comprovante via WhatsApp.";
     }
     if (s === 3 && !formData.description) errs.description = "Descrição é obrigatória";
     if (s === 3 && !formData.termsAccepted) errs.termsAccepted = "Você deve aceitar os termos";
@@ -240,7 +209,7 @@ function App() {
   };
 
   const resetForm = () => {
-    setFormData(INITIAL_DATA);
+    setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setStep(0);
     setIsSuccess(false);
     setCurrentProtocolId(generateId()); // Gera um novo ID, que dispara o useEffect para criar um novo rascunho
@@ -248,14 +217,15 @@ function App() {
   };
 
   const saveDraft = () => {
-    localStorage.setItem('csp_draft', JSON.stringify(formData));
+    const { invoiceFile, ...data } = formData;
+    localStorage.setItem('csp_draft', JSON.stringify(data));
     setHasSavedDraft(true);
     toast.success('Rascunho salvo localmente!');
   };
 
   const clearDraft = () => {
     localStorage.removeItem('csp_draft');
-    setFormData(INITIAL_DATA);
+    setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setHasSavedDraft(false);
     setCurrentProtocolId(generateId()); // Gera um novo ID
     toast.success('Dados limpos.');
@@ -336,177 +306,153 @@ function App() {
     </div>
   );
 
-  const renderStep2 = () => {
-    const boletoAttachment = formData.attachments.find(a => a.type === 'boleto');
-    
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <Select label="Conta de Pagamento" value={formData.paymentAccount} onChange={e => handleChange('paymentAccount', e.target.value)} required error={errors.paymentAccount}>
-          <option value="">Selecione...</option>
-          {paymentAccounts.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
-        </Select>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Verba Específica? <span className="text-accent">*</span></label>
-          <div className="flex gap-2">
-            <button onClick={() => handleChange('isSpecificBudget', 'yes')} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'yes' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Sim</button>
-            <button onClick={() => { handleChange('isSpecificBudget', 'no'); handleChange('specificBudgetName', ''); }} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'no' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Não</button>
-          </div>
+  const renderStep2 = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <Select label="Conta de Pagamento" value={formData.paymentAccount} onChange={e => handleChange('paymentAccount', e.target.value)} required error={errors.paymentAccount}>
+        <option value="">Selecione...</option>
+        {paymentAccounts.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
+      </Select>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1.5">Verba Específica? <span className="text-accent">*</span></label>
+        <div className="flex gap-2">
+          <button onClick={() => handleChange('isSpecificBudget', 'yes')} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'yes' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Sim</button>
+          <button onClick={() => { handleChange('isSpecificBudget', 'no'); handleChange('specificBudgetName', ''); }} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'no' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Não</button>
         </div>
-        
-        {formData.isSpecificBudget === 'yes' && (
-          <div className="md:col-span-2 animate-in slide-in-from-top-2 duration-300">
-            <Select label="Escolha a Verba Específica" value={formData.specificBudgetName} onChange={e => handleChange('specificBudgetName', e.target.value)} required error={errors.specificBudgetName}>
-              <option value="">Selecione a verba...</option>
-              {SPECIFIC_BUDGET_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </Select>
-          </div>
-        )}
-
-        <Input label="Fornecedor / Recebedor" value={formData.supplierName} onChange={e => handleChange('supplierName', e.target.value)} required error={errors.supplierName} />
-        <Input label="Valor (R$)" value={formatCurrency(formData.value)} onChange={e => handleChange('value', parseCurrency(e.target.value))} required error={errors.value} placeholder="R$ 0,00" />
-        <div className="md:col-span-2">
-          <Select label="Forma de Pagamento" value={formData.paymentMethod} onChange={e => handleChange('paymentMethod', e.target.value)} required error={errors.paymentMethod}>
-            <option value="">Selecione...</option>
-            <option value="PIX">PIX</option>
-            <option value="Boleto">Boleto</option>
-            <option value="Transferência">Transferência</option>
+      </div>
+      
+      {formData.isSpecificBudget === 'yes' && (
+        <div className="md:col-span-2 animate-in slide-in-from-top-2 duration-300">
+          <Select label="Escolha a Verba Específica" value={formData.specificBudgetName} onChange={e => handleChange('specificBudgetName', e.target.value)} required error={errors.specificBudgetName}>
+            <option value="">Selecione a verba...</option>
+            {SPECIFIC_BUDGET_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
           </Select>
         </div>
+      )}
 
-        {/* Campo de Anexo do Boleto Restaurado conforme UX original */}
-        {formData.paymentMethod === 'Boleto' && (
-          <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Anexo do Boleto <span className="text-accent">*</span></label>
-            <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-4 md:p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
-              <input 
-                type="file" 
-                className="absolute inset-0 opacity-0 cursor-pointer" 
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleUploadAttachment(file, 'boleto');
-                }} 
-              />
-              <div className="flex items-center justify-center gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                  {isUploading ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px]">
-                    {boletoAttachment ? boletoAttachment.name : "Anexe o arquivo do boleto aqui"}
-                  </p>
-                  <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem (Máx 100MB)</p>
-                </div>
-                {boletoAttachment && (
-                  <button 
-                    onClick={(e) => { e.preventDefault(); handleRemoveAttachment(boletoAttachment.url); }}
-                    className="p-2 text-slate-400 hover:text-danger transition-colors relative z-10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
+      <Input label="Fornecedor / Recebedor" value={formData.supplierName} onChange={e => handleChange('supplierName', e.target.value)} required error={errors.supplierName} />
+      <Input label="Valor (R$)" value={formatCurrency(formData.value)} onChange={e => handleChange('value', parseCurrency(e.target.value))} required error={errors.value} placeholder="R$ 0,00" />
+      <div className="md:col-span-2">
+        <Select label="Forma de Pagamento" value={formData.paymentMethod} onChange={e => handleChange('paymentMethod', e.target.value)} required error={errors.paymentMethod}>
+          <option value="">Selecione...</option>
+          <option value="PIX">PIX</option>
+          <option value="Boleto">Boleto</option>
+          <option value="Transferência">Transferência</option>
+        </Select>
+      </div>
+      {formData.paymentMethod === 'Boleto' && (
+        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300">
+          <label className="block text-sm font-medium text-slate-700 mb-2">Anexo do Boleto <span className="text-accent">*</span></label>
+          <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-4 md:p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                {isUploadingBoleto ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px]">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
+                <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem</p>
               </div>
             </div>
-            {errors.attachments && <p className="text-xs text-danger mt-1">{errors.attachments}</p>}
           </div>
-        )}
-      </div>
-    );
-  };
+          {errors.boletoFile && <p className="text-xs text-danger mt-1">{errors.boletoFile}</p>}
+        </div>
+      )}
+    </div>
+  );
 
-  const renderStep3 = () => {
-    const hasInvoiceAttached = formData.attachments.some(a => a.type === 'invoice');
-    
-    return (
-      <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-3 md:mb-4 text-center md:text-left">Possui Nota Fiscal? <span className="text-accent">*</span></label>
-          <div className="grid grid-cols-2 gap-3 md:gap-4">
-            <button onClick={() => handleInvoiceOptionClick('yes')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
-              <FileText className="w-6 h-6 md:w-8 md:h-8" />
-              <span className="font-bold text-xs md:text-base">Sim, possuo</span>
-            </button>
-            <button onClick={() => handleInvoiceOptionClick('no')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
-              <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />
-              <span className="font-bold text-xs md:text-base">Não possuo</span>
-            </button>
+  const renderStep3 = () => (
+    <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-3 md:mb-4 text-center md:text-left">Possui Nota Fiscal? <span className="text-accent">*</span></label>
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          <button onClick={() => handleInvoiceOptionClick('yes')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'yes' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+            <FileText className="w-6 h-6 md:w-8 md:h-8" />
+            <span className="font-bold text-xs md:text-base">Sim, possuo</span>
+          </button>
+          <button onClick={() => handleInvoiceOptionClick('no')} className={`flex flex-col items-center gap-2 md:gap-3 p-4 md:p-6 rounded-2xl border-2 transition-all ${formData.hasInvoice === 'no' ? 'bg-primary/5 border-primary text-primary' : 'bg-white border-slate-100 text-slate-400'}`}>
+            <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />
+            <span className="font-bold text-xs md:text-base">Não possuo</span>
+          </button>
+        </div>
+      </div>
+      
+      {formData.hasInvoice === 'yes' && (
+        <div className="space-y-3 md:space-y-4">
+          <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Upload do Anexo <span className="text-accent">*</span></label>
+          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-12 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'invoice')} />
+            <div className="flex flex-col items-center gap-2 md:gap-3">
+              <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                {isUploading ? <RefreshCw className="w-6 h-6 md:w-8 md:h-8 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 md:w-8 md:h-8 text-primary" />}
+              </div>
+              <div className="space-y-1">
+                <p className="font-bold text-primary text-xs md:text-base truncate max-w-[200px]">{formData.invoiceFileMeta?.name || "Clique para selecionar"}</p>
+                <p className="text-[10px] md:text-xs text-slate-400">PDF, JPG ou PNG</p>
+              </div>
+            </div>
+          </div>
+          {errors.invoiceFile && <p className="text-xs text-danger text-center">{errors.invoiceFile}</p>}
+        </div>
+      )}
+
+      {formData.hasInvoice === 'no' && formData.invoiceSentViaWhatsapp && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 text-primary text-sm animate-in fade-in duration-300">
+          <CheckCircle className="w-5 h-5 shrink-0" />
+          <span className="font-medium">Compromisso de envio via WhatsApp aceito.</span>
+        </div>
+      )}
+      
+      {errors.invoiceSentViaWhatsapp && (
+        <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-danger text-sm animate-in shake">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <span className="font-medium">Você deve aceitar o compromisso para prosseguir.</span>
+        </div>
+      )}
+
+      {/* Modal de Compromisso */}
+      {showInvoiceCommitmentModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 md:p-8 text-center">
+              <AlertTriangle className="w-10 h-10 text-accent mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Compromisso de Envio</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Ao prosseguir sem a Nota Fiscal, você se compromete a enviar o comprovante (ex: recibo, foto) 
+                <strong className="font-bold text-primary block mt-1">imediatamente após o envio desta solicitação</strong> para o WhatsApp do Departamento Financeiro.
+              </p>
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={() => { 
+                  setShowInvoiceCommitmentModal(false); 
+                  handleChange('hasInvoice', 'yes'); // Volta para a opção 'Sim'
+                }}
+              >
+                Voltar
+              </Button>
+              <Button 
+                variant="primary" 
+                size="sm" 
+                onClick={() => { 
+                  handleChange('invoiceSentViaWhatsapp', true); 
+                  setShowInvoiceCommitmentModal(false); 
+                }}
+              >
+                Aceitar e Continuar
+              </Button>
+            </div>
           </div>
         </div>
-        
-        {/* Componente de Upload de Múltiplos Arquivos para NF e Outros */}
-        <MultiFileUpload
-          attachments={formData.attachments}
-          onUpload={handleUploadAttachment}
-          onRemove={handleRemoveAttachment}
-          isUploading={isUploading}
-          error={errors.attachments}
-        />
-
-        {/* Mensagens de Status/Compromisso */}
-        {formData.hasInvoice === 'yes' && !hasInvoiceAttached && errors.attachments && (
-          <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-danger text-sm animate-in shake">
-            <AlertTriangle className="w-5 h-5 shrink-0" />
-            <span className="font-medium">Você indicou que possui a NF, mas o anexo está faltando na lista acima.</span>
-          </div>
-        )}
-
-        {formData.hasInvoice === 'no' && formData.invoiceSentViaWhatsapp && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 text-primary text-sm animate-in fade-in duration-300">
-            <CheckCircle className="w-5 h-5 shrink-0" />
-            <span className="font-medium">Compromisso de envio via WhatsApp aceito.</span>
-          </div>
-        )}
-        
-        {errors.invoiceSentViaWhatsapp && (
-          <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-danger text-sm animate-in shake">
-            <AlertTriangle className="w-5 h-5 shrink-0" />
-            <span className="font-medium">Você deve aceitar o compromisso para prosseguir.</span>
-          </div>
-        )}
-
-        {/* Modal de Compromisso */}
-        {showInvoiceCommitmentModal && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="p-6 md:p-8 text-center">
-                <AlertTriangle className="w-10 h-10 text-accent mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Compromisso de Envio</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  Ao prosseguir sem a Nota Fiscal, você se compromete a enviar o comprovante (ex: recibo, foto) 
-                  <strong className="font-bold text-primary block mt-1">imediatamente após o envio desta solicitação</strong> para o WhatsApp do Departamento Financeiro.
-                </p>
-              </div>
-              <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  onClick={() => { 
-                    setShowInvoiceCommitmentModal(false); 
-                    handleChange('hasInvoice', 'yes'); // Volta para a opção 'Sim'
-                  }}
-                >
-                  Voltar
-                </Button>
-                <Button 
-                  variant="primary" 
-                  size="sm" 
-                  onClick={() => { 
-                    handleChange('invoiceSentViaWhatsapp', true); 
-                    setShowInvoiceCommitmentModal(false); 
-                  }}
-                >
-                  Aceitar e Continuar
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
+      )}
+    </div>
+  );
 
   const renderStep4 = () => (
     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Textarea label="Descrição do Pagamento" required value={formData.description} onChange={e => handleChange('description', e.target.value)} error={errors.description} rows={4} placeholder="Ex: Pagamento referente à compra de materiais de escritório para o mês de Outubro..." />
+      {/* Campo 'Número de Autorização (Opcional)' removido conforme solicitado */}
       <div className={`p-4 md:p-6 rounded-2xl border transition-all ${formData.termsAccepted ? 'bg-primary/5 border-primary' : 'bg-slate-50 border-slate-100'}`}>
         <label className="flex items-start gap-3 md:gap-4 cursor-pointer">
           <input type="checkbox" className="mt-1 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" checked={formData.termsAccepted} onChange={e => handleChange('termsAccepted', e.target.checked)} />
@@ -521,12 +467,6 @@ function App() {
   );
 
   const renderReview = () => {
-    const invoiceStatus = formData.attachments.some(a => a.type === 'invoice') 
-      ? 'Anexado' 
-      : formData.hasInvoice === 'no' && formData.invoiceSentViaWhatsapp 
-        ? 'Pendente via WhatsApp' 
-        : 'Não possui';
-
     const items = [
       { label: 'Responsável', value: formData.requesterName },
       { label: 'Departamento', value: departments.find(d => d.id === formData.departmentId)?.name || 'N/A' },
@@ -537,8 +477,8 @@ function App() {
       { label: 'Autorizador', value: formData.authorizer },
       { label: 'Verba Específica', value: formData.isSpecificBudget === 'yes' ? formData.specificBudgetName : 'Não' },
       { label: 'Descrição', value: formData.description, full: true },
-      { label: 'Status NF', value: invoiceStatus, full: false },
-      { label: 'Total Anexos', value: `${formData.attachments.length} arquivo(s)`, full: false }
+      { label: 'Anexo Nota', value: formData.invoiceUrl ? 'Enviado' : (formData.hasInvoice === 'no' ? 'Pendente via WhatsApp' : 'Não possui'), full: false },
+      { label: 'Anexo Boleto', value: formData.boletoUrl ? 'Enviado' : 'N/A', full: false }
     ];
 
     return (

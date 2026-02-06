@@ -84,9 +84,6 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
   const getDepartmentName = (id: string) => departments.find(d => d.id === id)?.name || 'N/A';
   const getAuthorizerName = (id: string) => authorizers.find(a => a.id === id)?.name || 'N/A';
   const getPaymentAccountLabel = (id: string) => paymentAccounts.find(p => p.id === id)?.label || 'N/A';
-  
-  const hasInvoiceAttached = request?.attachments.some(a => a.type === 'invoice');
-  const hasBoletoAttached = request?.attachments.some(a => a.type === 'boleto');
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -182,37 +179,30 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
                    <p className="text-sm text-slate-600 leading-relaxed italic">"{request.description}"</p>
                 </div>
 
-                {/* Lista de Anexos */}
-                {request.attachments.length > 0 && (
-                  <div className="pt-4 border-t border-slate-100">
-                    <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3">Anexos ({request.attachments.length})</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {request.attachments.map((attachment, index) => (
-                        <a 
-                          key={index}
-                          href={attachment.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 text-slate-700 font-medium text-xs border border-slate-200 hover:bg-slate-100 transition-all group"
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <FileText className={`w-4 h-4 shrink-0 ${attachment.type === 'boleto' ? 'text-accent' : 'text-primary'}`} />
-                            <span className="truncate">{attachment.name}</span>
-                          </div>
-                          <Download className="w-4 h-4 text-slate-400 group-hover:text-primary shrink-0" />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Status de NF (se não houver anexo, mas houver compromisso) */}
-                {!hasInvoiceAttached && request.invoiceSentViaWhatsapp && (
-                  <div className="pt-4 border-t border-slate-100">
-                    <span className="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">Status Nota Fiscal</span>
-                    <p className="text-sm text-accent font-medium flex items-center gap-1">
-                      <AlertTriangle className="w-4 h-4" /> Pendente de envio via WhatsApp (Compromisso aceito)
-                    </p>
+                {(request.invoiceUrl || request.boletoUrl) && (
+                  <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                     {request.invoiceUrl && request.invoiceUrl !== 'Pendente via WhatsApp' && (
+                       <a 
+                         href={request.invoiceUrl} 
+                         target="_blank" 
+                         rel="noopener noreferrer"
+                         className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 text-primary font-bold text-xs border border-slate-100 hover:bg-primary hover:text-white transition-all group"
+                       >
+                         <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                         Visualizar Nota Fiscal
+                       </a>
+                     )}
+                     {request.boletoUrl && (
+                       <a 
+                         href={request.boletoUrl} 
+                         target="_blank" 
+                         rel="noopener noreferrer"
+                         className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 text-primary font-bold text-xs border border-slate-100 hover:bg-primary hover:text-white transition-all group"
+                       >
+                         <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                         Visualizar Boleto
+                       </a>
+                     )}
                   </div>
                 )}
              </div>
