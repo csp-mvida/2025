@@ -44,17 +44,19 @@ function App() {
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false);
   
-  const [currentProtocolId, setCurrentProtocolId] = useState(generateId());
+  const [currentProtocolId, setCurrentProtocolId] = useState('');
 
   const isUrgent = checkUrgency(formData.dueDate);
 
   const getDateValue = () => formData.dueDate ? formData.dueDate.split('T')[0] : '';
   const getTimeValue = () => formData.dueDate && formData.dueDate.includes('T') ? formData.dueDate.split('T')[1].substring(0, 5) : '';
 
-  const createInitialDraft = useCallback(async (protocolId: string) => {
-    const success = await createDraftRequest(protocolId);
-    if (!success) {
-      console.error(`Falha ao criar rascunho inicial para o protocolo ${protocolId}.`);
+  const startNewRequest = useCallback(async () => {
+    const protocol = await createDraftRequest();
+    if (protocol) {
+      setCurrentProtocolId(protocol);
+    } else {
+      toast.error("Falha ao iniciar protocolo. Verifique sua conexão.");
     }
   }, []);
 
@@ -73,9 +75,14 @@ function App() {
 
     const saved = localStorage.getItem('csp_draft');
     if (saved) setHasSavedDraft(true);
-    
-    createInitialDraft(currentProtocolId);
-  }, [currentProtocolId, createInitialDraft]);
+  }, []);
+
+  // Quando o usuário entra no formulário, iniciamos o protocolo oficial se ainda não houver um
+  useEffect(() => {
+    if (view === 'form' && !currentProtocolId) {
+      startNewRequest();
+    }
+  }, [view, currentProtocolId, startNewRequest]);
 
   const handleChange = (field: keyof CSPFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -119,6 +126,10 @@ function App() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'invoice' | 'boleto') => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    if (!currentProtocolId) {
+      toast.error("Protocolo ainda não iniciado. Tente novamente em instantes.");
+      return;
+    }
 
     const isInvoice = type === 'invoice';
     const MAX_FILES = 10;
@@ -243,7 +254,7 @@ function App() {
     setFormData({ ...INITIAL_DATA });
     setStep(0);
     setIsSuccess(false);
-    setCurrentProtocolId(generateId());
+    setCurrentProtocolId('');
     setView('welcome');
   };
 
@@ -257,7 +268,7 @@ function App() {
     localStorage.removeItem('csp_draft');
     setFormData({ ...INITIAL_DATA });
     setHasSavedDraft(false);
-    setCurrentProtocolId(generateId());
+    setCurrentProtocolId('');
     toast.success('Dados limpos.');
   };
 

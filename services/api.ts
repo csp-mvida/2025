@@ -1,7 +1,7 @@
 import { supabase } from '../src/integrations/supabase/client';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
-const STORAGE_BUCKET = 'uploads'; // Nome do bucket centralizado
+const STORAGE_BUCKET = 'uploads'; 
 const TABLE_NAME = 'payment_requests';
 const PLACEHOLDER_UUID = '00000000-0000-0000-0000-000000000000';
 
@@ -88,45 +88,46 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
 };
 
 /**
- * Cria um registro inicial no banco de dados com status DRAFT.
+ * Cria um registro inicial no banco de dados e retorna o protocolo gerado pelo banco.
  */
-export const createDraftRequest = async (requestId: string): Promise<boolean> => {
+export const createDraftRequest = async (): Promise<string | null> => {
   const dbPayload = {
-    protocol: requestId,
     status: 'draft',
-    requester_name: 'Rascunho',
+    requester_name: 'Iniciando...',
     requester_whatsapp: '(00) 00000-0000',
     department_id: PLACEHOLDER_UUID,
     authorizer_id: PLACEHOLDER_UUID,
     due_date: new Date().toISOString().split('T')[0],
     payment_account_id: PLACEHOLDER_UUID,
-    vendor_name: 'Rascunho',
+    vendor_name: 'Pendente',
     amount_cents: 0,
     payment_method: 'PIX',
-    description: 'Rascunho de solicitação',
+    description: 'Rascunho em preenchimento',
     invoice_commitment: false,
     agreed_terms: false,
     urgent: false,
   };
 
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from(TABLE_NAME)
-      .upsert([dbPayload], { onConflict: 'protocol' });
+      .insert([dbPayload])
+      .select('protocol')
+      .single();
 
     if (error) {
-      console.error('[createDraftRequest] Supabase DB Upsert Error:', JSON.stringify(error, null, 2));
-      return false;
+      console.error('[createDraftRequest] Supabase DB Insert Error:', JSON.stringify(error, null, 2));
+      return null;
     }
-    return true;
+    return data.protocol;
   } catch (e) {
-    console.error("[createDraftRequest] Save failed", e);
-    return false;
+    console.error("[createDraftRequest] Draft creation failed", e);
+    return null;
   }
 };
 
 /**
- * Atualiza o registro DRAFT com a URL do anexo após um upload bem-sucedido.
+ * Atualiza o registro DRAFT com a URL do anexo.
  */
 export const updateRequestAttachments = async (
   protocolId: string, 
