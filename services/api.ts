@@ -200,7 +200,7 @@ export const submitRequest = async (
   // amount_cents deve ser um número inteiro > 0
   const amountCents = parseInt(data.value);
 
-  // Limpeza condicional de campos específicos para evitar vazamento (Tarefa 5)
+  // Limpeza condicional de campos específicos para evitar vazamento
   const isTransfer = data.paymentMethod === 'Transferência';
   const isBoleto = data.paymentMethod === 'Boleto';
   const isPix = data.paymentMethod === 'PIX';
@@ -222,13 +222,13 @@ export const submitRequest = async (
     boleto_attachment_path: isBoleto ? data.boletoUrl : null,
     
     // Transferência (NEW)
-    transfer_bank_name: isTransfer ? data.transferBankName : null,
+    transfer_bank: isTransfer ? data.transferBankName : null,
     transfer_account_type: isTransfer ? data.transferAccountType : null,
     transfer_agency: isTransfer ? data.transferAgency : null,
     transfer_account: isTransfer ? data.transferAccount : null,
-    transfer_cpf_cnpj: isTransfer ? data.transferCpfCnpj : null,
-    transfer_beneficiary_name: isTransfer ? data.transferBeneficiaryName : null,
-    transfer_attachment_path: isTransfer ? data.transferUrl : null,
+    transfer_document: isTransfer ? data.transferCpfCnpj : null, // Mapeando para transfer_document
+    transfer_favored_name: isTransfer ? data.transferBeneficiaryName : null, // Mapeando para transfer_favored_name
+    transfer_attachment_path: isTransfer ? data.transferUrl : null, // Garantindo que o path seja salvo
 
     // Comuns
     status: 'pending' as RequestStatus, 
@@ -244,17 +244,17 @@ export const submitRequest = async (
   };
 
   try {
-    // Tarefa 5: Logar o payload completo
+    // Logar o payload completo para conferência (Tarefa 5)
     console.log('[submitRequest] Final Payload:', dbPayload);
     
-    // Tarefa 1, 4: Garantir que é um UPDATE no registro existente
+    // Garantir que é um UPDATE no registro existente
     const { error, status } = await supabase
       .from(TABLE_NAME)
       .update(dbPayload)
       .eq('protocol', requestId);
 
     if (error) {
-      // Tarefa 3: Log detalhado do erro do Supabase
+      // Log detalhado do erro do Supabase
       console.error('[submitRequest] Supabase DB Update Error (Final Submission):', {
         message: error.message,
         details: error.details,
@@ -311,12 +311,12 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     invoiceUrl: data.invoice_attachment_path,
     boletoUrl: data.boleto_attachment_path,
     // NEW Transfer fields
-    transferBankName: data.transfer_bank_name || '',
+    transferBankName: data.transfer_bank || '',
     transferAccountType: data.transfer_account_type || '',
     transferAgency: data.transfer_agency || '',
     transferAccount: data.transfer_account || '',
-    transferCpfCnpj: data.transfer_cpf_cnpj || '',
-    transferBeneficiaryName: data.transfer_beneficiary_name || '',
+    transferCpfCnpj: data.transfer_document || '', // Mapeando de volta
+    transferBeneficiaryName: data.transfer_favored_name || '', // Mapeando de volta
     transferUrl: data.transfer_attachment_path,
     history: []
   };
@@ -354,12 +354,12 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     boletoUrl: req.boleto_attachment_path,
     invoiceUrl: req.invoice_attachment_path,
     // NEW Transfer fields
-    transferBankName: req.transfer_bank_name || '',
+    transferBankName: req.transfer_bank || '',
     transferAccountType: req.transfer_account_type || '',
     transferAgency: req.transfer_agency || '',
     transferAccount: req.transfer_account || '',
-    transferCpfCnpj: req.transfer_cpf_cnpj || '',
-    transferBeneficiaryName: req.transfer_beneficiary_name || '',
+    transferCpfCnpj: req.transfer_document || '',
+    transferBeneficiaryName: req.transfer_favored_name || '',
     transferUrl: req.transfer_attachment_path,
     history: []
   }));
