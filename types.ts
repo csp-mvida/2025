@@ -32,32 +32,26 @@ export interface CSPFormData {
   pixKey?: string;
   
   // Boleto fields
-  boletoCode?: string;
-  boletoDueDate?: string;
-  boletoFile?: File | null;
-  boletoFileMeta?: { name: string; size: number };
-  boletoUrl?: string; // String JSON se múltiplo
-  boletoUrls?: string[]; // Array de URLs reais
-  boletoFilesMeta?: FileMeta[]; // Lista de metadados dos boletos
+  boletoUrl?: string; 
+  boletoUrls?: string[];
+  boletoFilesMeta?: FileMeta[];
 
-  // Transferência fields (NEW)
+  // Transferência fields
   transferBankName?: string;
   transferAccountType?: 'Corrente' | 'Poupança' | '';
   transferAgency?: string;
   transferAccount?: string;
   transferCpfCnpj?: string;
   transferBeneficiaryName?: string;
-  transferUrl?: string; // String JSON se múltiplo
-  transferUrls?: string[]; // Array de URLs reais
-  transferFilesMeta?: FileMeta[]; // Lista de metadados dos arquivos de comprovante
+  transferUrl?: string; 
+  transferUrls?: string[];
+  transferFilesMeta?: FileMeta[];
 
   // Step 3: Proof
   hasInvoice: 'yes' | 'no';
-  invoiceFile?: File | null;
-  invoiceFileMeta?: { name: string; size: number }; 
-  invoiceUrl?: string; // String JSON se múltiplo
-  invoiceUrls?: string[]; // Array de URLs reais
-  invoiceFilesMeta?: FileMeta[]; // Lista de metadados dos arquivos
+  invoiceUrl?: string; 
+  invoiceUrls?: string[];
+  invoiceFilesMeta?: FileMeta[];
   invoiceSentViaWhatsapp: boolean;
 
   // Step 4: Description
@@ -70,6 +64,11 @@ export interface CSPRequest extends CSPFormData {
   id: string;
   createdAt: string;
   status: RequestStatus;
+  // Audit Fields
+  reviewedBy?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  paidAt?: string;
   history: { date: string; action: string; user: string }[];
 }
 
@@ -88,24 +87,4 @@ export const INITIAL_DATA: CSPFormData = {
   invoiceSentViaWhatsapp: false,
   description: '',
   termsAccepted: false,
-  invoiceUrl: '',
-  invoiceUrls: [],
-  invoiceFilesMeta: [],
-  boletoUrl: '',
-  boletoUrls: [],
-  boletoFilesMeta: [],
-  // NEW Transfer fields
-  transferBankName: '',
-  transferAccountType: '',
-  transferAgency: '',
-  transferAccount: '',
-  transferCpfCnpj: '',
-  transferBeneficiaryName: '',
-  transferUrl: '',
-  transferUrls: [],
-  transferFilesMeta: [],
 };
-
-export interface ValidationErrors {
-  [key: string]: string;
-}
