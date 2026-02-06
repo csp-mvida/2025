@@ -6,6 +6,12 @@ export interface Department {
 
 export type RequestStatus = 'pending' | 'approved' | 'paid' | 'rejected' | 'draft';
 
+export interface FileMeta {
+  name: string;
+  size: number;
+  url?: string;
+}
+
 export interface CSPFormData {
   // Step 1: Identification
   requesterName: string;
@@ -31,8 +37,10 @@ export interface CSPFormData {
   // Step 3: Proof
   hasInvoice: 'yes' | 'no';
   invoiceFile?: File | null;
-  invoiceFileMeta?: { name: string; size: number }; // For display after "upload"
-  invoiceUrl?: string; // Stored Public URL from Supabase
+  invoiceFileMeta?: { name: string; size: number }; 
+  invoiceUrl?: string; // Mantido para compatibilidade (será JSON string se múltiplo)
+  invoiceUrls?: string[]; // Array de URLs reais
+  invoiceFilesMeta?: FileMeta[]; // Lista de metadados dos arquivos
   invoiceSentViaWhatsapp: boolean;
 
   // Step 4: Description
@@ -63,7 +71,9 @@ export const INITIAL_DATA: CSPFormData = {
   invoiceSentViaWhatsapp: false,
   description: '',
   termsAccepted: false,
-  invoiceUrl: ''
+  invoiceUrl: '',
+  invoiceUrls: [],
+  invoiceFilesMeta: []
 };
 
 export interface ValidationErrors {

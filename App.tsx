@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { INITIAL_DATA, CSPFormData, Department, ValidationErrors } from './types';
+import { INITIAL_DATA, CSPFormData, Department, ValidationErrors, FileMeta } from './types';
 import { URGENCY_THRESHOLD_HOURS, SPECIFIC_BUDGET_OPTIONS } from './constants';
 import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency, generateId } from './utils/formatters';
 import { 
@@ -42,9 +42,8 @@ function App() {
   const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [showTimeInput, setShowTimeInput] = useState(false);
-  const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false); // Novo estado
+  const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false);
   
-  // ID do protocolo, gerado ao iniciar o formulário
   const [currentProtocolId, setCurrentProtocolId] = useState(generateId());
 
   const isUrgent = checkUrgency(formData.dueDate);
@@ -52,7 +51,6 @@ function App() {
   const getDateValue = () => formData.dueDate ? formData.dueDate.split('T')[0] : '';
   const getTimeValue = () => formData.dueDate && formData.dueDate.includes('T') ? formData.dueDate.split('T')[1].substring(0, 5) : '';
 
-  // Função para criar o rascunho inicial no DB
   const createInitialDraft = useCallback(async (protocolId: string) => {
     const success = await createDraftRequest(protocolId);
     if (!success) {
@@ -76,7 +74,6 @@ function App() {
     const saved = localStorage.getItem('csp_draft');
     if (saved) setHasSavedDraft(true);
     
-    // Cria ou garante que o registro DRAFT exista para este ID
     createInitialDraft(currentProtocolId);
   }, [currentProtocolId, createInitialDraft]);
 
@@ -89,65 +86,95 @@ function App() {
     });
   };
 
+  const handleRemoveFile = async (index: number) => {
+    const updatedMeta = [...(formData.invoiceFilesMeta || [])];
+    const updatedUrls = [...(formData.invoiceUrls || [])];
+    
+    updatedMeta.splice(index, 1);
+    updatedUrls.splice(index, 1);
+    
+    const serializedUrls = JSON.stringify(updatedUrls);
+    
+    setFormData(prev => ({
+      ...prev,
+      invoiceFilesMeta: updatedMeta,
+      invoiceUrls: updatedUrls,
+      invoiceUrl: updatedUrls.length > 0 ? serializedUrls : ''
+    }));
+
+    await updateRequestAttachments(currentProtocolId, 'invoice', updatedUrls.length > 0 ? serializedUrls : '');
+    toast.success('Arquivo removido.');
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'invoice' | 'boleto') => {
-    if (e.target.files?.[0]) {
-      const file = e.target.files[0];
-      const isInvoice = type === 'invoice';
-      
-      const toastId = toast.loading(isInvoice ? 'Enviando nota fiscal...' : 'Enviando boleto...');
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const isInvoice = type === 'invoice';
+    const MAX_FILES = 10;
+    const MAX_SIZE_MB = 100;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+    if (isInvoice) {
+      const currentCount = formData.invoiceFilesMeta?.length || 0;
+      if (currentCount + files.length > MAX_FILES) {
+        toast.error(`Limite máximo de ${MAX_FILES} anexos excedido.`);
+        return;
+      }
+    }
+
+    const toastId = toast.loading(isInvoice ? `Enviando ${files.length} arquivo(s)...` : 'Enviando boleto...');
+    
+    if (isInvoice) setIsUploading(true);
+    else setIsUploadingBoleto(true);
+
+    try {
+      const newUrls: string[] = isInvoice ? [...(formData.invoiceUrls || [])] : [];
+      const newMeta: FileMeta[] = isInvoice ? [...(formData.invoiceFilesMeta || [])] : [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        if (file.size > MAX_SIZE_BYTES) {
+          toast.error(`Arquivo "${file.name}" excede o limite de ${MAX_SIZE_MB}MB.`, { id: toastId });
+          throw new Error('File too large');
+        }
+
+        const url = await uploadInvoice(file, type, currentProtocolId);
+        
+        if (isInvoice) {
+          newUrls.push(url);
+          newMeta.push({ name: file.name, size: file.size, url });
+        } else {
+          setFormData(prev => ({ 
+            ...prev, 
+            boletoUrl: url, 
+            boletoFileMeta: { name: file.name, size: file.size } 
+          }));
+          await updateRequestAttachments(currentProtocolId, 'boleto', url);
+        }
+      }
 
       if (isInvoice) {
-        setFormData(prev => ({ ...prev, invoiceFileMeta: { name: file.name, size: file.size } }));
-        setIsUploading(true);
-      } else {
-        setFormData(prev => ({ ...prev, boletoFileMeta: { name: file.name, size: file.size } }));
-        setIsUploadingBoleto(true);
+        const serializedUrls = JSON.stringify(newUrls);
+        setFormData(prev => ({
+          ...prev,
+          invoiceUrls: newUrls,
+          invoiceFilesMeta: newMeta,
+          invoiceUrl: serializedUrls
+        }));
+        await updateRequestAttachments(currentProtocolId, 'invoice', serializedUrls);
       }
 
-      try {
-        // 1. Upload para o Storage usando o protocolo como subpasta
-        const url = await uploadInvoice(file, type, currentProtocolId); 
-        
-        // 2. Atualiza o registro DRAFT no DB com a URL
-        const updateSuccess = await updateRequestAttachments(currentProtocolId, type, url);
-
-        if (!updateSuccess) {
-             throw new Error('Falha ao salvar URL do anexo no banco de dados.');
-        }
-
-        // 3. Atualiza o estado local
-        if (isInvoice) {
-          setFormData(prev => ({ ...prev, invoiceUrl: url }));
-        } else {
-          setFormData(prev => ({ ...prev, boletoUrl: url }));
-        }
-        toast.success(isInvoice ? 'Nota fiscal enviada!' : 'Boleto enviado!', { id: toastId });
-      } catch (error: any) {
-        console.error("Upload error", error);
-        
-        // Improved error message extraction
-        let errorMsg = 'Erro desconhecido';
-        if (error.message) {
-          errorMsg = error.message;
-        } else if (error.error) {
-          errorMsg = error.error;
-        } else if (error.status) {
-          errorMsg = `Erro de rede/servidor: Status ${error.status}`;
-        } else if (typeof error === 'string') {
-          errorMsg = error;
-        }
-        
-        toast.error(`Falha no upload: ${errorMsg}`, { id: toastId });
-        
-        if (isInvoice) {
-           setFormData(prev => ({ ...prev, invoiceFileMeta: undefined, invoiceUrl: '' }));
-        } else {
-           setFormData(prev => ({ ...prev, boletoFileMeta: undefined, boletoUrl: '' }));
-        }
-      } finally {
-        if (isInvoice) setIsUploading(false);
-        else setIsUploadingBoleto(false);
+      toast.success(isInvoice ? 'Arquivos enviados com sucesso!' : 'Boleto enviado!', { id: toastId });
+    } catch (error: any) {
+      console.error("Upload error", error);
+      if (error.message !== 'File too large') {
+        toast.error('Falha no upload. Tente novamente.', { id: toastId });
       }
+    } finally {
+      if (isInvoice) setIsUploading(false);
+      else setIsUploadingBoleto(false);
     }
   };
 
@@ -169,7 +196,7 @@ function App() {
       if (formData.paymentMethod === 'Boleto' && !formData.boletoUrl) errs.boletoFile = "Anexo do boleto necessário";
     }
     if (s === 2) {
-      if (formData.hasInvoice === 'yes' && !formData.invoiceUrl) errs.invoiceFile = "Upload necessário";
+      if (formData.hasInvoice === 'yes' && (!formData.invoiceUrls || formData.invoiceUrls.length === 0)) errs.invoiceFile = "Upload necessário";
       if (formData.hasInvoice === 'no' && !formData.invoiceSentViaWhatsapp) errs.invoiceSentViaWhatsapp = "Você deve se comprometer a enviar o comprovante via WhatsApp.";
     }
     if (s === 3 && !formData.description) errs.description = "Descrição é obrigatória";
@@ -184,26 +211,23 @@ function App() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
-    // Mapeamento de IDs obrigatório para o payload do Supabase
     const selectedAuthorizer = authorizers.find(a => a.name === formData.authorizer);
     const selectedAccount = paymentAccounts.find(p => p.label === formData.paymentAccount);
     const isUrgent = checkUrgency(formData.dueDate);
 
     if (!selectedAuthorizer || !selectedAccount) {
-        toast.error('Erro de mapeamento: Autorizador ou Conta de Pagamento não encontrados. Tente novamente.');
+        toast.error('Erro de mapeamento: Autorizador ou Conta de Pagamento não encontrados.');
         setIsSubmitting(false);
         return;
     }
 
-    // Submissão final (Atualiza DRAFT para PENDING)
     if (await submitRequest(formData, currentProtocolId, selectedAuthorizer.id, selectedAccount.id, isUrgent)) {
       setGeneratedId(currentProtocolId);
       setIsSuccess(true);
       localStorage.removeItem('csp_draft');
       toast.success('Solicitação enviada com sucesso!');
     } else {
-      toast.error('Erro ao enviar solicitação. Verifique o console para detalhes do erro.');
+      toast.error('Erro ao enviar solicitação.');
     }
     setIsSubmitting(false);
   };
@@ -212,7 +236,7 @@ function App() {
     setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setStep(0);
     setIsSuccess(false);
-    setCurrentProtocolId(generateId()); // Gera um novo ID, que dispara o useEffect para criar um novo rascunho
+    setCurrentProtocolId(generateId());
     setView('welcome');
   };
 
@@ -227,19 +251,16 @@ function App() {
     localStorage.removeItem('csp_draft');
     setFormData({ ...INITIAL_DATA, boletoUrl: '' });
     setHasSavedDraft(false);
-    setCurrentProtocolId(generateId()); // Gera um novo ID
+    setCurrentProtocolId(generateId());
     toast.success('Dados limpos.');
   };
 
   const handleInvoiceOptionClick = (option: 'yes' | 'no') => {
     handleChange('hasInvoice', option);
     if (option === 'no') {
-      // Se não possui, abre o modal de compromisso
       setShowInvoiceCommitmentModal(true);
-      // Reseta o compromisso se o usuário voltar para 'sim'
       handleChange('invoiceSentViaWhatsapp', false);
     } else {
-      // Se possui, remove o compromisso e o erro
       handleChange('invoiceSentViaWhatsapp', false);
       setErrors(prev => {
         const next = { ...prev };
@@ -273,7 +294,6 @@ function App() {
             value={getDateValue()} 
             onChange={e => handleChange('dueDate', `${e.target.value}T${getTimeValue() || '12:00'}`)} 
           />
-          
           {showTimeInput ? (
             <div className="flex-1 flex gap-2 animate-in slide-in-from-left-2 duration-300">
               <input 
@@ -282,21 +302,11 @@ function App() {
                 value={getTimeValue()} 
                 onChange={e => handleChange('dueDate', `${getDateValue()}T${e.target.value}`)} 
               />
-              <button 
-                onClick={() => { setShowTimeInput(false); handleChange('dueDate', `${getDateValue()}T12:00`); }}
-                className="p-3 text-slate-400 hover:text-danger transition-colors"
-                title="Remover horário"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              <button onClick={() => { setShowTimeInput(false); handleChange('dueDate', `${getDateValue()}T12:00`); }} className="p-3 text-slate-400 hover:text-danger transition-colors"><Trash2 className="w-5 h-5" /></button>
             </div>
           ) : (
-            <button 
-              onClick={() => setShowTimeInput(true)}
-              className="flex-1 px-4 py-3 rounded-xl border border-dashed border-slate-300 text-slate-400 text-sm font-bold flex items-center justify-center gap-2 hover:border-primary/50 hover:text-primary transition-all group"
-            >
-              <Clock className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              Definir horário específico?
+            <button onClick={() => setShowTimeInput(true)} className="flex-1 px-4 py-3 rounded-xl border border-dashed border-slate-300 text-slate-400 text-sm font-bold flex items-center justify-center gap-2 hover:border-primary/50 hover:text-primary transition-all group">
+              <Clock className="w-4 h-4 group-hover:scale-110 transition-transform" /> Definir horário específico?
             </button>
           )}
         </div>
@@ -319,7 +329,6 @@ function App() {
           <button onClick={() => { handleChange('isSpecificBudget', 'no'); handleChange('specificBudgetName', ''); }} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'no' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Não</button>
         </div>
       </div>
-      
       {formData.isSpecificBudget === 'yes' && (
         <div className="md:col-span-2 animate-in slide-in-from-top-2 duration-300">
           <Select label="Escolha a Verba Específica" value={formData.specificBudgetName} onChange={e => handleChange('specificBudgetName', e.target.value)} required error={errors.specificBudgetName}>
@@ -328,7 +337,6 @@ function App() {
           </Select>
         </div>
       )}
-
       <Input label="Fornecedor / Recebedor" value={formData.supplierName} onChange={e => handleChange('supplierName', e.target.value)} required error={errors.supplierName} />
       <Input label="Valor (R$)" value={formatCurrency(formData.value)} onChange={e => handleChange('value', parseCurrency(e.target.value))} required error={errors.value} placeholder="R$ 0,00" />
       <div className="md:col-span-2">
@@ -377,20 +385,34 @@ function App() {
       </div>
       
       {formData.hasInvoice === 'yes' && (
-        <div className="space-y-3 md:space-y-4">
-          <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Upload do Anexo <span className="text-accent">*</span></label>
-          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-12 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
-            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'invoice')} />
-            <div className="flex flex-col items-center gap-2 md:gap-3">
-              <div className="w-10 h-10 md:w-16 md:h-16 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                {isUploading ? <RefreshCw className="w-6 h-6 md:w-8 md:h-8 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 md:w-8 md:h-8 text-primary" />}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Upload de Anexos (Até 10 arquivos, máx 100MB cada) <span className="text-accent">*</span></label>
+          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-10 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+            <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'invoice')} />
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                {isUploading ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
               </div>
-              <div className="space-y-1">
-                <p className="font-bold text-primary text-xs md:text-base truncate max-w-[200px]">{formData.invoiceFileMeta?.name || "Clique para selecionar"}</p>
-                <p className="text-[10px] md:text-xs text-slate-400">PDF, JPG ou PNG</p>
-              </div>
+              <p className="font-bold text-primary text-xs md:text-sm">Clique ou arraste seus arquivos aqui</p>
+              <p className="text-[10px] text-slate-400">{formData.invoiceFilesMeta?.length || 0}/10 arquivos selecionados</p>
             </div>
           </div>
+
+          {/* Lista de Arquivos Enviados */}
+          {formData.invoiceFilesMeta && formData.invoiceFilesMeta.length > 0 && (
+            <div className="space-y-2 mt-4 animate-in fade-in duration-300">
+              {formData.invoiceFilesMeta.map((file, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 group">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-xs font-bold text-slate-700 truncate">{file.name}</span>
+                    <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  </div>
+                  <button onClick={() => handleRemoveFile(idx)} className="p-1.5 text-slate-400 hover:text-danger hover:bg-red-50 rounded-lg transition-all"><X className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+          )}
           {errors.invoiceFile && <p className="text-xs text-danger text-center">{errors.invoiceFile}</p>}
         </div>
       )}
@@ -409,39 +431,17 @@ function App() {
         </div>
       )}
 
-      {/* Modal de Compromisso */}
       {showInvoiceCommitmentModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6 md:p-8 text-center">
               <AlertTriangle className="w-10 h-10 text-accent mx-auto mb-4" />
               <h3 className="text-xl font-bold text-slate-900 mb-2">Compromisso de Envio</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Ao prosseguir sem a Nota Fiscal, você se compromete a enviar o comprovante (ex: recibo, foto) 
-                <strong className="font-bold text-primary block mt-1">imediatamente após o envio desta solicitação</strong> para o WhatsApp do Departamento Financeiro.
-              </p>
+              <p className="text-slate-600 text-sm leading-relaxed">Ao prosseguir sem a Nota Fiscal, você se compromete a enviar o comprovante imediatamente após o envio desta solicitação para o WhatsApp do Departamento Financeiro.</p>
             </div>
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                onClick={() => { 
-                  setShowInvoiceCommitmentModal(false); 
-                  handleChange('hasInvoice', 'yes'); // Volta para a opção 'Sim'
-                }}
-              >
-                Voltar
-              </Button>
-              <Button 
-                variant="primary" 
-                size="sm" 
-                onClick={() => { 
-                  handleChange('invoiceSentViaWhatsapp', true); 
-                  setShowInvoiceCommitmentModal(false); 
-                }}
-              >
-                Aceitar e Continuar
-              </Button>
+              <Button variant="secondary" size="sm" onClick={() => { setShowInvoiceCommitmentModal(false); handleChange('hasInvoice', 'yes'); }}>Voltar</Button>
+              <Button variant="primary" size="sm" onClick={() => { handleChange('invoiceSentViaWhatsapp', true); setShowInvoiceCommitmentModal(false); }}>Aceitar e Continuar</Button>
             </div>
           </div>
         </div>
@@ -451,8 +451,7 @@ function App() {
 
   const renderStep4 = () => (
     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <Textarea label="Descrição do Pagamento" required value={formData.description} onChange={e => handleChange('description', e.target.value)} error={errors.description} rows={4} placeholder="Ex: Pagamento referente à compra de materiais de escritório para o mês de Outubro..." />
-      {/* Campo 'Número de Autorização (Opcional)' removido conforme solicitado */}
+      <Textarea label="Descrição do Pagamento" required value={formData.description} onChange={e => handleChange('description', e.target.value)} error={errors.description} rows={4} placeholder="Ex: Pagamento referente à compra de materiais de escritório..." />
       <div className={`p-4 md:p-6 rounded-2xl border transition-all ${formData.termsAccepted ? 'bg-primary/5 border-primary' : 'bg-slate-50 border-slate-100'}`}>
         <label className="flex items-start gap-3 md:gap-4 cursor-pointer">
           <input type="checkbox" className="mt-1 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" checked={formData.termsAccepted} onChange={e => handleChange('termsAccepted', e.target.checked)} />
@@ -477,7 +476,7 @@ function App() {
       { label: 'Autorizador', value: formData.authorizer },
       { label: 'Verba Específica', value: formData.isSpecificBudget === 'yes' ? formData.specificBudgetName : 'Não' },
       { label: 'Descrição', value: formData.description, full: true },
-      { label: 'Anexo Nota', value: formData.invoiceUrl ? 'Enviado' : (formData.hasInvoice === 'no' ? 'Pendente via WhatsApp' : 'Não possui'), full: false },
+      { label: 'Anexos Nota', value: formData.invoiceFilesMeta?.length ? `${formData.invoiceFilesMeta.length} arquivo(s) enviado(s)` : (formData.hasInvoice === 'no' ? 'Pendente via WhatsApp' : 'Não possui'), full: false },
       { label: 'Anexo Boleto', value: formData.boletoUrl ? 'Enviado' : 'N/A', full: false }
     ];
 
@@ -499,7 +498,7 @@ function App() {
         </div>
         <div className="bg-slate-50 p-4 rounded-2xl flex items-start gap-3 border border-slate-100">
           <AlertTriangle className="w-5 h-5 text-slate-400 shrink-0" />
-          <p className="text-[10px] md:text-xs text-slate-500 leading-relaxed">Verifique todas as informações antes de enviar. Após o envio, você receberá um ID de protocolo.</p>
+          <p className="text-[10px] md:text-xs text-slate-500 leading-relaxed">Verifique todas as informações antes de enviar.</p>
         </div>
       </div>
     );
@@ -566,16 +565,11 @@ function App() {
         </div>
       </header>
 
-      {/* Main container: Reverted mobile layout to original, using flex-1 and justify-center */}
       <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-4 pt-8 md:p-8 relative z-10 text-center">
-        <img 
-          src="/logo.png" 
-          alt="Logo" 
-          className="h-12 md:h-24 mb-4 md:mb-12 md:-mt-20 drop-shadow-2xl animate-fade-up" 
-        />
+        <img src="/logo.png" alt="Logo" className="h-12 md:h-24 mb-4 md:mb-12 md:-mt-20 drop-shadow-2xl animate-fade-up" />
         <div className="space-y-4 md:space-y-6 max-w-3xl mb-6 md:mb-14 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <h1 className="text-3xl md:text-7xl font-bold text-slate-900 tracking-tighter leading-tight px-2">Sua plataforma de <span className="text-primary italic font-black">pagamentos.</span></h1>
-          <p className="text-sm md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada, segura e acompanhe o processamento em tempo real.</p>
+          <p className="text-sm md:text-xl text-slate-500 font-medium px-4 md:px-8 leading-relaxed">Envie suas solicitações de forma guiada e segura.</p>
         </div>
         <div className="flex flex-col gap-4 w-full max-w-sm animate-fade-up px-4" style={{ animationDelay: '0.2s' }}>
           <div className="relative group">
@@ -583,7 +577,6 @@ function App() {
             <Button size="lg" onClick={() => setView('form')} className="relative w-full rounded-2xl py-5 md:py-6 text-lg md:text-xl font-black shadow-2xl">Criar Solicitação</Button>
           </div>
           <Button variant="outline" size="lg" onClick={() => setView('track')} className="rounded-2xl py-5 md:py-6 bg-white border-slate-200 text-slate-600 font-bold hover:border-primary/50 text-base md:text-lg">Acompanhar Solicitação</Button>
-          {hasSavedDraft && <button onClick={() => { setFormData(JSON.parse(localStorage.getItem('csp_draft')!)); setView('form'); toast.success('Rascunho carregado!'); }} className="text-[10px] md:text-xs text-slate-400 font-bold flex items-center gap-2 justify-center hover:text-primary transition-colors mt-2"><RefreshCw className="w-3 h-3" /> Continuar rascunho</button>}
         </div>
       </div>
     </div>
@@ -614,7 +607,6 @@ function App() {
       <main className="flex-1 flex flex-col items-center justify-start md:justify-center p-4 pt-6 md:p-8">
         {!isSuccess ? (
           <div className="w-full max-w-3xl animate-in fade-in zoom-in-95 duration-700">
-            {/* Top Navigation - Tighter on desktop */}
             <div className="flex flex-row justify-between items-center gap-4 mb-6 md:mb-6 px-1">
               <button onClick={() => setView('welcome')} className="flex items-center gap-1.5 text-slate-400 hover:text-primary transition-colors text-[9px] md:text-xs font-bold uppercase tracking-widest"><Home className="w-3.5 h-3.5 md:w-4 md:h-4" /> Início</button>
               <div className="flex gap-2 md:gap-4">
@@ -623,16 +615,13 @@ function App() {
               </div>
             </div>
 
-            {/* Title Section - Reduced gaps on desktop */}
             <div className="mb-6 md:mb-6 text-center md:text-left">
                <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1 block">Financeiro</span>
                <h1 className="text-2xl md:text-5xl font-bold text-slate-900 tracking-tighter mb-1">Nova Solicitação</h1>
-               <p className="text-xs md:text-base text-slate-500 font-medium">Preencha os dados para registrar o pagamento.</p>
             </div>
 
             <Stepper currentStep={step} />
 
-            {/* Main Content Box - Reduced padding and margin bottom on desktop */}
             <div className="bg-white rounded-2xl md:rounded-[2.5rem] p-5 md:p-8 shadow-2xl shadow-slate-200/50 border border-slate-50 mb-6 md:mb-6">
               {step === 0 && renderStep1()}
               {step === 1 && renderStep2()}
@@ -641,7 +630,6 @@ function App() {
               {step === 4 && renderReview()}
             </div>
 
-            {/* Footer Navigation - Reduced padding top on desktop */}
             <div className="flex justify-between items-center pt-6 md:pt-4 border-t border-slate-200">
               <button onClick={prevStep} className={`flex items-center gap-1.5 md:gap-2 text-slate-400 hover:text-slate-600 font-bold text-xs md:text-sm transition-all ${step === 0 ? 'invisible' : ''}`}><ChevronLeft className="w-4 h-4 md:w-5 md:h-5" /> Voltar</button>
               {step < 4 ? (
