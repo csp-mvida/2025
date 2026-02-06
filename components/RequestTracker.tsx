@@ -55,7 +55,9 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
 
   const handleSearch = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    const searchProtocol = protocol.trim();
+    const searchProtocol = protocol.trim().toUpperCase(); // Normaliza o protocolo
+    setProtocol(searchProtocol); // Atualiza o estado com o protocolo normalizado
+    
     if (!searchProtocol) return;
 
     setLoading(true);
@@ -79,14 +81,9 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
   useEffect(() => {
     // Executa a busca inicial se um protocolo for fornecido
     if (initialProtocol) {
-      // Usamos setTimeout para garantir que a transição de status no banco de dados
-      // (draft -> pending) tenha tempo de ser processada após o submit.
-      // 500ms é um buffer seguro para operações de banco de dados rápidas.
-      const timer = setTimeout(() => {
-        handleSearch();
-      }, 500); 
-      
-      return () => clearTimeout(timer);
+      // Removemos o setTimeout e confiamos na normalização e no log da API para debug.
+      // A busca é feita imediatamente ao carregar a tela.
+      handleSearch();
     }
   }, [initialProtocol]); // Dependência apenas do initialProtocol
 

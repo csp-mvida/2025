@@ -208,15 +208,21 @@ export const submitRequest = async (
 };
 
 export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
+  const normalizedProtocol = protocol.trim().toUpperCase();
+  console.log(`[API] Searching for protocol: ${normalizedProtocol}`);
+  
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select('*')
-    .eq('protocol', protocol.trim())
+    .eq('protocol', normalizedProtocol)
     .single();
 
   if (error || !data) {
+    console.error(`[API] Protocol search failed for ${normalizedProtocol}. Error:`, error);
     return null;
   }
+
+  console.log(`[API] Protocol found: ${normalizedProtocol}. Data:`, data);
 
   return {
     id: data.protocol,
