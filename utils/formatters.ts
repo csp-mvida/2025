@@ -37,14 +37,3 @@ export const checkUrgency = (dateString: string): boolean => {
   // Urgent if strictly less than 2 hours or in the past
   return diffHours < 2;
 };
-
-export const generateId = () => {
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  const hh = String(now.getHours()).padStart(2, '0');
-  const min = String(now.getMinutes()).padStart(2, '0');
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `CSP-${yyyy}${mm}${dd}-${hh}${min}-${random}`;
-};

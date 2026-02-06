@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { INITIAL_DATA, CSPFormData, Department, ValidationErrors, FileMeta } from './types';
 import { URGENCY_THRESHOLD_HOURS, SPECIFIC_BUDGET_OPTIONS } from './constants';
-import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency, generateId } from './utils/formatters';
+import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency } from './utils/formatters';
 import { 
   fetchDepartments, fetchAuthorizers, fetchPaymentAccounts, 
   submitRequest, uploadInvoice, createDraftRequest, updateRequestAttachments 
@@ -44,17 +44,21 @@ function App() {
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false);
   
-  const [currentProtocolId, setCurrentProtocolId] = useState(generateId());
+  const [currentProtocolId, setCurrentProtocolId] = useState(''); // Inicializa vazio, será preenchido pelo DB
 
   const isUrgent = checkUrgency(formData.dueDate);
 
   const getDateValue = () => formData.dueDate ? formData.dueDate.split('T')[0] : '';
   const getTimeValue = () => formData.dueDate && formData.dueDate.includes('T') ? formData.dueDate.split('T')[1].substring(0, 5) : '';
 
-  const createInitialDraft = useCallback(async (protocolId: string) => {
-    const success = await createDraftRequest(protocolId);
-    if (!success) {
-      console.error(`Falha ao criar rascunho inicial para o protocolo ${protocolId}.`);
+  const createInitialDraft = useCallback(async () => {
+    const protocol = await createDraftRequest();
+    if (protocol) {
+      setCurrentProtocolId(protocol);
+      console.log(`[App] Draft created with DB protocol: ${protocol}`);
+    } else {
+      console.error(`Falha ao criar rascunho inicial.`);
+      toast.error('Falha ao iniciar o formulário. Tente recarregar.');
     }
   }, []);
 
@@ -74,8 +78,11 @@ function App() {
     const saved = localStorage.getItem('csp_draft');
     if (saved) setHasSavedDraft(true);
     
-    createInitialDraft(currentProtocolId);
-  }, [currentProtocolId, createInitialDraft]);
+    // Se não houver protocolo atual (primeira carga), cria um rascunho
+    if (!currentProtocolId) {
+      createInitialDraft();
+    }
+  }, [createInitialDraft, currentProtocolId]);
 
   const handleChange = (field: keyof CSPFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -87,6 +94,8 @@ function App() {
   };
 
   const handleRemoveFile = async (idx: number, type: 'invoice' | 'boleto') => {
+    if (!currentProtocolId) return; // Não remove se não houver protocolo
+    
     const isInvoice = type === 'invoice';
     const updatedMeta = [...(isInvoice ? (formData.invoiceFilesMeta || []) : (formData.boletoFilesMeta || []))];
     const updatedUrls = [...(isInvoice ? (formData.invoiceUrls || []) : (formData.boletoUrls || []))];
@@ -118,7 +127,7 @@ function App() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'invoice' | 'boleto') => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !currentProtocolId) return;
 
     const isInvoice = type === 'invoice';
     const MAX_FILES = 10;
@@ -217,6 +226,11 @@ function App() {
   const prevStep = () => setStep(s => s - 1);
 
   const handleSubmit = async () => {
+    if (!currentProtocolId) {
+      toast.error('Erro: Protocolo não inicializado.');
+      return;
+    }
+    
     setIsSubmitting(true);
     const selectedAuthorizer = authorizers.find(a => a.name === formData.authorizer);
     const selectedAccount = paymentAccounts.find(p => p.label === formData.paymentAccount);
@@ -243,7 +257,8 @@ function App() {
     setFormData({ ...INITIAL_DATA });
     setStep(0);
     setIsSuccess(false);
-    setCurrentProtocolId(generateId());
+    setCurrentProtocolId(''); // Limpa o protocolo
+    createInitialDraft(); // Gera um novo rascunho/protocolo
     setView('welcome');
   };
 
@@ -257,7 +272,8 @@ function App() {
     localStorage.removeItem('csp_draft');
     setFormData({ ...INITIAL_DATA });
     setHasSavedDraft(false);
-    setCurrentProtocolId(generateId());
+    setCurrentProtocolId(''); // Limpa o protocolo
+    createInitialDraft(); // Gera um novo rascunho/protocolo
     toast.success('Dados limpos.');
   };
 
