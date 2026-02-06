@@ -91,16 +91,16 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
  * Cria um registro inicial no banco de dados com status DRAFT, permitindo que o trigger gere o protocolo.
  * @returns O protocolo gerado pelo banco de dados, ou null em caso de falha.
  */
-export const createDraftRequest = async (): Promise<string | null> => {
+export const createDraftRequest = async (departmentId: string, authorizerId: string, paymentAccountId: string): Promise<string | null> => {
   // Não enviamos o campo 'protocol' para que o trigger 'generate_csp_protocol' o preencha.
   const dbPayload = {
     status: 'draft',
     requester_name: 'Rascunho',
     requester_whatsapp: '(00) 00000-0000',
-    department_id: PLACEHOLDER_UUID,
-    authorizer_id: PLACEHOLDER_UUID,
+    department_id: departmentId,
+    authorizer_id: authorizerId,
     due_date: new Date().toISOString().split('T')[0],
-    payment_account_id: PLACEHOLDER_UUID,
+    payment_account_id: paymentAccountId,
     vendor_name: 'Rascunho',
     amount_cents: 0,
     payment_method: 'PIX',

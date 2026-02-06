@@ -45,14 +45,15 @@ function App() {
   const [showInvoiceCommitmentModal, setShowInvoiceCommitmentModal] = useState(false);
   
   const [currentProtocolId, setCurrentProtocolId] = useState(''); // Inicializa vazio, será preenchido pelo DB
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const isUrgent = checkUrgency(formData.dueDate);
 
   const getDateValue = () => formData.dueDate ? formData.dueDate.split('T')[0] : '';
   const getTimeValue = () => formData.dueDate && formData.dueDate.includes('T') ? formData.dueDate.split('T')[1].substring(0, 5) : '';
 
-  const createInitialDraft = useCallback(async () => {
-    const protocol = await createDraftRequest();
+  const createInitialDraft = useCallback(async (deptId: string, authId: string, accountId: string) => {
+    const protocol = await createDraftRequest(deptId, authId, accountId);
     if (protocol) {
       setCurrentProtocolId(protocol);
       console.log(`[App] Draft created with DB protocol: ${protocol}`);
@@ -72,16 +73,19 @@ function App() {
       setDepartments(depts);
       setAuthorizers(auths);
       setPaymentAccounts(accounts);
+      setIsDataLoaded(true);
+      
+      // Se os dados de lookup foram carregados e não há protocolo, crie o rascunho.
+      if (depts.length > 0 && auths.length > 0 && accounts.length > 0 && !currentProtocolId) {
+        // Usamos o primeiro ID válido de cada lista para o rascunho inicial
+        createInitialDraft(depts[0].id, auths[0].id, accounts[0].id);
+      }
     };
     loadData();
 
     const saved = localStorage.getItem('csp_draft');
     if (saved) setHasSavedDraft(true);
     
-    // Se não houver protocolo atual (primeira carga), cria um rascunho
-    if (!currentProtocolId) {
-      createInitialDraft();
-    }
   }, [createInitialDraft, currentProtocolId]);
 
   const handleChange = (field: keyof CSPFormData, value: any) => {
@@ -258,7 +262,10 @@ function App() {
     setStep(0);
     setIsSuccess(false);
     setCurrentProtocolId(''); // Limpa o protocolo
-    createInitialDraft(); // Gera um novo rascunho/protocolo
+    // Recria o rascunho se os dados de lookup já estiverem carregados
+    if (isDataLoaded && departments.length > 0 && authorizers.length > 0 && paymentAccounts.length > 0) {
+      createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
+    }
     setView('welcome');
   };
 
@@ -273,7 +280,10 @@ function App() {
     setFormData({ ...INITIAL_DATA });
     setHasSavedDraft(false);
     setCurrentProtocolId(''); // Limpa o protocolo
-    createInitialDraft(); // Gera um novo rascunho/protocolo
+    // Recria o rascunho se os dados de lookup já estiverem carregados
+    if (isDataLoaded && departments.length > 0 && authorizers.length > 0 && paymentAccounts.length > 0) {
+      createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
+    }
     toast.success('Dados limpos.');
   };
 
