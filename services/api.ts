@@ -59,9 +59,17 @@ export const fetchPaymentAccounts = async (): Promise<{ id: string; label: strin
 /**
  * Upload File to Supabase Storage
  */
-export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', protocolId: string): Promise<string> => {
+export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto' | 'transfer', protocolId: string): Promise<string> => {
   const fileExt = file.name.split('.').pop() || 'bin';
-  const subfolder = type === 'invoice' ? 'notas_fiscais' : 'boletos'; 
+  let subfolder: string;
+  
+  if (type === 'invoice') {
+    subfolder = 'notas_fiscais';
+  } else if (type === 'boleto') {
+    subfolder = 'boletos';
+  } else { // type === 'transfer'
+    subfolder = 'transferencias';
+  }
   
   // Tarefa 5: Usar protocolId (que agora é garantido) no path
   const safeFileName = `${subfolder}/${protocolId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
@@ -145,12 +153,18 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
  */
 export const updateRequestAttachments = async (
   protocolId: string, 
-  type: 'invoice' | 'boleto', 
+  type: 'invoice' | 'boleto' | 'transfer', 
   url: string
 ): Promise<boolean> => {
-  const payload = type === 'invoice' 
-    ? { invoice_attachment_path: url } 
-    : { boleto_attachment_path: url };
+  let payload: { [key: string]: string };
+  
+  if (type === 'invoice') {
+    payload = { invoice_attachment_path: url };
+  } else if (type === 'boleto') {
+    payload = { boleto_attachment_path: url };
+  } else { // type === 'transfer'
+    payload = { transfer_attachment_path: url };
+  }
 
   const { error } = await supabase
     .from(TABLE_NAME)
@@ -180,11 +194,16 @@ export const submitRequest = async (
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
-  // Mapeamento do payment_method para minúsculas, conforme esperado pelo DB (Tarefa 1, 5)
+  // Mapeamento do payment_method para minúsculas, conforme esperado pelo DB
   const mappedPaymentMethod = data.paymentMethod.toLowerCase().replace('transferência', 'transferencia');
   
-  // amount_cents deve ser um número inteiro > 0 (Tarefa 5)
+  // amount_cents deve ser um número inteiro > 0
   const amountCents = parseInt(data.value);
+
+  // Limpeza condicional de campos específicos para evitar vazamento (Tarefa 5)
+  const isTransfer = data.paymentMethod === 'Transferência';
+  const isBoleto = data.paymentMethod === 'Boleto';
+  const isPix = data.paymentMethod === 'PIX';
 
   const dbPayload = {
     requester_name: data.requesterName,
@@ -195,12 +214,27 @@ export const submitRequest = async (
     vendor_name: data.supplierName,
     amount_cents: amountCents, 
     payment_method: mappedPaymentMethod,
-    pix_key: data.pixKey || null,
-    status: 'pending' as RequestStatus, // Garantindo status 'pending' (Tarefa 1, 2)
+    
+    // PIX
+    pix_key: isPix ? data.pixKey : null,
+    
+    // Boleto
+    boleto_attachment_path: isBoleto ? data.boletoUrl : null,
+    
+    // Transferência (NEW)
+    transfer_bank_name: isTransfer ? data.transferBankName : null,
+    transfer_account_type: isTransfer ? data.transferAccountType : null,
+    transfer_agency: isTransfer ? data.transferAgency : null,
+    transfer_account: isTransfer ? data.transferAccount : null,
+    transfer_cpf_cnpj: isTransfer ? data.transferCpfCnpj : null,
+    transfer_beneficiary_name: isTransfer ? data.transferBeneficiaryName : null,
+    transfer_attachment_path: isTransfer ? data.transferUrl : null,
+
+    // Comuns
+    status: 'pending' as RequestStatus, 
     invoice_attachment_path: url_anexo,
-    boleto_attachment_path: data.paymentMethod === 'Boleto' ? data.boletoUrl : null,
     is_budget_specific: data.isSpecificBudget === 'yes',
-    budget_id: null, // Mantido como null, pois a busca de ID de budget não foi implementada
+    budget_id: null, 
     authorization_number: data.authNumber || null,
     authorizer_id: authorizerId,
     payment_account_id: paymentAccountId,
@@ -276,6 +310,14 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     status: data.status as RequestStatus,
     invoiceUrl: data.invoice_attachment_path,
     boletoUrl: data.boleto_attachment_path,
+    // NEW Transfer fields
+    transferBankName: data.transfer_bank_name || '',
+    transferAccountType: data.transfer_account_type || '',
+    transferAgency: data.transfer_agency || '',
+    transferAccount: data.transfer_account || '',
+    transferCpfCnpj: data.transfer_cpf_cnpj || '',
+    transferBeneficiaryName: data.transfer_beneficiary_name || '',
+    transferUrl: data.transfer_attachment_path,
     history: []
   };
 };
@@ -311,6 +353,14 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     status: req.status as RequestStatus,
     boletoUrl: req.boleto_attachment_path,
     invoiceUrl: req.invoice_attachment_path,
+    // NEW Transfer fields
+    transferBankName: req.transfer_bank_name || '',
+    transferAccountType: req.transfer_account_type || '',
+    transferAgency: req.transfer_agency || '',
+    transferAccount: req.transfer_account || '',
+    transferCpfCnpj: req.transfer_cpf_cnpj || '',
+    transferBeneficiaryName: req.transfer_beneficiary_name || '',
+    transferUrl: req.transfer_attachment_path,
     history: []
   }));
 };

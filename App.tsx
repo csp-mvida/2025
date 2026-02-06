@@ -2,7 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { INITIAL_DATA, CSPFormData, Department, ValidationErrors, FileMeta } from './types';
 import { URGENCY_THRESHOLD_HOURS, SPECIFIC_BUDGET_OPTIONS } from './constants';
-import { formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency } from './utils/formatters';
+import { 
+  formatCurrency, parseCurrency, formatPhone, isValidPhone, checkUrgency, 
+  formatCpfCnpj, isValidCpfCnpj, isValidAccountOrAgency 
+} from './utils/formatters';
 import { 
   fetchDepartments, fetchAuthorizers, fetchPaymentAccounts, 
   submitRequest, uploadInvoice, createDraftRequest, updateRequestAttachments, getRequestByProtocol 
@@ -36,6 +39,7 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false); 
   const [isUploadingBoleto, setIsUploadingBoleto] = useState(false);
+  const [isUploadingTransfer, setIsUploadingTransfer] = useState(false); // NEW state for transfer upload
   const [isSuccess, setIsSuccess] = useState(false);
   const [generatedId, setGeneratedId] = useState('');
   const [isIdCopied, setIsIdCopied] = useState(false); 
@@ -144,7 +148,38 @@ function App() {
 
 
   const handleChange = (field: keyof CSPFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+        const newState = { ...prev, [field]: value };
+
+        // Task 5: Clear specific fields when payment method changes
+        if (field === 'paymentMethod') {
+            // Clear PIX fields
+            newState.pixKey = '';
+            
+            // Clear Boleto fields
+            newState.boletoUrl = '';
+            newState.boletoUrls = [];
+            newState.boletoFilesMeta = [];
+            
+            // Clear Transfer fields
+            newState.transferBankName = '';
+            newState.transferAccountType = '';
+            newState.transferAgency = '';
+            newState.transferAccount = '';
+            newState.transferCpfCnpj = '';
+            newState.transferBeneficiaryName = '';
+            newState.transferUrl = '';
+            newState.transferUrls = [];
+            newState.transferFilesMeta = [];
+        }
+        
+        // Apply formatting for specific fields
+        if (field === 'transferCpfCnpj') {
+            newState.transferCpfCnpj = formatCpfCnpj(value);
+        }
+        
+        return newState;
+    });
     if (errors[field]) setErrors(prev => {
       const next = { ...prev };
       delete next[field];
@@ -152,15 +187,18 @@ function App() {
     });
   };
 
-  const handleRemoveFile = async (idx: number, type: 'invoice' | 'boleto') => {
+  const handleRemoveFile = async (idx: number, type: 'invoice' | 'boleto' | 'transfer') => {
     if (!currentProtocolId) {
       toast.error('Erro: Protocolo não definido para remover arquivo.');
       return;
     }
     
     const isInvoice = type === 'invoice';
-    const updatedMeta = [...(isInvoice ? (formData.invoiceFilesMeta || []) : (formData.boletoFilesMeta || []))];
-    const updatedUrls = [...(isInvoice ? (formData.invoiceUrls || []) : (formData.boletoUrls || []))];
+    const isBoleto = type === 'boleto';
+    const isTransfer = type === 'transfer';
+    
+    const updatedMeta = [...(isInvoice ? (formData.invoiceFilesMeta || []) : isBoleto ? (formData.boletoFilesMeta || []) : (formData.transferFilesMeta || []))];
+    const updatedUrls = [...(isInvoice ? (formData.invoiceUrls || []) : isBoleto ? (formData.boletoUrls || []) : (formData.transferUrls || []))];
     
     updatedMeta.splice(idx, 1);
     updatedUrls.splice(idx, 1);
@@ -175,7 +213,7 @@ function App() {
         invoiceUrl: serializedUrls
       }));
       await updateRequestAttachments(currentProtocolId, 'invoice', serializedUrls);
-    } else {
+    } else if (isBoleto) {
       setFormData(prev => ({
         ...prev,
         boletoFilesMeta: updatedMeta,
@@ -183,11 +221,19 @@ function App() {
         boletoUrl: serializedUrls
       }));
       await updateRequestAttachments(currentProtocolId, 'boleto', serializedUrls);
+    } else if (isTransfer) { // Transfer
+        setFormData(prev => ({
+            ...prev,
+            transferFilesMeta: updatedMeta,
+            transferUrls: updatedUrls,
+            transferUrl: serializedUrls
+        }));
+        await updateRequestAttachments(currentProtocolId, 'transfer', serializedUrls);
     }
     toast.success('Arquivo removido.');
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'invoice' | 'boleto') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'invoice' | 'boleto' | 'transfer') => {
     const files = e.target.files;
     // Tarefa 3: Não permitir upload se o protocolo não estiver inicializado
     if (!files || files.length === 0) return;
@@ -197,11 +243,14 @@ function App() {
     }
 
     const isInvoice = type === 'invoice';
+    const isBoleto = type === 'boleto';
+    const isTransfer = type === 'transfer';
+    
     const MAX_FILES = 10;
     const MAX_SIZE_MB = 100;
     const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
-    const currentCount = isInvoice ? (formData.invoiceFilesMeta?.length || 0) : (formData.boletoFilesMeta?.length || 0);
+    const currentCount = isInvoice ? (formData.invoiceFilesMeta?.length || 0) : isBoleto ? (formData.boletoFilesMeta?.length || 0) : (formData.transferFilesMeta?.length || 0);
     if (currentCount + files.length > MAX_FILES) {
       toast.error(`Limite máximo de ${MAX_FILES} arquivos excedido.`);
       return;
@@ -210,11 +259,12 @@ function App() {
     const toastId = toast.loading(`Enviando ${files.length} arquivo(s)...`);
     
     if (isInvoice) setIsUploading(true);
-    else setIsUploadingBoleto(true);
+    else if (isBoleto) setIsUploadingBoleto(true);
+    else if (isTransfer) setIsUploadingTransfer(true);
 
     try {
-      const newUrls: string[] = isInvoice ? [...(formData.invoiceUrls || [])] : [...(formData.boletoUrls || [])];
-      const newMeta: FileMeta[] = isInvoice ? [...(formData.invoiceFilesMeta || [])] : [...(formData.boletoFilesMeta || [])];
+      const newUrls: string[] = isInvoice ? [...(formData.invoiceUrls || [])] : isBoleto ? [...(formData.boletoUrls || [])] : [...(formData.transferUrls || [])];
+      const newMeta: FileMeta[] = isInvoice ? [...(formData.invoiceFilesMeta || [])] : isBoleto ? [...(formData.boletoFilesMeta || [])] : [...(formData.transferFilesMeta || [])];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -240,7 +290,7 @@ function App() {
           invoiceUrl: serializedUrls
         }));
         await updateRequestAttachments(currentProtocolId, 'invoice', serializedUrls);
-      } else {
+      } else if (isBoleto) {
         setFormData(prev => ({
           ...prev,
           boletoUrls: newUrls,
@@ -248,6 +298,14 @@ function App() {
           boletoUrl: serializedUrls
         }));
         await updateRequestAttachments(currentProtocolId, 'boleto', serializedUrls);
+      } else if (isTransfer) { // Transfer
+        setFormData(prev => ({
+            ...prev,
+            transferUrls: newUrls,
+            transferFilesMeta: newMeta,
+            transferUrl: serializedUrls
+        }));
+        await updateRequestAttachments(currentProtocolId, 'transfer', serializedUrls);
       }
 
       toast.success('Arquivos enviados!', { id: toastId });
@@ -258,7 +316,8 @@ function App() {
       }
     } finally {
       if (isInvoice) setIsUploading(false);
-      else setIsUploadingBoleto(false);
+      else if (isBoleto) setIsUploadingBoleto(false);
+      else if (isTransfer) setIsUploadingTransfer(false);
     }
   };
 
@@ -277,7 +336,18 @@ function App() {
       if (!formData.supplierName) errs.supplierName = "Fornecedor é obrigatório";
       if (!formData.value || parseInt(formData.value) === 0) errs.value = "Valor é obrigatório";
       if (!formData.paymentMethod) errs.paymentMethod = "Forma é obrigatória";
+      
       if (formData.paymentMethod === 'Boleto' && (!formData.boletoUrls || formData.boletoUrls.length === 0)) errs.boletoFile = "Anexo do boleto necessário";
+      
+      // NEW Transfer validation
+      if (formData.paymentMethod === 'Transferência') {
+          if (!formData.transferBankName) errs.transferBankName = "Banco é obrigatório";
+          if (!formData.transferAccountType) errs.transferAccountType = "Tipo de conta é obrigatório";
+          if (!isValidAccountOrAgency(formData.transferAgency || '')) errs.transferAgency = "Agência é obrigatória";
+          if (!isValidAccountOrAgency(formData.transferAccount || '')) errs.transferAccount = "Conta é obrigatória";
+          if (!isValidCpfCnpj(formData.transferCpfCnpj || '')) errs.transferCpfCnpj = "CPF/CNPJ inválido";
+          if (!formData.transferBeneficiaryName) errs.transferBeneficiaryName = "Nome do favorecido é obrigatório";
+      }
     }
     if (s === 2) {
       if (formData.hasInvoice === 'yes' && (!formData.invoiceUrls || formData.invoiceUrls.length === 0)) errs.invoiceFile = "Upload necessário";
@@ -435,6 +505,96 @@ function App() {
     </div>
   );
 
+  const renderBoletoFields = () => (
+    <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300 space-y-4">
+      <label className="block text-sm font-medium text-slate-700">Anexos do Boleto <span className="text-accent">*</span></label>
+      <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+        <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+            {isUploadingBoleto ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
+          </div>
+          <p className="font-bold text-primary text-xs md:text-sm">Clique ou arraste até 10 boletos aqui</p>
+          <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem (Máx 100MB por arquivo)</p>
+          <div className="mt-1 px-3 py-1 bg-white/50 rounded-full">
+            <p className="text-[10px] text-slate-600 font-bold">{formData.boletoFilesMeta?.length || 0}/10 boletos anexados</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista de Boletos Enviados */}
+      {formData.boletoFilesMeta && formData.boletoFilesMeta.length > 0 && (
+        <div className="space-y-2 animate-in fade-in duration-300">
+          {formData.boletoFilesMeta.map((file, idx) => (
+            <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-100 group">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <FileText className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs font-bold text-slate-700 truncate">{file.name}</span>
+                <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+              </div>
+              <button onClick={() => handleRemoveFile(idx, 'boleto')} className="p-1.5 text-slate-400 hover:text-danger hover:bg-red-50 rounded-lg transition-all"><X className="w-4 h-4" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+      {errors.boletoFile && <p className="text-xs text-danger mt-1">{errors.boletoFile}</p>}
+    </div>
+  );
+
+  const renderTransferFields = () => (
+    <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300 space-y-4">
+        <Input label="Banco" value={formData.transferBankName} onChange={e => handleChange('transferBankName', e.target.value)} required error={errors.transferBankName} placeholder="Nome do Banco" />
+        
+        <Select label="Tipo de Conta" value={formData.transferAccountType} onChange={e => handleChange('transferAccountType', e.target.value)} required error={errors.transferAccountType}>
+            <option value="">Selecione...</option>
+            <option value="Corrente">Conta Corrente</option>
+            <option value="Poupança">Conta Poupança</option>
+        </Select>
+
+        <div className="grid grid-cols-2 gap-4">
+            <Input label="Agência (c/ dígito)" value={formData.transferAgency} onChange={e => handleChange('transferAgency', e.target.value)} required error={errors.transferAgency} placeholder="Ex: 0000-0" />
+            <Input label="Conta (c/ dígito)" value={formData.transferAccount} onChange={e => handleChange('transferAccount', e.target.value)} required error={errors.transferAccount} placeholder="Ex: 000000-0" />
+        </div>
+
+        <Input label="CPF/CNPJ do Favorecido" value={formData.transferCpfCnpj} onChange={e => handleChange('transferCpfCnpj', e.target.value)} required error={errors.transferCpfCnpj} placeholder="000.000.000-00 ou 00.000.000/0000-00" />
+        <Input label="Nome do Favorecido" value={formData.transferBeneficiaryName} onChange={e => handleChange('transferBeneficiaryName', e.target.value)} required error={errors.transferBeneficiaryName} placeholder="Nome completo ou Razão Social" />
+
+        {/* Upload Comprovante Bancário (Opcional) */}
+        <div className="pt-4 space-y-2">
+            <label className="block text-sm font-medium text-slate-700">Comprovante de Dados Bancários (Opcional)</label>
+            <div className="border-2 border-dashed border-slate-200 bg-slate-50 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+                <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'transfer')} />
+                <div className="flex flex-col items-center gap-2">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                        {isUploadingTransfer ? <RefreshCw className="w-5 h-5 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 text-primary" />}
+                    </div>
+                    <p className="font-bold text-slate-700 text-xs md:text-sm">Clique para anexar comprovante (Opcional)</p>
+                    <p className="text-[9px] md:text-[10px] text-slate-400">Print, PDF ou Imagem</p>
+                    <div className="mt-1 px-3 py-1 bg-white/50 rounded-full">
+                        <p className="text-[10px] text-slate-600 font-bold">{formData.transferFilesMeta?.length || 0}/10 arquivos anexados</p>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Lista de Arquivos Enviados */}
+            {formData.transferFilesMeta && formData.transferFilesMeta.length > 0 && (
+                <div className="space-y-2 animate-in fade-in duration-300">
+                    {formData.transferFilesMeta.map((file, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-100 group">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                                <FileText className="w-4 h-4 text-primary shrink-0" />
+                                <span className="text-xs font-bold text-slate-700 truncate">{file.name}</span>
+                                <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                            </div>
+                            <button onClick={() => handleRemoveFile(idx, 'transfer')} className="p-1.5 text-slate-400 hover:text-danger hover:bg-red-50 rounded-lg transition-all"><X className="w-4 h-4" /></button>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    </div>
+  );
+
   const renderStep2 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Select label="Conta de Pagamento" value={formData.paymentAccount} onChange={e => handleChange('paymentAccount', e.target.value)} required error={errors.paymentAccount}>
@@ -466,41 +626,13 @@ function App() {
           <option value="Transferência">Transferência</option>
         </Select>
       </div>
-      {formData.paymentMethod === 'Boleto' && (
-        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300 space-y-4">
-          <label className="block text-sm font-medium text-slate-700">Anexos do Boleto <span className="text-accent">*</span></label>
-          <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
-            <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                {isUploadingBoleto ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
-              </div>
-              <p className="font-bold text-primary text-xs md:text-sm">Clique ou arraste até 10 boletos aqui</p>
-              <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem (Máx 100MB por arquivo)</p>
-              <div className="mt-1 px-3 py-1 bg-white/50 rounded-full">
-                <p className="text-[10px] text-slate-600 font-bold">{formData.boletoFilesMeta?.length || 0}/10 boletos anexados</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Lista de Boletos Enviados */}
-          {formData.boletoFilesMeta && formData.boletoFilesMeta.length > 0 && (
-            <div className="space-y-2 animate-in fade-in duration-300">
-              {formData.boletoFilesMeta.map((file, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-100 group">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <FileText className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-xs font-bold text-slate-700 truncate">{file.name}</span>
-                    <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                  </div>
-                  <button onClick={() => handleRemoveFile(idx, 'boleto')} className="p-1.5 text-slate-400 hover:text-danger hover:bg-red-50 rounded-lg transition-all"><X className="w-4 h-4" /></button>
-                </div>
-              ))}
-            </div>
-          )}
-          {errors.boletoFile && <p className="text-xs text-danger mt-1">{errors.boletoFile}</p>}
+      {formData.paymentMethod === 'PIX' && (
+        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300">
+          <Input label="Chave PIX" value={formData.pixKey} onChange={e => handleChange('pixKey', e.target.value)} required error={errors.pixKey} placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória" />
         </div>
       )}
+      {formData.paymentMethod === 'Boleto' && renderBoletoFields()}
+      {formData.paymentMethod === 'Transferência' && renderTransferFields()}
     </div>
   );
 
@@ -614,6 +746,21 @@ function App() {
       { label: 'Forma Pagto', value: formData.paymentMethod },
       { label: 'Autorizador', value: formData.authorizer },
       { label: 'Verba Específica', value: formData.isSpecificBudget === 'yes' ? formData.specificBudgetName : 'Não' },
+      
+      // Detalhes de Pagamento
+      ...(formData.paymentMethod === 'PIX' ? [
+        { label: 'Chave PIX', value: formData.pixKey || 'N/A' }
+      ] : []),
+      
+      ...(formData.paymentMethod === 'Transferência' ? [
+        { label: 'Banco', value: formData.transferBankName || 'N/A' },
+        { label: 'Tipo de Conta', value: formData.transferAccountType || 'N/A' },
+        { label: 'Agência/Conta', value: `${formData.transferAgency || 'N/A'} / ${formData.transferAccount || 'N/A'}` },
+        { label: 'Favorecido', value: formData.transferBeneficiaryName || 'N/A' },
+        { label: 'CPF/CNPJ', value: formData.transferCpfCnpj || 'N/A' },
+        { label: 'Anexo Transferência', value: formData.transferFilesMeta?.length ? `${formData.transferFilesMeta.length} arquivo(s) enviado(s)` : 'Nenhum', full: false }
+      ] : []),
+
       { label: 'Descrição', value: formData.description, full: true },
       { label: 'Anexos Nota', value: formData.invoiceFilesMeta?.length ? `${formData.invoiceFilesMeta.length} arquivo(s)` : (formData.hasInvoice === 'no' ? 'Pendente WhatsApp' : 'Nenhum'), full: false },
       { label: 'Anexos Boleto', value: formData.boletoFilesMeta?.length ? `${formData.boletoFilesMeta.length} arquivo(s)` : 'Nenhum', full: false }

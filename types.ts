@@ -27,7 +27,11 @@ export interface CSPFormData {
   supplierName: string;
   value: string; // Raw string, parsed later
   paymentMethod: 'PIX' | 'Boleto' | 'Transferência' | '';
+  
+  // PIX fields
   pixKey?: string;
+  
+  // Boleto fields
   boletoCode?: string;
   boletoDueDate?: string;
   boletoFile?: File | null;
@@ -35,6 +39,17 @@ export interface CSPFormData {
   boletoUrl?: string; // String JSON se múltiplo
   boletoUrls?: string[]; // Array de URLs reais
   boletoFilesMeta?: FileMeta[]; // Lista de metadados dos boletos
+
+  // Transferência fields (NEW)
+  transferBankName?: string;
+  transferAccountType?: 'Corrente' | 'Poupança' | '';
+  transferAgency?: string;
+  transferAccount?: string;
+  transferCpfCnpj?: string;
+  transferBeneficiaryName?: string;
+  transferUrl?: string; // String JSON se múltiplo
+  transferUrls?: string[]; // Array de URLs reais
+  transferFilesMeta?: FileMeta[]; // Lista de metadados dos arquivos de comprovante
 
   // Step 3: Proof
   hasInvoice: 'yes' | 'no';
@@ -78,7 +93,17 @@ export const INITIAL_DATA: CSPFormData = {
   invoiceFilesMeta: [],
   boletoUrl: '',
   boletoUrls: [],
-  boletoFilesMeta: []
+  boletoFilesMeta: [],
+  // NEW Transfer fields
+  transferBankName: '',
+  transferAccountType: '',
+  transferAgency: '',
+  transferAccount: '',
+  transferCpfCnpj: '',
+  transferBeneficiaryName: '',
+  transferUrl: '',
+  transferUrls: [],
+  transferFilesMeta: [],
 };
 
 export interface ValidationErrors {

@@ -37,3 +37,34 @@ export const checkUrgency = (dateString: string): boolean => {
   // Urgent if strictly less than 2 hours or in the past
   return diffHours < 2;
 };
+
+// NEW: CPF/CNPJ formatting and validation
+export const formatCpfCnpj = (value: string) => {
+  const clean = value.replace(/\D/g, '');
+  if (clean.length <= 11) {
+    // CPF: 000.000.000-00
+    if (clean.length > 9) return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9, 11)}`;
+    if (clean.length > 6) return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6)}`;
+    if (clean.length > 3) return `${clean.slice(0, 3)}.${clean.slice(3)}`;
+    return clean;
+  } else {
+    // CNPJ: 00.000.000/0000-00
+    if (clean.length > 12) return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5, 8)}/${clean.slice(8, 12)}-${clean.slice(12, 14)}`;
+    if (clean.length > 8) return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5, 8)}/${clean.slice(8)}`;
+    if (clean.length > 5) return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5)}`;
+    if (clean.length > 2) return `${clean.slice(0, 2)}.${clean.slice(2)}`;
+    return clean;
+  }
+};
+
+export const isValidCpfCnpj = (value: string): boolean => {
+  const clean = value.replace(/\D/g, '');
+  // Basic length check for CPF (11) or CNPJ (14)
+  return clean.length === 11 || clean.length === 14;
+};
+
+export const isValidAccountOrAgency = (value: string): boolean => {
+    const clean = value.trim();
+    // Allows numbers and optional hyphen/digit (e.g., 1234-5)
+    return clean.length > 0 && /^[0-9-]+$/.test(clean);
+};
