@@ -310,7 +310,7 @@ function App() {
     
     setIsSubmitting(true);
     
-    // 2. Mapeamento de IDs (Tarefa 3)
+    // 2. Mapeamento de IDs
     const selectedAuthorizer = authorizers.find(a => a.name === formData.authorizer);
     const selectedAccount = paymentAccounts.find(p => p.label === formData.paymentAccount);
     const isUrgent = checkUrgency(formData.dueDate);

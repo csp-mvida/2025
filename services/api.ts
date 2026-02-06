@@ -180,10 +180,8 @@ export const submitRequest = async (
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
-  // Mapeamento de budget_id: Como não temos a lista de budgets, budget_id é null.
-  // Se is_budget_specific for 'yes', o campo budget_id deve ser preenchido com um UUID válido.
-  // Por enquanto, mantemos null, mas o front-end deve garantir que o campo não seja obrigatório
-  // se o budget_id não for implementado ainda.
+  // Tarefa 2: O UPDATE deve incluir todos os campos obrigatórios para mudar o status para 'pending'.
+  // amount_cents e payment_method são validados no front-end antes desta chamada.
   
   const dbPayload = {
     requester_name: data.requesterName,
@@ -195,7 +193,7 @@ export const submitRequest = async (
     amount_cents: parseInt(data.value), 
     payment_method: data.paymentMethod,
     pix_key: data.pixKey || null,
-    status: 'pending' as RequestStatus, // Atualiza o status de 'draft' para 'pending'
+    status: 'pending' as RequestStatus, // Mudar status de 'draft' para 'pending'
     invoice_attachment_path: url_anexo,
     boleto_attachment_path: data.paymentMethod === 'Boleto' ? data.boletoUrl : null,
     is_budget_specific: data.isSpecificBudget === 'yes',
@@ -209,14 +207,14 @@ export const submitRequest = async (
   };
 
   try {
-    // Tarefa 2: Garantir que é um UPDATE no registro existente
+    // Tarefa 1: Garantir que é um UPDATE no registro existente
     const { error, status } = await supabase
       .from(TABLE_NAME)
       .update(dbPayload)
       .eq('protocol', requestId);
 
     if (error) {
-      // Tarefa 1: Log detalhado do erro do Supabase
+      // Tarefa 3: Log detalhado do erro do Supabase
       console.error('[submitRequest] Supabase DB Update Error (Final Submission):', {
         message: error.message,
         details: error.details,
