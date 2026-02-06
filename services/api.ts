@@ -93,7 +93,7 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
  * @returns O protocolo gerado pelo banco de dados, ou null em caso de falha.
  */
 export const createDraftRequest = async (departmentId: string, authorizerId: string, paymentAccountId: string): Promise<string | null> => {
-  // Removendo amount_cents e payment_method para evitar violação de CHECK constraints no DRAFT
+  // NÃO enviamos amount_cents nem payment_method, confiando que o DB aceita NULL/default para DRAFT
   const dbPayload = {
     status: 'draft',
     requester_name: 'Rascunho',
@@ -107,7 +107,6 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
     invoice_commitment: false,
     agreed_terms: false,
     urgent: false,
-    // amount_cents e payment_method removidos
   };
 
   try {
@@ -118,7 +117,7 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
       .single();
 
     if (error) {
-      // Tarefa 4: Log detalhado do erro do Supabase
+      // Log detalhado do erro do Supabase
       console.error('[createDraftRequest] Supabase DB Insert Error:', {
         message: error.message,
         details: error.details,
@@ -181,6 +180,7 @@ export const submitRequest = async (
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
+  // Aqui, amount_cents e payment_method são obrigatórios e validados pelo front-end
   const dbPayload = {
     requester_name: data.requesterName,
     requester_whatsapp: data.whatsapp,
@@ -188,7 +188,7 @@ export const submitRequest = async (
     description: data.description,
     due_date: data.dueDate,
     vendor_name: data.supplierName,
-    amount_cents: parseInt(data.value), // Aqui o valor real é validado e enviado
+    amount_cents: parseInt(data.value), 
     payment_method: data.paymentMethod,
     pix_key: data.pixKey || null,
     status: 'pending',
