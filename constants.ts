@@ -28,15 +28,15 @@ export const DEPARTMENTS_FALLBACK = [
 ];
 
 export const SPECIFIC_BUDGET_OPTIONS = [
-  "CASA DO PROFETA",
-  "CONVENIO TRIAGEM",
-  "CONVENIO CEV",
-  "FAZENDA",
-  "GRANJA",
-  "VEICULOS",
-  "VERBA PR DOUGLAS",
-  "VERBA PR JOAO",
-  "OUTROS"
+  "Casa do Profeta",
+  "Convênio Triagem",
+  "Convênio CEV",
+  "Fazenda",
+  "Granja",
+  "Veículos",
+  "Verba Pr. Douglas",
+  "Verba Pr. João",
+  "Outros"
 ];
 
 export const URGENCY_THRESHOLD_HOURS = 2;

@@ -28,7 +28,7 @@ import { RequestTracker } from './components/RequestTracker';
 function App() {
   const [view, setView] = useState<'welcome' | 'form' | 'login' | 'admin' | 'track'>('welcome');
   const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<CSPFormData>({ ...INITIAL_DATA, boletoUrl: '' });
+  const [formData, setFormData] = useState<CSPFormData>({ ...INITIAL_DATA });
   const [departments, setDepartments] = useState<Department[]>([]);
   const [authorizers, setAuthorizers] = useState<{ id: string; name: string }[]>([]);
   const [paymentAccounts, setPaymentAccounts] = useState<{ id: string; label: string }[]>([]);
@@ -86,23 +86,33 @@ function App() {
     });
   };
 
-  const handleRemoveFile = async (index: number) => {
-    const updatedMeta = [...(formData.invoiceFilesMeta || [])];
-    const updatedUrls = [...(formData.invoiceUrls || [])];
+  const handleRemoveFile = async (idx: number, type: 'invoice' | 'boleto') => {
+    const isInvoice = type === 'invoice';
+    const updatedMeta = [...(isInvoice ? (formData.invoiceFilesMeta || []) : (formData.boletoFilesMeta || []))];
+    const updatedUrls = [...(isInvoice ? (formData.invoiceUrls || []) : (formData.boletoUrls || []))];
     
-    updatedMeta.splice(index, 1);
-    updatedUrls.splice(index, 1);
+    updatedMeta.splice(idx, 1);
+    updatedUrls.splice(idx, 1);
     
-    const serializedUrls = JSON.stringify(updatedUrls);
+    const serializedUrls = updatedUrls.length > 0 ? JSON.stringify(updatedUrls) : '';
     
-    setFormData(prev => ({
-      ...prev,
-      invoiceFilesMeta: updatedMeta,
-      invoiceUrls: updatedUrls,
-      invoiceUrl: updatedUrls.length > 0 ? serializedUrls : ''
-    }));
-
-    await updateRequestAttachments(currentProtocolId, 'invoice', updatedUrls.length > 0 ? serializedUrls : '');
+    if (isInvoice) {
+      setFormData(prev => ({
+        ...prev,
+        invoiceFilesMeta: updatedMeta,
+        invoiceUrls: updatedUrls,
+        invoiceUrl: serializedUrls
+      }));
+      await updateRequestAttachments(currentProtocolId, 'invoice', serializedUrls);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        boletoFilesMeta: updatedMeta,
+        boletoUrls: updatedUrls,
+        boletoUrl: serializedUrls
+      }));
+      await updateRequestAttachments(currentProtocolId, 'boleto', serializedUrls);
+    }
     toast.success('Arquivo removido.');
   };
 
@@ -115,22 +125,20 @@ function App() {
     const MAX_SIZE_MB = 100;
     const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
-    if (isInvoice) {
-      const currentCount = formData.invoiceFilesMeta?.length || 0;
-      if (currentCount + files.length > MAX_FILES) {
-        toast.error(`Limite máximo de ${MAX_FILES} anexos excedido.`);
-        return;
-      }
+    const currentCount = isInvoice ? (formData.invoiceFilesMeta?.length || 0) : (formData.boletoFilesMeta?.length || 0);
+    if (currentCount + files.length > MAX_FILES) {
+      toast.error(`Limite máximo de ${MAX_FILES} arquivos excedido.`);
+      return;
     }
 
-    const toastId = toast.loading(isInvoice ? `Enviando ${files.length} arquivo(s)...` : 'Enviando boleto...');
+    const toastId = toast.loading(`Enviando ${files.length} arquivo(s)...`);
     
     if (isInvoice) setIsUploading(true);
     else setIsUploadingBoleto(true);
 
     try {
-      const newUrls: string[] = isInvoice ? [...(formData.invoiceUrls || [])] : [];
-      const newMeta: FileMeta[] = isInvoice ? [...(formData.invoiceFilesMeta || [])] : [];
+      const newUrls: string[] = isInvoice ? [...(formData.invoiceUrls || [])] : [...(formData.boletoUrls || [])];
+      const newMeta: FileMeta[] = isInvoice ? [...(formData.invoiceFilesMeta || [])] : [...(formData.boletoFilesMeta || [])];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -141,22 +149,13 @@ function App() {
         }
 
         const url = await uploadInvoice(file, type, currentProtocolId);
-        
-        if (isInvoice) {
-          newUrls.push(url);
-          newMeta.push({ name: file.name, size: file.size, url });
-        } else {
-          setFormData(prev => ({ 
-            ...prev, 
-            boletoUrl: url, 
-            boletoFileMeta: { name: file.name, size: file.size } 
-          }));
-          await updateRequestAttachments(currentProtocolId, 'boleto', url);
-        }
+        newUrls.push(url);
+        newMeta.push({ name: file.name, size: file.size, url });
       }
 
+      const serializedUrls = JSON.stringify(newUrls);
+      
       if (isInvoice) {
-        const serializedUrls = JSON.stringify(newUrls);
         setFormData(prev => ({
           ...prev,
           invoiceUrls: newUrls,
@@ -164,9 +163,17 @@ function App() {
           invoiceUrl: serializedUrls
         }));
         await updateRequestAttachments(currentProtocolId, 'invoice', serializedUrls);
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          boletoUrls: newUrls,
+          boletoFilesMeta: newMeta,
+          boletoUrl: serializedUrls
+        }));
+        await updateRequestAttachments(currentProtocolId, 'boleto', serializedUrls);
       }
 
-      toast.success(isInvoice ? 'Arquivos enviados com sucesso!' : 'Boleto enviado!', { id: toastId });
+      toast.success('Arquivos enviados!', { id: toastId });
     } catch (error: any) {
       console.error("Upload error", error);
       if (error.message !== 'File too large') {
@@ -193,7 +200,7 @@ function App() {
       if (!formData.supplierName) errs.supplierName = "Fornecedor é obrigatório";
       if (!formData.value || parseInt(formData.value) === 0) errs.value = "Valor é obrigatório";
       if (!formData.paymentMethod) errs.paymentMethod = "Forma é obrigatória";
-      if (formData.paymentMethod === 'Boleto' && !formData.boletoUrl) errs.boletoFile = "Anexo do boleto necessário";
+      if (formData.paymentMethod === 'Boleto' && (!formData.boletoUrls || formData.boletoUrls.length === 0)) errs.boletoFile = "Anexo do boleto necessário";
     }
     if (s === 2) {
       if (formData.hasInvoice === 'yes' && (!formData.invoiceUrls || formData.invoiceUrls.length === 0)) errs.invoiceFile = "Upload necessário";
@@ -233,7 +240,7 @@ function App() {
   };
 
   const resetForm = () => {
-    setFormData({ ...INITIAL_DATA, boletoUrl: '' });
+    setFormData({ ...INITIAL_DATA });
     setStep(0);
     setIsSuccess(false);
     setCurrentProtocolId(generateId());
@@ -241,15 +248,14 @@ function App() {
   };
 
   const saveDraft = () => {
-    const { invoiceFile, ...data } = formData;
-    localStorage.setItem('csp_draft', JSON.stringify(data));
+    localStorage.setItem('csp_draft', JSON.stringify(formData));
     setHasSavedDraft(true);
     toast.success('Rascunho salvo localmente!');
   };
 
   const clearDraft = () => {
     localStorage.removeItem('csp_draft');
-    setFormData({ ...INITIAL_DATA, boletoUrl: '' });
+    setFormData({ ...INITIAL_DATA });
     setHasSavedDraft(false);
     setCurrentProtocolId(generateId());
     toast.success('Dados limpos.');
@@ -348,20 +354,37 @@ function App() {
         </Select>
       </div>
       {formData.paymentMethod === 'Boleto' && (
-        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Anexo do Boleto <span className="text-accent">*</span></label>
-          <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-4 md:p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
-            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                {isUploadingBoleto ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
+        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300 space-y-4">
+          <label className="block text-sm font-medium text-slate-700">Anexos do Boleto <span className="text-accent">*</span></label>
+          <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+            <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                {isUploadingBoleto ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
               </div>
-              <div className="text-left overflow-hidden">
-                <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px] md:max-w-xs">{formData.boletoFileMeta?.name || "Anexe o arquivo do boleto aqui"}</p>
-                <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem (Máx 100MB)</p>
+              <p className="font-bold text-primary text-xs md:text-sm">Clique ou arraste até 10 boletos aqui</p>
+              <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem (Máx 100MB por arquivo)</p>
+              <div className="mt-1 px-3 py-1 bg-white/50 rounded-full">
+                <p className="text-[10px] text-slate-600 font-bold">{formData.boletoFilesMeta?.length || 0}/10 boletos anexados</p>
               </div>
             </div>
           </div>
+
+          {/* Lista de Boletos Enviados */}
+          {formData.boletoFilesMeta && formData.boletoFilesMeta.length > 0 && (
+            <div className="space-y-2 animate-in fade-in duration-300">
+              {formData.boletoFilesMeta.map((file, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-100 group">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-xs font-bold text-slate-700 truncate">{file.name}</span>
+                    <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  </div>
+                  <button onClick={() => handleRemoveFile(idx, 'boleto')} className="p-1.5 text-slate-400 hover:text-danger hover:bg-red-50 rounded-lg transition-all"><X className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+          )}
           {errors.boletoFile && <p className="text-xs text-danger mt-1">{errors.boletoFile}</p>}
         </div>
       )}
@@ -411,7 +434,7 @@ function App() {
                     <span className="text-xs font-bold text-slate-700 truncate">{file.name}</span>
                     <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                   </div>
-                  <button onClick={() => handleRemoveFile(idx)} className="p-1.5 text-slate-400 hover:text-danger hover:bg-red-50 rounded-lg transition-all"><X className="w-4 h-4" /></button>
+                  <button onClick={() => handleRemoveFile(idx, 'invoice')} className="p-1.5 text-slate-400 hover:text-danger hover:bg-red-50 rounded-lg transition-all"><X className="w-4 h-4" /></button>
                 </div>
               ))}
             </div>
@@ -479,8 +502,8 @@ function App() {
       { label: 'Autorizador', value: formData.authorizer },
       { label: 'Verba Específica', value: formData.isSpecificBudget === 'yes' ? formData.specificBudgetName : 'Não' },
       { label: 'Descrição', value: formData.description, full: true },
-      { label: 'Anexos Nota', value: formData.invoiceFilesMeta?.length ? `${formData.invoiceFilesMeta.length} arquivo(s) enviado(s)` : (formData.hasInvoice === 'no' ? 'Pendente via WhatsApp' : 'Não possui'), full: false },
-      { label: 'Anexo Boleto', value: formData.boletoUrl ? 'Enviado' : 'N/A', full: false }
+      { label: 'Anexos Nota', value: formData.invoiceFilesMeta?.length ? `${formData.invoiceFilesMeta.length} arquivo(s)` : (formData.hasInvoice === 'no' ? 'Pendente WhatsApp' : 'Nenhum'), full: false },
+      { label: 'Anexos Boleto', value: formData.boletoFilesMeta?.length ? `${formData.boletoFilesMeta.length} arquivo(s)` : 'Nenhum', full: false }
     ];
 
     return (
@@ -498,10 +521,6 @@ function App() {
               </div>
             ))}
           </div>
-        </div>
-        <div className="bg-slate-50 p-4 rounded-2xl flex items-start gap-3 border border-slate-100">
-          <AlertTriangle className="w-5 h-5 text-slate-400 shrink-0" />
-          <p className="text-[10px] md:text-xs text-slate-500 leading-relaxed">Verifique todas as informações antes de enviar.</p>
         </div>
       </div>
     );

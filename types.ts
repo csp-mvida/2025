@@ -32,13 +32,15 @@ export interface CSPFormData {
   boletoDueDate?: string;
   boletoFile?: File | null;
   boletoFileMeta?: { name: string; size: number };
-  boletoUrl?: string;
+  boletoUrl?: string; // String JSON se múltiplo
+  boletoUrls?: string[]; // Array de URLs reais
+  boletoFilesMeta?: FileMeta[]; // Lista de metadados dos boletos
 
   // Step 3: Proof
   hasInvoice: 'yes' | 'no';
   invoiceFile?: File | null;
   invoiceFileMeta?: { name: string; size: number }; 
-  invoiceUrl?: string; // Mantido para compatibilidade (será JSON string se múltiplo)
+  invoiceUrl?: string; // String JSON se múltiplo
   invoiceUrls?: string[]; // Array de URLs reais
   invoiceFilesMeta?: FileMeta[]; // Lista de metadados dos arquivos
   invoiceSentViaWhatsapp: boolean;
@@ -73,7 +75,10 @@ export const INITIAL_DATA: CSPFormData = {
   termsAccepted: false,
   invoiceUrl: '',
   invoiceUrls: [],
-  invoiceFilesMeta: []
+  invoiceFilesMeta: [],
+  boletoUrl: '',
+  boletoUrls: [],
+  boletoFilesMeta: []
 };
 
 export interface ValidationErrors {
