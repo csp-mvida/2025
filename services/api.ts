@@ -180,7 +180,11 @@ export const submitRequest = async (
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
-  // Aqui, amount_cents e payment_method são obrigatórios e validados pelo front-end
+  // Mapeamento de budget_id: Como não temos a lista de budgets, budget_id é null.
+  // Se is_budget_specific for 'yes', o campo budget_id deve ser preenchido com um UUID válido.
+  // Por enquanto, mantemos null, mas o front-end deve garantir que o campo não seja obrigatório
+  // se o budget_id não for implementado ainda.
+  
   const dbPayload = {
     requester_name: data.requesterName,
     requester_whatsapp: data.whatsapp,
@@ -191,11 +195,11 @@ export const submitRequest = async (
     amount_cents: parseInt(data.value), 
     payment_method: data.paymentMethod,
     pix_key: data.pixKey || null,
-    status: 'pending',
+    status: 'pending' as RequestStatus, // Atualiza o status de 'draft' para 'pending'
     invoice_attachment_path: url_anexo,
     boleto_attachment_path: data.paymentMethod === 'Boleto' ? data.boletoUrl : null,
     is_budget_specific: data.isSpecificBudget === 'yes',
-    budget_id: null,
+    budget_id: null, // Mantido como null, pois a busca de ID de budget não foi implementada
     authorization_number: data.authNumber || null,
     authorizer_id: authorizerId,
     payment_account_id: paymentAccountId,
@@ -205,20 +209,28 @@ export const submitRequest = async (
   };
 
   try {
-    const { error } = await supabase
+    // Tarefa 2: Garantir que é um UPDATE no registro existente
+    const { error, status } = await supabase
       .from(TABLE_NAME)
       .update(dbPayload)
       .eq('protocol', requestId);
 
     if (error) {
-      console.error('Supabase DB Update Error (Final Submission):', JSON.stringify(error, null, 2));
+      // Tarefa 1: Log detalhado do erro do Supabase
+      console.error('[submitRequest] Supabase DB Update Error (Final Submission):', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        status: status,
+        payload: dbPayload
+      });
       return false;
     }
 
     return true;
 
   } catch (e) {
-    console.error("Final submission failed", e);
+    console.error("Final submission failed (Exception)", e);
     return false;
   }
 };

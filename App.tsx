@@ -121,6 +121,7 @@ function App() {
       if (!protocolToUse) {
         // 2. Crie um novo registro DRAFT
         console.log('[App] Creating new draft...');
+        // Usamos os IDs do primeiro item de cada lista como fallback para criar o rascunho
         await createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
       } else {
         setCurrentProtocolId(protocolToUse);
@@ -293,36 +294,49 @@ function App() {
   const prevStep = () => setStep(s => s - 1);
 
   const handleSubmit = async () => {
-    // Tarefa 3 & 6: Validação e re-inicialização se necessário
+    // 1. Validação final (redundante, mas seguro)
+    if (!validateStep(4)) {
+      toast.error('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
     if (!currentProtocolId) {
       toast.error('Erro: Protocolo não inicializado. Tentando re-inicializar...');
-      // Tenta re-inicializar automaticamente (Tarefa 3)
       if (departments.length > 0 && authorizers.length > 0 && paymentAccounts.length > 0) {
         await createInitialDraft(departments[0].id, authorizers[0].id, paymentAccounts[0].id);
       }
-      // Se ainda não tiver protocolo após a tentativa, retorna
       if (!currentProtocolId) return;
     }
     
     setIsSubmitting(true);
+    
+    // 2. Mapeamento de IDs (Tarefa 3)
     const selectedAuthorizer = authorizers.find(a => a.name === formData.authorizer);
     const selectedAccount = paymentAccounts.find(p => p.label === formData.paymentAccount);
     const isUrgent = checkUrgency(formData.dueDate);
 
-    if (!selectedAuthorizer || !selectedAccount) {
-        toast.error('Erro de mapeamento: Autorizador ou Conta de Pagamento não encontrados.');
+    if (!selectedAuthorizer) {
+        console.error('Mapeamento falhou: Autorizador não encontrado.', { authorizerName: formData.authorizer });
+        toast.error('Erro de mapeamento: Autorizador não encontrado.');
+        setIsSubmitting(false);
+        return;
+    }
+    if (!selectedAccount) {
+        console.error('Mapeamento falhou: Conta de Pagamento não encontrada.', { accountLabel: formData.paymentAccount });
+        toast.error('Erro de mapeamento: Conta de Pagamento não encontrada.');
         setIsSubmitting(false);
         return;
     }
 
-    // Tarefa 6: Atualiza o registro DRAFT para o status final (pending)
+    // 3. Submissão (UPDATE no registro DRAFT)
     if (await submitRequest(formData, currentProtocolId, selectedAuthorizer.id, selectedAccount.id, isUrgent)) {
       setGeneratedId(currentProtocolId);
       setIsSuccess(true);
       localStorage.removeItem('csp_draft');
       toast.success('Solicitação enviada com sucesso!');
     } else {
-      toast.error('Erro ao enviar solicitação.');
+      // O erro detalhado já é logado dentro de submitRequest (services/api.ts)
+      toast.error('Erro ao enviar solicitação. Verifique o console para detalhes.');
     }
     setIsSubmitting(false);
   };
