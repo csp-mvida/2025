@@ -180,9 +180,12 @@ export const submitRequest = async (
     ? data.invoiceUrl 
     : 'Pendente via WhatsApp';
 
-  // Tarefa 2: O UPDATE deve incluir todos os campos obrigatórios para mudar o status para 'pending'.
-  // amount_cents e payment_method são validados no front-end antes desta chamada.
+  // Mapeamento do payment_method para minúsculas, conforme esperado pelo DB (Tarefa 1, 5)
+  const mappedPaymentMethod = data.paymentMethod.toLowerCase().replace('transferência', 'transferencia');
   
+  // amount_cents deve ser um número inteiro > 0 (Tarefa 5)
+  const amountCents = parseInt(data.value);
+
   const dbPayload = {
     requester_name: data.requesterName,
     requester_whatsapp: data.whatsapp,
@@ -190,10 +193,10 @@ export const submitRequest = async (
     description: data.description,
     due_date: data.dueDate,
     vendor_name: data.supplierName,
-    amount_cents: parseInt(data.value), 
-    payment_method: data.paymentMethod,
+    amount_cents: amountCents, 
+    payment_method: mappedPaymentMethod,
     pix_key: data.pixKey || null,
-    status: 'pending' as RequestStatus, // Mudar status de 'draft' para 'pending'
+    status: 'pending' as RequestStatus, // Garantindo status 'pending' (Tarefa 1, 2)
     invoice_attachment_path: url_anexo,
     boleto_attachment_path: data.paymentMethod === 'Boleto' ? data.boletoUrl : null,
     is_budget_specific: data.isSpecificBudget === 'yes',
@@ -207,7 +210,10 @@ export const submitRequest = async (
   };
 
   try {
-    // Tarefa 1: Garantir que é um UPDATE no registro existente
+    // Tarefa 5: Logar o payload completo
+    console.log('[submitRequest] Final Payload:', dbPayload);
+    
+    // Tarefa 1, 4: Garantir que é um UPDATE no registro existente
     const { error, status } = await supabase
       .from(TABLE_NAME)
       .update(dbPayload)
