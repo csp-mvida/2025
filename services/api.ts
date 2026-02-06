@@ -219,7 +219,7 @@ export const submitRequest = async (
         message: error.message,
         details: error.details,
         hint: error.hint,
-        status: status,
+        status: error.status,
         payload: dbPayload
       });
       return false;
