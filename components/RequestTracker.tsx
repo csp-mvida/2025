@@ -55,14 +55,15 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
 
   const handleSearch = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!protocol) return;
+    const searchProtocol = protocol.trim();
+    if (!searchProtocol) return;
 
     setLoading(true);
     setError('');
     setRequest(null);
 
     try {
-      const data = await getRequestByProtocol(protocol);
+      const data = await getRequestByProtocol(searchProtocol);
       if (data) {
         setRequest(data);
       } else {
@@ -76,10 +77,18 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
   };
 
   useEffect(() => {
+    // Executa a busca inicial se um protocolo for fornecido
     if (initialProtocol) {
-      handleSearch();
+      // Usamos setTimeout para garantir que a transição de status no banco de dados
+      // (draft -> pending) tenha tempo de ser processada após o submit.
+      // 500ms é um buffer seguro para operações de banco de dados rápidas.
+      const timer = setTimeout(() => {
+        handleSearch();
+      }, 500); 
+      
+      return () => clearTimeout(timer);
     }
-  }, [initialProtocol]);
+  }, [initialProtocol]); // Dependência apenas do initialProtocol
 
   const getDepartmentName = (id: string) => departments.find(d => d.id === id)?.name || 'N/A';
   const getAuthorizerName = (id: string) => authorizers.find(a => a.id === id)?.name || 'N/A';
