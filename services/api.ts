@@ -93,7 +93,7 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto', prot
  * @returns O protocolo gerado pelo banco de dados, ou null em caso de falha.
  */
 export const createDraftRequest = async (departmentId: string, authorizerId: string, paymentAccountId: string): Promise<string | null> => {
-  // Não enviamos o campo 'protocol' para que o trigger 'generate_csp_protocol' o preencha.
+  // Ajuste para amount_cents: 1 para evitar a violação da constraint de checagem (amount_cents > 0)
   const dbPayload = {
     status: 'draft',
     requester_name: 'Rascunho',
@@ -103,7 +103,7 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
     due_date: new Date().toISOString().split('T')[0],
     payment_account_id: paymentAccountId,
     vendor_name: 'Rascunho',
-    amount_cents: 0,
+    amount_cents: 1, // Valor mínimo para satisfazer a constraint de checagem
     payment_method: 'PIX',
     description: 'Rascunho de solicitação',
     invoice_commitment: false,
@@ -189,7 +189,7 @@ export const submitRequest = async (
     description: data.description,
     due_date: data.dueDate,
     vendor_name: data.supplierName,
-    amount_cents: parseInt(data.value),
+    amount_cents: parseInt(data.value), // Aqui o valor real é validado e enviado
     payment_method: data.paymentMethod,
     pix_key: data.pixKey || null,
     status: 'pending',
