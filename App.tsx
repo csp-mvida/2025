@@ -92,6 +92,18 @@ function App() {
   // --- Lógica de Múltiplos Anexos ---
 
   const handleUploadAttachment = async (file: File, type: 'invoice' | 'boleto' | 'other') => {
+    // Validação de tamanho (100MB)
+    const MAX_FILE_SIZE_MB = 100;
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error(`O arquivo "${file.name}" excede o limite de ${MAX_FILE_SIZE_MB}MB.`);
+      return;
+    }
+
+    if (formData.attachments.length >= 10) {
+      toast.error('Limite de 10 anexos atingido.');
+      return;
+    }
+
     setIsUploading(true);
     const toastId = toast.loading(`Enviando ${file.name}...`);
 
@@ -324,48 +336,82 @@ function App() {
     </div>
   );
 
-  const renderStep2 = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <Select label="Conta de Pagamento" value={formData.paymentAccount} onChange={e => handleChange('paymentAccount', e.target.value)} required error={errors.paymentAccount}>
-        <option value="">Selecione...</option>
-        {paymentAccounts.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
-      </Select>
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1.5">Verba Específica? <span className="text-accent">*</span></label>
-        <div className="flex gap-2">
-          <button onClick={() => handleChange('isSpecificBudget', 'yes')} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'yes' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Sim</button>
-          <button onClick={() => { handleChange('isSpecificBudget', 'no'); handleChange('specificBudgetName', ''); }} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'no' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Não</button>
+  const renderStep2 = () => {
+    const boletoAttachment = formData.attachments.find(a => a.type === 'boleto');
+    
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 md:gap-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <Select label="Conta de Pagamento" value={formData.paymentAccount} onChange={e => handleChange('paymentAccount', e.target.value)} required error={errors.paymentAccount}>
+          <option value="">Selecione...</option>
+          {paymentAccounts.map(p => <option key={p.id} value={p.label}>{p.label}</option>)}
+        </Select>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Verba Específica? <span className="text-accent">*</span></label>
+          <div className="flex gap-2">
+            <button onClick={() => handleChange('isSpecificBudget', 'yes')} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'yes' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Sim</button>
+            <button onClick={() => { handleChange('isSpecificBudget', 'no'); handleChange('specificBudgetName', ''); }} className={`flex-1 py-3 rounded-xl border transition-all ${formData.isSpecificBudget === 'no' ? 'bg-primary/5 border-primary text-primary font-bold' : 'bg-white border-slate-200 text-slate-500'}`}>Não</button>
+          </div>
         </div>
-      </div>
-      
-      {formData.isSpecificBudget === 'yes' && (
-        <div className="md:col-span-2 animate-in slide-in-from-top-2 duration-300">
-          <Select label="Escolha a Verba Específica" value={formData.specificBudgetName} onChange={e => handleChange('specificBudgetName', e.target.value)} required error={errors.specificBudgetName}>
-            <option value="">Selecione a verba...</option>
-            {SPECIFIC_BUDGET_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        
+        {formData.isSpecificBudget === 'yes' && (
+          <div className="md:col-span-2 animate-in slide-in-from-top-2 duration-300">
+            <Select label="Escolha a Verba Específica" value={formData.specificBudgetName} onChange={e => handleChange('specificBudgetName', e.target.value)} required error={errors.specificBudgetName}>
+              <option value="">Selecione a verba...</option>
+              {SPECIFIC_BUDGET_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </Select>
+          </div>
+        )}
+
+        <Input label="Fornecedor / Recebedor" value={formData.supplierName} onChange={e => handleChange('supplierName', e.target.value)} required error={errors.supplierName} />
+        <Input label="Valor (R$)" value={formatCurrency(formData.value)} onChange={e => handleChange('value', parseCurrency(e.target.value))} required error={errors.value} placeholder="R$ 0,00" />
+        <div className="md:col-span-2">
+          <Select label="Forma de Pagamento" value={formData.paymentMethod} onChange={e => handleChange('paymentMethod', e.target.value)} required error={errors.paymentMethod}>
+            <option value="">Selecione...</option>
+            <option value="PIX">PIX</option>
+            <option value="Boleto">Boleto</option>
+            <option value="Transferência">Transferência</option>
           </Select>
         </div>
-      )}
 
-      <Input label="Fornecedor / Recebedor" value={formData.supplierName} onChange={e => handleChange('supplierName', e.target.value)} required error={errors.supplierName} />
-      <Input label="Valor (R$)" value={formatCurrency(formData.value)} onChange={e => handleChange('value', parseCurrency(e.target.value))} required error={errors.value} placeholder="R$ 0,00" />
-      <div className="md:col-span-2">
-        <Select label="Forma de Pagamento" value={formData.paymentMethod} onChange={e => handleChange('paymentMethod', e.target.value)} required error={errors.paymentMethod}>
-          <option value="">Selecione...</option>
-          <option value="PIX">PIX</option>
-          <option value="Boleto">Boleto</option>
-          <option value="Transferência">Transferência</option>
-        </Select>
+        {/* Campo de Anexo do Boleto Restaurado conforme UX original */}
+        {formData.paymentMethod === 'Boleto' && (
+          <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Anexo do Boleto <span className="text-accent">*</span></label>
+            <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-4 md:p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
+              <input 
+                type="file" 
+                className="absolute inset-0 opacity-0 cursor-pointer" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUploadAttachment(file, 'boleto');
+                }} 
+              />
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                  {isUploading ? <RefreshCw className="w-5 h-5 md:w-6 md:h-6 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-primary text-xs md:text-sm truncate max-w-[180px]">
+                    {boletoAttachment ? boletoAttachment.name : "Anexe o arquivo do boleto aqui"}
+                  </p>
+                  <p className="text-[9px] md:text-[10px] text-slate-400">PDF ou Imagem (Máx 100MB)</p>
+                </div>
+                {boletoAttachment && (
+                  <button 
+                    onClick={(e) => { e.preventDefault(); handleRemoveAttachment(boletoAttachment.url); }}
+                    className="p-2 text-slate-400 hover:text-danger transition-colors relative z-10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            {errors.attachments && <p className="text-xs text-danger mt-1">{errors.attachments}</p>}
+          </div>
+        )}
       </div>
-      {/* A validação de anexo de boleto agora é feita no validateStep e o upload é feito na Etapa 3 */}
-      {errors.attachments && formData.paymentMethod === 'Boleto' && (
-        <div className="md:col-span-2 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-danger text-sm animate-in shake">
-          <AlertTriangle className="w-5 h-5 shrink-0" />
-          {errors.attachments}
-        </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   const renderStep3 = () => {
     const hasInvoiceAttached = formData.attachments.some(a => a.type === 'invoice');
@@ -386,22 +432,20 @@ function App() {
           </div>
         </div>
         
-        {/* Componente de Upload de Múltiplos Arquivos */}
-        {(formData.hasInvoice === 'yes' || formData.paymentMethod === 'Boleto') && (
-          <MultiFileUpload
-            attachments={formData.attachments}
-            onUpload={handleUploadAttachment}
-            onRemove={handleRemoveAttachment}
-            isUploading={isUploading}
-            error={errors.attachments}
-          />
-        )}
+        {/* Componente de Upload de Múltiplos Arquivos para NF e Outros */}
+        <MultiFileUpload
+          attachments={formData.attachments}
+          onUpload={handleUploadAttachment}
+          onRemove={handleRemoveAttachment}
+          isUploading={isUploading}
+          error={errors.attachments}
+        />
 
         {/* Mensagens de Status/Compromisso */}
         {formData.hasInvoice === 'yes' && !hasInvoiceAttached && errors.attachments && (
           <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-danger text-sm animate-in shake">
             <AlertTriangle className="w-5 h-5 shrink-0" />
-            <span className="font-medium">Você indicou que possui a NF, mas o anexo está faltando.</span>
+            <span className="font-medium">Você indicou que possui a NF, mas o anexo está faltando na lista acima.</span>
           </div>
         )}
 
@@ -463,7 +507,6 @@ function App() {
   const renderStep4 = () => (
     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <Textarea label="Descrição do Pagamento" required value={formData.description} onChange={e => handleChange('description', e.target.value)} error={errors.description} rows={4} placeholder="Ex: Pagamento referente à compra de materiais de escritório para o mês de Outubro..." />
-      {/* Campo 'Número de Autorização (Opcional)' removido conforme solicitado */}
       <div className={`p-4 md:p-6 rounded-2xl border transition-all ${formData.termsAccepted ? 'bg-primary/5 border-primary' : 'bg-slate-50 border-slate-100'}`}>
         <label className="flex items-start gap-3 md:gap-4 cursor-pointer">
           <input type="checkbox" className="mt-1 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" checked={formData.termsAccepted} onChange={e => handleChange('termsAccepted', e.target.checked)} />
