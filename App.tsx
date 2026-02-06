@@ -386,15 +386,18 @@ function App() {
       
       {formData.hasInvoice === 'yes' && (
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Upload de Anexos (Até 10 arquivos, máx 100MB cada) <span className="text-accent">*</span></label>
+          <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Anexos da Nota Fiscal <span className="text-accent">*</span></label>
           <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-10 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
             <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'invoice')} />
             <div className="flex flex-col items-center gap-2">
               <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                 {isUploading ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
               </div>
-              <p className="font-bold text-primary text-xs md:text-sm">Clique ou arraste seus arquivos aqui</p>
-              <p className="text-[10px] text-slate-400">{formData.invoiceFilesMeta?.length || 0}/10 arquivos selecionados</p>
+              <p className="font-bold text-primary text-xs md:text-sm">Clique ou arraste até 10 arquivos aqui</p>
+              <p className="text-[10px] md:text-xs text-slate-500 font-medium">Limite individual de 100MB por arquivo</p>
+              <div className="mt-1 px-3 py-1 bg-slate-100 rounded-full">
+                <p className="text-[10px] text-slate-600 font-bold">{formData.invoiceFilesMeta?.length || 0}/10 arquivos selecionados</p>
+              </div>
             </div>
           </div>
 
@@ -454,7 +457,7 @@ function App() {
       <Textarea label="Descrição do Pagamento" required value={formData.description} onChange={e => handleChange('description', e.target.value)} error={errors.description} rows={4} placeholder="Ex: Pagamento referente à compra de materiais de escritório..." />
       <div className={`p-4 md:p-6 rounded-2xl border transition-all ${formData.termsAccepted ? 'bg-primary/5 border-primary' : 'bg-slate-50 border-slate-100'}`}>
         <label className="flex items-start gap-3 md:gap-4 cursor-pointer">
-          <input type="checkbox" className="mt-1 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" checked={formData.termsAccepted} onChange={e => handleChange('termsAccepted', e.target.checked)} />
+          <input type="checkbox" className="mt-1 <input type="checkbox" className="mt-1 w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary" checked={formData.termsAccepted} onChange={e => handleChange('termsAccepted', e.target.checked)} />
           <div className="space-y-1">
             <p className="font-bold text-slate-800 text-xs md:text-sm">Confirmo que li e concordo com os prazos e regras.</p>
             <p className="text-[10px] md:text-xs text-slate-500 leading-relaxed">Entendo que solicitações urgentes devem ser comunicadas via WhatsApp.</p>
