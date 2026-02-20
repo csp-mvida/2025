@@ -231,7 +231,7 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
   
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*')
+    .select('*, rejection_reason')
     .eq('protocol', normalizedProtocol)
     .single();
 
@@ -264,14 +264,15 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     transferCpfCnpj: data.transfer_document || '',
     transferBeneficiaryName: data.transfer_favored_name || '',
     transferUrl: data.transfer_attachment_path,
-    history: []
-  };
+    history: [],
+    authNumber: data.rejection_reason // Usando campo existente ou temporário para o motivo se não editarmos types.ts
+  } as any; // Cast para any para permitir rejectionReason dinâmico
 };
 
 export const getRequests = async (): Promise<CSPRequest[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*')
+    .select('*, rejection_reason')
     .order('created_at', { ascending: false });
 
   if (error) return [];
@@ -303,14 +304,20 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     transferCpfCnpj: req.transfer_document || '',
     transferBeneficiaryName: req.transfer_favored_name || '',
     transferUrl: req.transfer_attachment_path,
-    history: []
-  }));
+    history: [],
+    rejectionReason: req.rejection_reason
+  } as any));
 };
 
-export const updateRequestStatus = async (id: string, status: RequestStatus): Promise<boolean> => {
+export const updateRequestStatus = async (id: string, status: RequestStatus, reason?: string): Promise<boolean> => {
+  const payload: any = { status };
+  if (reason !== undefined) {
+    payload.rejection_reason = reason;
+  }
+
   const { error } = await supabase
     .from(TABLE_NAME)
-    .update({ status })
+    .update(payload)
     .eq('protocol', id);
 
   return !error;

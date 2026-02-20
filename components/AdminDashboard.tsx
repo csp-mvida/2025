@@ -28,6 +28,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all' | 'pendencias'>('all');
   const [selectedRequest, setSelectedRequest] = useState<CSPRequest | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -41,36 +42,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   }, []);
 
   const handleStatusUpdate = async (id: string, newStatus: RequestStatus) => {
-    const success = await updateRequestStatus(id, newStatus);
+    // Validação de motivo obrigatório para rejeição
+    if (newStatus === 'rejected') {
+        const reason = rejectionReason.trim();
+        if (reason.length < 5) {
+            toast.error('O motivo da rejeição deve ter pelo menos 5 caracteres.');
+            return;
+        }
+    }
+
+    const success = await updateRequestStatus(id, newStatus, rejectionReason.trim());
     if (success) {
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus, rejectionReason: rejectionReason.trim() } as any : r));
       if (selectedRequest && selectedRequest.id === id) {
-        setSelectedRequest(prev => prev ? { ...prev, status: newStatus } : null);
+        setSelectedRequest(prev => prev ? { ...prev, status: newStatus, rejectionReason: rejectionReason.trim() } as any : null);
       }
-      toast.success('Status atualizado!');
+      toast.success(`Status alterado para ${STATUS_CONFIG[newStatus].label}`);
+    } else {
+      toast.error('Erro ao atualizar status.');
     }
   };
 
   const isIssue = (req: CSPRequest): boolean => {
     const method = req.paymentMethod?.toLowerCase() || '';
-    
-    // PIX sem chave
     if (method === 'pix' && !req.pixKey) return true;
-    
-    // Boleto sem anexo
     if (method === 'boleto' && (!req.boletoUrl || req.boletoUrl === '')) return true;
-    
-    // Transferência incompleta
     if (method.includes('transferencia')) {
         if (!req.transferBankName || !req.transferAccountType || !req.transferAgency || 
             !req.transferAccount || !req.transferCpfCnpj || !req.transferBeneficiaryName) {
             return true;
         }
     }
-    
-    // NF Pendente (marcada como SIM mas sem URL válida)
     if (req.hasInvoice === 'yes' && (!req.invoiceUrl || req.invoiceUrl === 'Pendente via WhatsApp')) return true;
-    
     return false;
   };
 
@@ -82,7 +85,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       req.supplierName.toLowerCase().includes(term);
     
     let matchesFilter = false;
-    
     if (statusFilter === 'all') {
         matchesFilter = req.status !== 'draft';
     } else if (statusFilter === 'pendencias') {
@@ -90,35 +92,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     } else {
         matchesFilter = req.status === statusFilter;
     }
-
     return matchesSearch && matchesFilter;
   });
 
-  // Ordenação solicitada
   const sortedRequests = [...filteredRequests].sort((a, b) => {
     const isAPriority = a.status === 'pending' || a.status === 'approved';
     const isBPriority = b.status === 'pending' || b.status === 'approved';
-
-    if (isAPriority && isBPriority) {
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-    }
-    
-    // Se um for prioridade e o outro não
+    if (isAPriority && isBPriority) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     if (isAPriority) return -1;
     if (isBPriority) return 1;
-
-    // Se ambos forem Paid ou Rejected
     return new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
   });
 
-  const getInvoiceUrls = (request: CSPRequest): string[] => {
-    if (!request.invoiceUrl || request.invoiceUrl === 'Pendente via WhatsApp') return [];
-    try {
-      const parsed = JSON.parse(request.invoiceUrl);
-      return Array.isArray(parsed) ? parsed : [request.invoiceUrl];
-    } catch {
-      return [request.invoiceUrl];
-    }
+  const openDetails = (req: CSPRequest) => {
+    setSelectedRequest(req);
+    setRejectionReason((req as any).rejectionReason || '');
   };
 
   const copyProtocol = (id: string) => {
@@ -200,12 +188,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                      <td className="px-6 py-4 font-medium text-slate-900">{req.requesterName}</td>
                      <td className="px-6 py-4 text-right font-medium text-slate-900">{formatCurrency(req.value)}</td>
                      <td className="px-6 py-4 text-center">
-                       <button onClick={() => setSelectedRequest(req)} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"><Eye className="w-5 h-5" /></button>
+                       <button onClick={() => openDetails(req)} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"><Eye className="w-5 h-5" /></button>
                      </td>
                    </tr>
                  )) : (
                     <tr>
-                        <td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada para este filtro.</td>
+                        <td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada.</td>
                     </tr>
                  )}
                </tbody>
@@ -221,78 +209,56 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                <div>
                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-3">
                    {selectedRequest.id}
-                   <button 
-                     onClick={() => copyProtocol(selectedRequest.id)}
-                     className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-md hover:bg-primary/5"
-                     title="Copiar Protocolo"
-                   >
-                     <Copy className="w-4 h-4" />
-                   </button>
+                   <button onClick={() => copyProtocol(selectedRequest.id)} className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-md hover:bg-primary/5"><Copy className="w-4 h-4" /></button>
                  </h2>
-                 <p className="text-xs text-slate-500">Criado em {new Date(selectedRequest.createdAt!).toLocaleString('pt-BR')}</p>
                </div>
                <button onClick={() => setSelectedRequest(null)} className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100"><X className="w-6 h-6" /></button>
              </div>
 
-             <div className="p-6 overflow-y-auto">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+             <div className="p-6 overflow-y-auto space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">Dados do Pagamento</h3>
+                    <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400">Dados Gerais</h3>
                     <div><span className="block text-xs text-slate-500">Valor</span> <span className="text-xl font-bold text-primary">{formatCurrency(selectedRequest.value)}</span></div>
+                    <div><span className="block text-xs text-slate-500">Solicitante</span> <span className="font-medium text-slate-900">{selectedRequest.requesterName}</span></div>
                     <div><span className="block text-xs text-slate-500">Fornecedor</span> <span className="font-medium text-slate-900">{selectedRequest.supplierName}</span></div>
-                    <div><span className="block text-xs text-slate-500">Forma / Detalhes</span> 
-                        <span className="font-bold text-slate-800 text-sm block">
-                            {selectedRequest.paymentMethod || 'Não definido'} 
-                            {selectedRequest.pixKey && ` - Chave: ${selectedRequest.pixKey}`}
-                        </span>
-                        {selectedRequest.paymentMethod?.toLowerCase().includes('transferencia') && (
-                            <div className="mt-1 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">
-                                <p><strong>Banco:</strong> {selectedRequest.transferBankName || '?'}</p>
-                                <p><strong>Agência:</strong> {selectedRequest.transferAgency || '?'} | <strong>Conta:</strong> {selectedRequest.transferAccount || '?'}</p>
-                                <p><strong>Favorecido:</strong> {selectedRequest.transferBeneficiaryName || '?'}</p>
-                            </div>
-                        )}
-                    </div>
                   </div>
                   <div className="space-y-4">
-                    <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">Anexos</h3>
-                    {getInvoiceUrls(selectedRequest).length > 0 ? (
-                      <div className="space-y-2">
-                        {getInvoiceUrls(selectedRequest).map((url, i) => (
-                          <a key={i} href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-200 text-xs text-primary font-bold hover:bg-primary/5 transition-all">
-                            <Download className="w-3 h-3" /> Nota Fiscal {i + 1}
-                          </a>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-amber-600 text-[10px] font-bold flex items-center gap-1 bg-amber-50 p-2 rounded border border-amber-100"><AlertTriangle className="w-3 h-3" /> NF: {selectedRequest.invoiceUrl || 'Pendente'}</span>
-                    )}
-                    {selectedRequest.boletoUrl && (
-                      <a href={selectedRequest.boletoUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-200 text-xs text-primary font-bold hover:bg-primary/5 transition-all mt-2">
-                        <Download className="w-3 h-3" /> Visualizar Boleto
-                      </a>
+                    <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400">Pagamento</h3>
+                    <div><span className="block text-xs text-slate-500">Forma</span> <span className="font-bold text-slate-800">{selectedRequest.paymentMethod}</span></div>
+                    {selectedRequest.pixKey && <div><span className="block text-xs text-slate-500">Chave PIX</span> <span className="text-sm font-mono break-all">{selectedRequest.pixKey}</span></div>}
+                    {selectedRequest.paymentMethod?.toLowerCase().includes('transferencia') && (
+                        <div className="text-xs bg-slate-50 p-2 rounded border border-slate-100">
+                            <p><strong>Bco:</strong> {selectedRequest.transferBankName || '?'}</p>
+                            <p><strong>Ag/Cc:</strong> {selectedRequest.transferAgency || '?'}/{selectedRequest.transferAccount || '?'}</p>
+                            <p><strong>Fav:</strong> {selectedRequest.transferBeneficiaryName || '?'}</p>
+                        </div>
                     )}
                   </div>
                </div>
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
-                 <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">Descrição</h3>
-                 <p className="text-slate-700 text-sm leading-relaxed italic">"{selectedRequest.description}"</p>
+
+               <div className="space-y-2">
+                 <label className="text-xs uppercase tracking-wider font-bold text-slate-400">Motivo da Rejeição / Observações Internas</label>
+                 <textarea 
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Obrigatório ao rejeitar (mín. 5 caracteres)..."
+                    rows={3}
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                 />
+               </div>
+
+               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                 <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-1">Descrição do Solicitante</h3>
+                 <p className="text-slate-700 text-sm italic">"{selectedRequest.description}"</p>
                </div>
              </div>
 
-             <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-3 justify-end">
-               {selectedRequest.status === 'pending' && (
-                 <>
-                   <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')}>Rejeitar</Button>
-                   <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')}>Aprovar</Button>
-                 </>
-               )}
-               {selectedRequest.status === 'approved' && (
-                 <Button variant="primary" size="sm" className="bg-primaryDark hover:bg-primary" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')}>Marcar como Pago</Button>
-               )}
-               {selectedRequest.status === 'paid' && (
-                  <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 px-4"><CheckCircle className="w-4 h-4" /> Pagamento Concluído</span>
-               )}
+             <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 justify-center">
+               <Button variant="ghost" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'pending')} className="border border-slate-200">Pendente</Button>
+               <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} className="text-primary border-primary/20 hover:bg-primary/5">Aprovar</Button>
+               <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} className="bg-emerald-600 hover:bg-emerald-700">Marcar Pago</Button>
+               <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')}>Rejeitar</Button>
              </div>
           </div>
         </div>
