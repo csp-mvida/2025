@@ -114,7 +114,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     if (statusFilter === 'all') {
         matchesFilter = req.status !== 'draft';
     } else if (statusFilter === 'pendencias') {
-        matchesFilter = req.status !== 'draft' && isIssue(req);
+        // Bug Fix: Apenas solicitações PENDENTES (Em análise) que têm dados incompletos
+        matchesFilter = req.status === 'pending' && isIssue(req);
     } else {
         matchesFilter = req.status === statusFilter;
     }
