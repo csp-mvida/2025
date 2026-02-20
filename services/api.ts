@@ -231,7 +231,7 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
   
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*, rejection_reason')
+    .select('*, rejection_reason, paid_at')
     .eq('protocol', normalizedProtocol)
     .single();
 
@@ -265,14 +265,15 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     transferBeneficiaryName: data.transfer_favored_name || '',
     transferUrl: data.transfer_attachment_path,
     history: [],
-    authNumber: data.rejection_reason // Usando campo existente ou temporário para o motivo se não editarmos types.ts
-  } as any; // Cast para any para permitir rejectionReason dinâmico
+    authNumber: data.rejection_reason, // Reusado se tipos não permitirem extra
+    paidAt: data.paid_at
+  } as any;
 };
 
 export const getRequests = async (): Promise<CSPRequest[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*, rejection_reason')
+    .select('*, rejection_reason, paid_at')
     .order('created_at', { ascending: false });
 
   if (error) return [];
@@ -305,20 +306,31 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     transferBeneficiaryName: req.transfer_favored_name || '',
     transferUrl: req.transfer_attachment_path,
     history: [],
-    rejectionReason: req.rejection_reason
+    rejectionReason: req.rejection_reason,
+    paidAt: req.paid_at
   } as any));
 };
 
 export const updateRequestStatus = async (id: string, status: RequestStatus, reason?: string): Promise<boolean> => {
   const payload: any = { status };
+  
   if (reason !== undefined) {
     payload.rejection_reason = reason;
+  }
+  
+  if (status === 'paid') {
+    payload.paid_at = new Date().toISOString();
   }
 
   const { error } = await supabase
     .from(TABLE_NAME)
     .update(payload)
     .eq('protocol', id);
+
+  if (error) {
+    console.error('[updateRequestStatus] Error payload:', payload);
+    console.error('[updateRequestStatus] Error details:', error);
+  }
 
   return !error;
 };

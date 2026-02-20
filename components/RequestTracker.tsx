@@ -16,7 +16,7 @@ interface RequestTrackerProps {
 
 const STATUS_MAP: Record<RequestStatus, { label: string; color: string; icon: React.ReactNode; desc: string }> = {
   pending: { 
-    label: 'Pendente', 
+    label: 'Em análise', 
     color: 'bg-accent/10 text-accent border-accent/20', 
     icon: <Clock className="w-5 h-5" />,
     desc: 'Sua solicitação foi recebida e está aguardando análise do setor financeiro.'
@@ -115,6 +115,15 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
             <h2 className="text-2xl font-black uppercase tracking-widest">{STATUS_MAP[request.status].label}</h2>
             <p className="text-sm font-medium mt-1">{STATUS_MAP[request.status].desc}</p>
             
+            {/* Informação de Pagamento */}
+            {request.status === 'paid' && (request as any).paidAt && (
+                <div className="mt-4 p-3 bg-white/40 rounded-xl border border-emerald-200/50 inline-block">
+                    <span className="text-xs font-bold text-emerald-700">
+                        Confirmado em: {new Date((request as any).paidAt).toLocaleString('pt-BR')}
+                    </span>
+                </div>
+            )}
+
             {/* Motivo da Rejeição */}
             {request.status === 'rejected' && (request as any).rejectionReason && (
                 <div className="mt-4 p-4 bg-white/60 rounded-2xl border border-red-200/50 text-left">

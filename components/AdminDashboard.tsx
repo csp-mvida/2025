@@ -25,6 +25,7 @@ const STATUS_CONFIG: Record<RequestStatus, { label: string; color: string; icon:
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [requests, setRequests] = useState<CSPRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Mês atual como padrão para o filtro de Vencimento
@@ -71,16 +72,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         }
     }
 
+    setIsUpdating(true);
     const success = await updateRequestStatus(id, newStatus, rejectionReason.trim());
     if (success) {
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus, rejectionReason: rejectionReason.trim() } as any : r));
-      if (selectedRequest && selectedRequest.id === id) {
-        setSelectedRequest(prev => prev ? { ...prev, status: newStatus, rejectionReason: rejectionReason.trim() } as any : null);
-      }
-      toast.success(`Status alterado para ${STATUS_CONFIG[newStatus].label}`);
+      // Atualizar lista local para refletir a mudança imediatamente
+      const updatedDate = newStatus === 'paid' ? new Date().toISOString() : null;
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus, rejectionReason: rejectionReason.trim(), paidAt: updatedDate } as any : r));
+      
+      toast.success(`Status atualizado para ${STATUS_CONFIG[newStatus].label}`);
+      setSelectedRequest(null); // Fechar modal
     } else {
       toast.error('Erro ao atualizar status.');
     }
+    setIsUpdating(false);
   };
 
   const isIssue = (req: CSPRequest): boolean => {
@@ -114,7 +118,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     if (statusFilter === 'all') {
         matchesFilter = req.status !== 'draft';
     } else if (statusFilter === 'pendencias') {
-        // Bug Fix: Apenas solicitações PENDENTES (Em análise) que têm dados incompletos
         matchesFilter = req.status === 'pending' && isIssue(req);
     } else {
         matchesFilter = req.status === statusFilter;
@@ -249,6 +252,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                                         <span className="ml-1 text-primary">às: {req.dueDate.split('T')[1].substring(0, 5)}</span>
                                     )}
                                 </div>
+                                {(req as any).paidAt && (
+                                    <div className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                                        <CheckCircle className="w-3 h-3" /> Pago em: {new Date((req as any).paidAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                )}
                                 {getUrgencyIndicator(req.dueDate)}
                             </div>
                        </div>
@@ -290,6 +298,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                     <div><span className="block text-xs text-slate-500">Valor</span> <span className="text-xl font-bold text-primary">{formatCurrency(selectedRequest.value)}</span></div>
                     <div><span className="block text-xs text-slate-500">Solicitante</span> <span className="font-medium text-slate-900">{selectedRequest.requesterName}</span></div>
                     <div><span className="block text-xs text-slate-500">Fornecedor</span> <span className="font-medium text-slate-900">{selectedRequest.supplierName}</span></div>
+                    {(selectedRequest as any).paidAt && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                            <span className="block text-[10px] uppercase font-black text-emerald-600 mb-1">Confirmação de Pagamento</span>
+                            <span className="text-sm font-bold text-emerald-700">Pago em: {new Date((selectedRequest as any).paidAt).toLocaleString('pt-BR')}</span>
+                        </div>
+                    )}
                   </div>
                   <div className="space-y-4">
                     <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400">Pagamento</h3>
@@ -323,10 +337,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              </div>
 
              <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 justify-center">
-               <Button variant="ghost" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'pending')} className="border border-slate-200">Pendente</Button>
-               <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} className="text-primary border-primary/20 hover:bg-primary/5">Aprovar</Button>
-               <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} className="bg-emerald-600 hover:bg-emerald-700">Marcar Pago</Button>
-               <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')}>Rejeitar</Button>
+               <Button variant="ghost" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'pending')} disabled={isUpdating} className="border border-slate-200">Em análise</Button>
+               <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="text-blue-600 border-blue-200 hover:bg-blue-50">Aprovar</Button>
+               <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700">Marcar Pago</Button>
+               <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating}>Rejeitar</Button>
              </div>
           </div>
         </div>
