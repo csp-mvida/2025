@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { CSPRequest, RequestStatus } from '../types';
 import { getRequests, updateRequestStatus } from '../services/api';
 import { formatCurrency } from '../utils/formatters';
 import { Button } from './ui/Button';
 import { 
   Search, Filter, Eye, CheckCircle, AlertTriangle, X, 
-  Clock, LayoutDashboard, RefreshCw, FileText, Download 
+  Clock, LayoutDashboard, RefreshCw, FileText, Download, Copy
 } from './ui/Icons';
 import { BackgroundAnimation } from './BackgroundAnimation';
 
@@ -50,10 +51,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   };
 
   const filteredRequests = requests.filter(req => {
+    const term = searchTerm.toLowerCase();
     const matchesSearch = 
-      req.requesterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
+      req.requesterName.toLowerCase().includes(term) ||
+      req.id.toLowerCase().includes(term) || // Busca por protocolo (completo ou parcial)
+      req.supplierName.toLowerCase().includes(term);
     const matchesFilter = statusFilter === 'all' || req.status === statusFilter;
     return matchesSearch && matchesFilter;
   });
@@ -67,6 +69,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     } catch {
       return [request.invoiceUrl];
     }
+  };
+
+  const copyProtocol = (id: string) => {
+    navigator.clipboard.writeText(id);
+    toast.success('Protocolo copiado!');
   };
 
   return (
@@ -95,7 +102,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input type="text" placeholder="Buscar por ID, Nome ou Fornecedor..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            <input type="text" placeholder="Buscar por Protocolo, Nome ou Fornecedor..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
              {(['all', 'pending', 'approved', 'paid', 'rejected'] as const).map(status => (
@@ -111,7 +118,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                <thead>
                  <tr className="bg-slate-50/50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                    <th className="px-6 py-4">Status</th>
-                   <th className="px-6 py-4">ID / Data</th>
+                   <th className="px-6 py-4">Protocolo / Data</th>
                    <th className="px-6 py-4">Solicitante</th>
                    <th className="px-6 py-4 text-right">Valor</th>
                    <th className="px-6 py-4 text-center">Ações</th>
@@ -147,7 +154,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                <div>
-                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-3">{selectedRequest.id}</h2>
+                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-3">
+                   {selectedRequest.id}
+                   <button 
+                     onClick={() => copyProtocol(selectedRequest.id)}
+                     className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-md hover:bg-primary/5"
+                     title="Copiar Protocolo"
+                   >
+                     <Copy className="w-4 h-4" />
+                   </button>
+                 </h2>
                  <p className="text-xs text-slate-500">Criado em {new Date(selectedRequest.createdAt).toLocaleString('pt-BR')}</p>
                </div>
                <button onClick={() => setSelectedRequest(null)} className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100"><X className="w-6 h-6" /></button>
