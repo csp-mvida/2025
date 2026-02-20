@@ -265,7 +265,7 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     transferBeneficiaryName: data.transfer_favored_name || '',
     transferUrl: data.transfer_attachment_path,
     history: [],
-    authNumber: data.rejection_reason, // Reusado se tipos não permitirem extra
+    rejectionReason: data.rejection_reason,
     paidAt: data.paid_at
   } as any;
 };
@@ -314,6 +314,7 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
 export const updateRequestStatus = async (id: string, status: RequestStatus, reason?: string): Promise<boolean> => {
   const payload: any = { status };
   
+  // Garantir que reason seja enviado na coluna correta snake_case
   if (reason !== undefined) {
     payload.rejection_reason = reason;
   }
@@ -328,8 +329,12 @@ export const updateRequestStatus = async (id: string, status: RequestStatus, rea
     .eq('protocol', id);
 
   if (error) {
-    console.error('[updateRequestStatus] Error payload:', payload);
-    console.error('[updateRequestStatus] Error details:', error);
+    console.error('[updateRequestStatus] CRITICAL ERROR:');
+    console.error('- Payload:', JSON.stringify(payload, null, 2));
+    console.error('- Message:', error.message);
+    console.error('- Details:', error.details);
+    console.error('- Hint:', error.hint);
+    console.error('- Code:', error.code);
   }
 
   return !error;

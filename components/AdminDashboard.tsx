@@ -64,30 +64,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   }, []);
 
   const handleStatusUpdate = async (id: string, newStatus: RequestStatus) => {
-    if (newStatus === 'rejected') {
-        const reason = rejectionReason.trim();
-        if (reason.length < 5) {
-            toast.error('O motivo da rejeição deve ter pelo menos 5 caracteres.');
-            return;
-        }
+    // 1. Validação do motivo se for rejeição
+    const reason = rejectionReason.trim();
+    if (newStatus === 'rejected' && reason.length < 5) {
+        toast.error('O motivo da rejeição deve ter pelo menos 5 caracteres.');
+        return;
     }
 
     setIsUpdating(true);
-    const success = await updateRequestStatus(id, newStatus, rejectionReason.trim());
+    
+    // 2. Envio do update (services/api.ts cuidará de mapear rejection_reason snake_case)
+    const success = await updateRequestStatus(id, newStatus, reason);
     
     if (success) {
-      // Atualizar lista local para refletir a mudança imediatamente
+      // 3. Sucesso: Atualizar estado local para refletir mudança imediatamente
       const updatedDate = newStatus === 'paid' ? new Date().toISOString() : null;
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus, rejectionReason: rejectionReason.trim(), paidAt: updatedDate } as any : r));
+      setRequests(prev => prev.map(r => r.id === id ? { 
+        ...r, 
+        status: newStatus, 
+        rejectionReason: reason, 
+        paidAt: updatedDate 
+      } as any : r));
       
       toast.success(`Status atualizado para ${STATUS_CONFIG[newStatus].label}`);
-      setSelectedRequest(null); // Fechar modal após sucesso
+      setSelectedRequest(null); // Fechar modal
     } else {
-      console.error(`[AdminDashboard] Falha ao atualizar status. Protocolo: ${id}, Status Alvo: ${newStatus}, Payload:`, {
-        status: newStatus,
-        rejection_reason: rejectionReason
-      });
-      toast.error('Erro ao atualizar status. Verifique o console.');
+      // 4. Erro: Log detalhado já é feito em services/api.ts
+      toast.error('Erro ao atualizar status. Verifique o console para detalhes.');
     }
     setIsUpdating(false);
   };
