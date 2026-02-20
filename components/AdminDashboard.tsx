@@ -74,15 +74,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
 
     setIsUpdating(true);
     const success = await updateRequestStatus(id, newStatus, rejectionReason.trim());
+    
     if (success) {
       // Atualizar lista local para refletir a mudança imediatamente
       const updatedDate = newStatus === 'paid' ? new Date().toISOString() : null;
       setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus, rejectionReason: rejectionReason.trim(), paidAt: updatedDate } as any : r));
       
       toast.success(`Status atualizado para ${STATUS_CONFIG[newStatus].label}`);
-      setSelectedRequest(null); // Fechar modal
+      setSelectedRequest(null); // Fechar modal após sucesso
     } else {
-      toast.error('Erro ao atualizar status.');
+      console.error(`[AdminDashboard] Falha ao atualizar status. Protocolo: ${id}, Status Alvo: ${newStatus}, Payload:`, {
+        status: newStatus,
+        rejection_reason: rejectionReason
+      });
+      toast.error('Erro ao atualizar status. Verifique o console.');
     }
     setIsUpdating(false);
   };
