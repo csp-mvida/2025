@@ -121,10 +121,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     // Filtro por Abas/Status
     let matchesFilter = false;
     if (statusFilter === 'all') {
-        matchesFilter = req.status !== 'draft';
+        // Aba "Recebidos": APENAS status 'pending'
+        matchesFilter = req.status === 'pending';
     } else if (statusFilter === 'pendencias') {
+        // Aba "Incompletos": APENAS status 'pending' + dados incompletos
         matchesFilter = req.status === 'pending' && isIssue(req);
     } else {
+        // Demais abas: aprovado, pago, rejeitado, rascunho
         matchesFilter = req.status === statusFilter;
     }
     
@@ -206,11 +209,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
             </div>
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide self-end">
-             <button onClick={() => setStatusFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'all' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>Todos</button>
+             <button onClick={() => setStatusFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'all' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>Recebidos</button>
              <button onClick={() => setStatusFilter('pendencias')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap flex items-center gap-1.5 ${statusFilter === 'pendencias' ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'}`}>
                <AlertTriangle className="w-4 h-4" /> Incompletos
              </button>
-             {(['pending', 'approved', 'paid', 'rejected', 'draft'] as const).map(status => (
+             {(['approved', 'paid', 'rejected', 'draft'] as const).map(status => (
                <button key={status} onClick={() => setStatusFilter(status)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
                  {status === 'draft' ? 'Rascunhos' : STATUS_CONFIG[status].label}
                </button>
@@ -342,7 +345,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              </div>
 
              <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 justify-center">
-               <Button variant="ghost" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'pending')} disabled={isUpdating} className="border border-slate-200">Em análise</Button>
+               <Button variant="ghost" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'pending')} disabled={isUpdating} className="border border-slate-200">Reverter para Recebidos</Button>
                <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="text-blue-600 border-blue-200 hover:bg-blue-50">Aprovar</Button>
                <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700">Marcar Pago</Button>
                <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating}>Rejeitar</Button>
