@@ -213,7 +213,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              <button onClick={() => setStatusFilter('pendencias')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap flex items-center gap-1.5 ${statusFilter === 'pendencias' ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'}`}>
                <AlertTriangle className="w-4 h-4" /> Incompletos
              </button>
-             {(['approved', 'paid', 'rejected', 'draft'] as const).map(status => (
+             <button onClick={() => setStatusFilter('approved')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'approved' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+               A pagar
+             </button>
+             {(['paid', 'rejected', 'draft'] as const).map(status => (
                <button key={status} onClick={() => setStatusFilter(status)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
                  {status === 'draft' ? 'Rascunhos' : STATUS_CONFIG[status].label}
                </button>
