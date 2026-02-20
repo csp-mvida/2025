@@ -1,9 +1,8 @@
 import { supabase } from '../src/integrations/supabase/client';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
-const STORAGE_BUCKET = 'uploads'; // Nome do bucket centralizado
+const STORAGE_BUCKET = 'uploads'; 
 const TABLE_NAME = 'payment_requests';
-const PLACEHOLDER_UUID = '00000000-0000-0000-0000-000000000000';
 
 // Fetch Departments from Supabase
 export const fetchDepartments = async (): Promise<Department[]> => {
@@ -63,29 +62,19 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto' | 'tr
   const fileExt = file.name.split('.').pop() || 'bin';
   let subfolder: string;
   
-  if (type === 'invoice') {
-    subfolder = 'notas_fiscais';
-  } else if (type === 'boleto') {
-    subfolder = 'boletos';
-  } else { // type === 'transfer'
-    subfolder = 'transferencias';
-  }
+  if (type === 'invoice') subfolder = 'notas_fiscais';
+  else if (type === 'boleto') subfolder = 'boletos';
+  else subfolder = 'transferencias';
   
   const safeFileName = `${subfolder}/${protocolId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
-  const options = {
-    cacheControl: '3600',
-    upsert: false,
-    contentType: file.type || undefined,
-  };
-
   const { error } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .upload(safeFileName, file, options);
+    .upload(safeFileName, file, { cacheControl: '3600', upsert: false });
 
   if (error) {
-    console.error('[storage-upload] Detailed Error:', error);
-    throw new Error(error.message || 'Falha desconhecida no upload do Supabase Storage.');
+    console.error('[storage-upload] Error:', error);
+    throw new Error(error.message);
   }
 
   const { data: publicUrlData } = supabase.storage
@@ -114,73 +103,35 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
     urgent: false,
   };
 
-  try {
-    const { data, error } = await supabase
-      .from(TABLE_NAME)
-      .insert([dbPayload])
-      .select('protocol')
-      .single();
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .insert([dbPayload])
+    .select('protocol')
+    .single();
 
-    if (error) {
-      console.error('[createDraftRequest] Supabase DB Insert Error:', error);
-      return null;
-    }
-    
-    return data?.protocol || null;
-  } catch (e) {
-    console.error("[createDraftRequest] Save failed", e);
+  if (error) {
+    console.error('[createDraftRequest] Error:', error);
     return null;
   }
+  
+  return data?.protocol || null;
 };
 
 /**
  * Atualiza o registro DRAFT com a URL do anexo
  */
-export const updateRequestAttachments = async (
-  protocolId: string, 
-  type: 'invoice' | 'boleto' | 'transfer', 
-  url: string
-): Promise<boolean> => {
-  let payload: { [key: string]: string };
-  
-  if (type === 'invoice') {
-    payload = { invoice_attachment_path: url };
-  } else if (type === 'boleto') {
-    payload = { boleto_attachment_path: url };
-  } else { // type === 'transfer'
-    payload = { transfer_attachment_path: url };
-  }
-
-  const { error } = await supabase
-    .from(TABLE_NAME)
-    .update(payload)
-    .eq('protocol', protocolId);
-
+export const updateRequestAttachments = async (protocolId: string, type: 'invoice' | 'boleto' | 'transfer', url: string): Promise<boolean> => {
+  const field = type === 'invoice' ? 'invoice_attachment_path' : type === 'boleto' ? 'boleto_attachment_path' : 'transfer_attachment_path';
+  const { error } = await supabase.from(TABLE_NAME).update({ [field]: url }).eq('protocol', protocolId);
   return !error;
 };
-
 
 /**
  * Finaliza a solicitação.
  */
-export const submitRequest = async (
-  data: CSPFormData, 
-  requestId: string, 
-  authorizerId: string, 
-  paymentAccountId: string, 
-  isUrgent: boolean
-): Promise<boolean> => {
-  
-  const url_anexo = data.hasInvoice === 'yes' && data.invoiceUrl 
-    ? data.invoiceUrl 
-    : 'Pendente via WhatsApp';
-
+export const submitRequest = async (data: CSPFormData, requestId: string, authorizerId: string, paymentAccountId: string, isUrgent: boolean): Promise<boolean> => {
+  const url_anexo = data.hasInvoice === 'yes' && data.invoiceUrl ? data.invoiceUrl : 'Pendente via WhatsApp';
   const mappedPaymentMethod = data.paymentMethod.toLowerCase().replace('transferência', 'transferencia');
-  const amountCents = parseInt(data.value);
-
-  const isTransfer = data.paymentMethod === 'Transferência';
-  const isBoleto = data.paymentMethod === 'Boleto';
-  const isPix = data.paymentMethod === 'PIX';
 
   const dbPayload = {
     requester_name: data.requesterName,
@@ -189,22 +140,20 @@ export const submitRequest = async (
     description: data.description,
     due_date: data.dueDate,
     vendor_name: data.supplierName,
-    amount_cents: amountCents, 
+    amount_cents: parseInt(data.value), 
     payment_method: mappedPaymentMethod,
-    pix_key: isPix ? data.pixKey : null,
-    boleto_attachment_path: isBoleto ? data.boletoUrl : null,
-    transfer_bank: isTransfer ? data.transferBankName : null,
-    transfer_account_type: isTransfer ? data.transferAccountType : null,
-    transfer_agency: isTransfer ? data.transferAgency : null,
-    transfer_account: isTransfer ? data.transferAccount : null,
-    transfer_document: isTransfer ? data.transferCpfCnpj : null,
-    transfer_favored_name: isTransfer ? data.transferBeneficiaryName : null,
-    transfer_attachment_path: isTransfer ? data.transferUrl : null,
+    pix_key: data.paymentMethod === 'PIX' ? data.pixKey : null,
+    boleto_attachment_path: data.paymentMethod === 'Boleto' ? data.boletoUrl : null,
+    transfer_bank: data.paymentMethod === 'Transferência' ? data.transferBankName : null,
+    transfer_account_type: data.paymentMethod === 'Transferência' ? data.transferAccountType : null,
+    transfer_agency: data.paymentMethod === 'Transferência' ? data.transferAgency : null,
+    transfer_account: data.paymentMethod === 'Transferência' ? data.transferAccount : null,
+    transfer_document: data.paymentMethod === 'Transferência' ? data.transferCpfCnpj : null,
+    transfer_favored_name: data.paymentMethod === 'Transferência' ? data.transferBeneficiaryName : null,
+    transfer_attachment_path: data.paymentMethod === 'Transferência' ? data.transferUrl : null,
     status: 'pending' as RequestStatus,
     invoice_attachment_path: url_anexo,
     is_budget_specific: data.isSpecificBudget === 'yes',
-    budget_id: null, 
-    authorization_number: data.authNumber || null,
     authorizer_id: authorizerId,
     payment_account_id: paymentAccountId,
     agreed_terms: data.termsAccepted,
@@ -212,29 +161,12 @@ export const submitRequest = async (
     invoice_commitment: data.invoiceSentViaWhatsapp,
   };
 
-  if (!requestId) return false;
-
-  try {
-    const { error } = await supabase
-      .from(TABLE_NAME)
-      .update(dbPayload)
-      .eq('protocol', requestId);
-
-    return !error;
-  } catch (e) {
-    return false;
-  }
+  const { error } = await supabase.from(TABLE_NAME).update(dbPayload).eq('protocol', requestId);
+  return !error;
 };
 
 export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
-  const normalizedProtocol = protocol.trim().toUpperCase();
-  
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select('*, rejection_reason, paid_at')
-    .eq('protocol', normalizedProtocol)
-    .single();
-
+  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at').eq('protocol', protocol.trim().toUpperCase()).single();
   if (error || !data) return null;
 
   return {
@@ -247,7 +179,7 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     paymentAccount: data.payment_account_id,
     isSpecificBudget: data.is_budget_specific ? 'yes' : 'no',
     supplierName: data.vendor_name,
-    value: data.amount_cents ? data.amount_cents.toString() : '0',
+    value: data.amount_cents?.toString() || '0',
     paymentMethod: data.payment_method || '',
     hasInvoice: data.invoice_attachment_path ? 'yes' : 'no',
     invoiceSentViaWhatsapp: data.invoice_commitment,
@@ -271,11 +203,7 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
 };
 
 export const getRequests = async (): Promise<CSPRequest[]> => {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select('*, rejection_reason, paid_at')
-    .order('created_at', { ascending: false });
-
+  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at').order('created_at', { ascending: false });
   if (error) return [];
 
   return data.map(req => ({
@@ -288,7 +216,7 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     paymentAccount: req.payment_account_id,
     isSpecificBudget: req.is_budget_specific ? 'yes' : 'no',
     supplierName: req.vendor_name,
-    value: req.amount_cents ? req.amount_cents.toString() : '0',
+    value: req.amount_cents?.toString() || '0',
     paymentMethod: req.payment_method || '',
     hasInvoice: req.invoice_attachment_path && req.invoice_attachment_path !== 'Pendente via WhatsApp' ? 'yes' : 'no',
     invoiceSentViaWhatsapp: req.invoice_commitment,
@@ -313,27 +241,18 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
 
 export const updateRequestStatus = async (id: string, status: RequestStatus, reason?: string): Promise<boolean> => {
   const payload: any = { status };
-  
-  // Garantir que reason seja enviado na coluna correta snake_case
-  if (reason !== undefined) {
-    payload.rejection_reason = reason;
-  }
-  
-  if (status === 'paid') {
-    payload.paid_at = new Date().toISOString();
-  }
+  if (reason !== undefined) payload.rejection_reason = reason;
+  if (status === 'paid') payload.paid_at = new Date().toISOString();
 
-  const { error } = await supabase
-    .from(TABLE_NAME)
-    .update(payload)
-    .eq('protocol', id);
+  const { error, status: httpStatus } = await supabase.from(TABLE_NAME).update(payload).eq('protocol', id);
 
   if (error) {
     console.error('[updateRequestStatus] CRITICAL ERROR:');
+    console.error('- Protocolo:', id);
+    console.error('- Status HTTP:', httpStatus);
     console.error('- Payload:', JSON.stringify(payload, null, 2));
     console.error('- Message:', error.message);
     console.error('- Details:', error.details);
-    console.error('- Hint:', error.hint);
     console.error('- Code:', error.code);
   }
 
