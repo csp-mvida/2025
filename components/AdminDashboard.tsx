@@ -27,7 +27,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Mês atual como padrão: YYYY-MM
+  // Mês atual como padrão para o filtro de Vencimento
   const currentMonthValue = new Date().toISOString().slice(0, 7);
   const [monthFilter, setMonthFilter] = useState<string>(currentMonthValue);
   
@@ -35,18 +35,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [selectedRequest, setSelectedRequest] = useState<CSPRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  // Gerar últimos 12 meses
+  // Opções de meses começando em Janeiro de 2026 até o mês atual
   const monthOptions = React.useMemo(() => {
     const options = [];
-    const date = new Date();
-    for (let i = 0; i < 12; i++) {
+    const now = new Date();
+    const currentYear = 2026;
+    const currentMonth = now.getMonth(); // 0-indexed
+
+    for (let m = 0; m <= currentMonth; m++) {
+      const date = new Date(currentYear, m, 1);
       const monthLabel = date.toLocaleString('pt-BR', { month: 'short' });
-      const year = date.getFullYear();
-      const value = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      options.push({ label: `${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}/${year}`, value });
-      date.setMonth(date.getMonth() - 1);
+      const value = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
+      options.push({ label: `${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}/2026`, value });
     }
-    return options;
+    return options.reverse(); // Mais recente primeiro
   }, []);
 
   const loadData = async () => {
@@ -98,8 +100,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const filteredRequests = requests.filter(req => {
     const term = searchTerm.toLowerCase();
     
-    // Filtro por Mês (created_at)
-    const matchesMonth = monthFilter === 'all' || (req.createdAt && req.createdAt.startsWith(monthFilter));
+    // Filtro por Mês (Baseado no Vencimento due_date)
+    const matchesMonth = monthFilter === 'all' || (req.dueDate && req.dueDate.startsWith(monthFilter));
     
     // Filtro por Busca Textual
     const matchesSearch = 
@@ -139,17 +141,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     toast.success('Protocolo copiado!');
   };
 
-  // Lógica de Urgência
   const getUrgencyIndicator = (dueDateStr: string) => {
     if (!dueDateStr) return null;
-    
     const todayStr = new Date().toISOString().split('T')[0];
     const dueStr = dueDateStr.split('T')[0];
-    
     if (dueStr < todayStr) {
-        return <span className="text-[9px] font-black text-danger uppercase tracking-tighter">Vencido</span>;
+        return <span className="text-[10px] font-black text-danger uppercase tracking-tighter">Vencido</span>;
     } else if (dueStr === todayStr) {
-        return <span className="text-[9px] font-black text-amber-600 uppercase tracking-tighter">Vence hoje</span>;
+        return <span className="text-[10px] font-black text-amber-600 uppercase tracking-tighter">Vence hoje</span>;
     }
     return null;
   };
@@ -183,18 +182,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <input type="text" placeholder="Protocolo, Nome ou Fornecedor..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
-            <select 
-                value={monthFilter} 
-                onChange={e => setMonthFilter(e.target.value)}
-                className="px-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all text-sm font-bold text-slate-600"
-            >
-                <option value="all">Todos os Meses</option>
-                {monthOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-            </select>
+            <div className="flex flex-col">
+                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Mês (Vencimento)</label>
+                <select 
+                    value={monthFilter} 
+                    onChange={e => setMonthFilter(e.target.value)}
+                    className="px-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all text-sm font-bold text-slate-600"
+                >
+                    <option value="all">Todos os Meses</option>
+                    {monthOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                </select>
+            </div>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide self-end">
              <button onClick={() => setStatusFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'all' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>Todos</button>
              <button onClick={() => setStatusFilter('pendencias')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap flex items-center gap-1.5 ${statusFilter === 'pendencias' ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'}`}>
                <AlertTriangle className="w-4 h-4" /> Pendências
@@ -229,16 +231,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                           {STATUS_CONFIG[req.status].icon} {STATUS_CONFIG[req.status].label}
                         </span>
                         {isIssue(req) && req.status !== 'draft' && (
-                            <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Dados Pendentes</span>
+                            <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Dados Incompletos</span>
                         )}
                        </div>
                      </td>
                      <td className="px-6 py-4">
-                       <div className="font-mono text-sm font-black text-slate-900 group-hover:text-primary leading-none mb-1">{req.id}</div>
-                       <div className="space-y-0.5">
-                            <div className="text-[10px] text-slate-400 font-bold">Criado em: {new Date(req.createdAt!).toLocaleDateString('pt-BR')}</div>
-                            <div className="flex items-center gap-2">
-                                <div className="text-[10px] text-slate-600 font-black">Vence: {req.dueDate ? new Date(req.dueDate).toLocaleDateString('pt-BR') : '—'}</div>
+                       <div className="font-mono text-sm font-black text-slate-900 group-hover:text-primary leading-none mb-1.5">{req.id}</div>
+                       <div className="space-y-1">
+                            <div className="text-sm text-slate-500 font-medium">
+                                Criado em: {req.createdAt ? new Date(req.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                                <div className="text-sm text-slate-700 font-bold">
+                                    Vence: {req.dueDate ? new Date(req.dueDate).toLocaleDateString('pt-BR') : '—'}
+                                    {req.dueDate && req.dueDate.includes('T') && (
+                                        <span className="ml-1 text-primary">às: {req.dueDate.split('T')[1].substring(0, 5)}</span>
+                                    )}
+                                </div>
                                 {getUrgencyIndicator(req.dueDate)}
                             </div>
                        </div>
@@ -251,7 +260,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                    </tr>
                  )) : (
                     <tr>
-                        <td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada para os filtros selecionados.</td>
+                        <td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada para o período.</td>
                     </tr>
                  )}
                </tbody>
