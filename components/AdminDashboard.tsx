@@ -26,9 +26,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [requests, setRequests] = useState<CSPRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Mês atual como padrão: YYYY-MM
+  const currentMonthValue = new Date().toISOString().slice(0, 7);
+  const [monthFilter, setMonthFilter] = useState<string>(currentMonthValue);
+  
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all' | 'pendencias'>('all');
   const [selectedRequest, setSelectedRequest] = useState<CSPRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+
+  // Gerar últimos 12 meses
+  const monthOptions = React.useMemo(() => {
+    const options = [];
+    const date = new Date();
+    for (let i = 0; i < 12; i++) {
+      const monthLabel = date.toLocaleString('pt-BR', { month: 'short' });
+      const year = date.getFullYear();
+      const value = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      options.push({ label: `${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}/${year}`, value });
+      date.setMonth(date.getMonth() - 1);
+    }
+    return options;
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -42,7 +61,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   }, []);
 
   const handleStatusUpdate = async (id: string, newStatus: RequestStatus) => {
-    // Validação de motivo obrigatório para rejeição
     if (newStatus === 'rejected') {
         const reason = rejectionReason.trim();
         if (reason.length < 5) {
@@ -79,11 +97,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
 
   const filteredRequests = requests.filter(req => {
     const term = searchTerm.toLowerCase();
+    
+    // Filtro por Mês (created_at)
+    const matchesMonth = monthFilter === 'all' || (req.createdAt && req.createdAt.startsWith(monthFilter));
+    
+    // Filtro por Busca Textual
     const matchesSearch = 
       req.requesterName.toLowerCase().includes(term) ||
       req.id.toLowerCase().includes(term) || 
       req.supplierName.toLowerCase().includes(term);
     
+    // Filtro por Abas/Status
     let matchesFilter = false;
     if (statusFilter === 'all') {
         matchesFilter = req.status !== 'draft';
@@ -92,7 +116,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     } else {
         matchesFilter = req.status === statusFilter;
     }
-    return matchesSearch && matchesFilter;
+    
+    return matchesMonth && matchesSearch && matchesFilter;
   });
 
   const sortedRequests = [...filteredRequests].sort((a, b) => {
@@ -112,6 +137,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const copyProtocol = (id: string) => {
     navigator.clipboard.writeText(id);
     toast.success('Protocolo copiado!');
+  };
+
+  // Lógica de Urgência
+  const getUrgencyIndicator = (dueDateStr: string) => {
+    if (!dueDateStr) return null;
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dueStr = dueDateStr.split('T')[0];
+    
+    if (dueStr < todayStr) {
+        return <span className="text-[9px] font-black text-danger uppercase tracking-tighter">Vencido</span>;
+    } else if (dueStr === todayStr) {
+        return <span className="text-[9px] font-black text-amber-600 uppercase tracking-tighter">Vence hoje</span>;
+    }
+    return null;
   };
 
   return (
@@ -138,9 +178,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-8 relative z-10">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input type="text" placeholder="Protocolo, Nome ou Fornecedor..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+          <div className="relative flex-1 flex flex-col md:flex-row gap-2">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <input type="text" placeholder="Protocolo, Nome ou Fornecedor..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            </div>
+            <select 
+                value={monthFilter} 
+                onChange={e => setMonthFilter(e.target.value)}
+                className="px-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all text-sm font-bold text-slate-600"
+            >
+                <option value="all">Todos os Meses</option>
+                {monthOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+            </select>
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
              <button onClick={() => setStatusFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'all' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>Todos</button>
@@ -162,7 +214,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                <thead>
                  <tr className="bg-slate-50/50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                    <th className="px-6 py-4">Status</th>
-                   <th className="px-6 py-4">Protocolo / Data</th>
+                   <th className="px-6 py-4">Protocolo / Datas</th>
                    <th className="px-6 py-4">Solicitante</th>
                    <th className="px-6 py-4 text-right">Valor</th>
                    <th className="px-6 py-4 text-center">Ações</th>
@@ -177,13 +229,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                           {STATUS_CONFIG[req.status].icon} {STATUS_CONFIG[req.status].label}
                         </span>
                         {isIssue(req) && req.status !== 'draft' && (
-                            <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Pendente de dados</span>
+                            <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Dados Pendentes</span>
                         )}
                        </div>
                      </td>
                      <td className="px-6 py-4">
-                       <div className="font-mono text-sm font-medium text-slate-900 group-hover:text-primary">{req.id}</div>
-                       <div className="text-xs text-slate-500">{new Date(req.createdAt!).toLocaleDateString('pt-BR')}</div>
+                       <div className="font-mono text-sm font-black text-slate-900 group-hover:text-primary leading-none mb-1">{req.id}</div>
+                       <div className="space-y-0.5">
+                            <div className="text-[10px] text-slate-400 font-bold">Criado em: {new Date(req.createdAt!).toLocaleDateString('pt-BR')}</div>
+                            <div className="flex items-center gap-2">
+                                <div className="text-[10px] text-slate-600 font-black">Vence: {req.dueDate ? new Date(req.dueDate).toLocaleDateString('pt-BR') : '—'}</div>
+                                {getUrgencyIndicator(req.dueDate)}
+                            </div>
+                       </div>
                      </td>
                      <td className="px-6 py-4 font-medium text-slate-900">{req.requesterName}</td>
                      <td className="px-6 py-4 text-right font-medium text-slate-900">{formatCurrency(req.value)}</td>
@@ -193,7 +251,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                    </tr>
                  )) : (
                     <tr>
-                        <td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada.</td>
+                        <td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada para os filtros selecionados.</td>
                     </tr>
                  )}
                </tbody>
