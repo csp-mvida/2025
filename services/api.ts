@@ -167,6 +167,7 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
 
     if (lookupError || !budgetLookup) {
       console.error(`[submitRequest] Falha ao resolver budget_id para: ${budgetName}`, lookupError);
+      // Retorna false para que o App.tsx dispare o toast de erro apropriado
       return false;
     }
     
@@ -195,7 +196,7 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
     status: 'pending' as RequestStatus,
     invoice_attachment_path: url_anexo,
     is_budget_specific: data.isSpecificBudget === 'yes',
-    budget_id: finalBudgetId, // Campo corrigido
+    budget_id: finalBudgetId, 
     authorizer_id: authorizerId,
     payment_account_id: paymentAccountId,
     agreed_terms: data.termsAccepted,
