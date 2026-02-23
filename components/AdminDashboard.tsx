@@ -10,7 +10,7 @@ import {
 } from './ui/Icons';
 import { BackgroundAnimation } from './BackgroundAnimation';
 
-// Ícone de Clipe definido localmente para cumprir a regra de não editar outros arquivos
+// Ícone de Clipe definido localmente
 const Paperclip = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48" />
@@ -34,24 +34,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  const currentMonthValue = new Date().toISOString().slice(0, 7);
-  const [monthFilter, setMonthFilter] = useState<string>(currentMonthValue);
-  
+  const [monthFilter, setMonthFilter] = useState<string>(new Date().toISOString().slice(0, 7));
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all'>('all');
   const [selectedRequest, setSelectedRequest] = useState<CSPRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  
+  // State para o Preview de Arquivo
+  const [previewData, setPreviewData] = useState<{ url: string, title: string } | null>(null);
 
   const monthOptions = React.useMemo(() => {
     const options = [];
     const now = new Date();
-    const currentYear = 2026;
+    const currentYear = 2025; // Mantendo o ano base do projeto
     const currentMonth = now.getMonth();
-    for (let m = 0; m <= currentMonth; m++) {
+    for (let m = 0; m <= 11; m++) {
       const date = new Date(currentYear, m, 1);
       const monthLabel = date.toLocaleString('pt-BR', { month: 'short' });
       const value = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
-      options.push({ label: `${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}/2026`, value });
+      options.push({ label: `${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}/2025`, value });
     }
     return options.reverse();
   }, []);
@@ -82,23 +82,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       const success = await updateRequestStatus(id, newStatus, reason);
       
       if (success) {
-        const updatedDate = newStatus === 'paid' ? new Date().toISOString() : null;
         setRequests(prev => prev.map(r => r.id === id ? { 
           ...r, 
           status: newStatus, 
           rejectionReason: reason, 
-          paidAt: updatedDate 
+          paidAt: newStatus === 'paid' ? new Date().toISOString() : r.paidAt 
         } as any : r));
         
-        toast.success(newStatus === 'rejected' ? 'Solicitação rejeitada' : `Status atualizado para ${STATUS_CONFIG[newStatus].label}`);
+        toast.success(newStatus === 'rejected' ? 'Solicitação rejeitada' : `Status atualizado`);
         setSelectedRequest(null);
       } else {
         toast.error('Erro ao atualizar status.');
       }
     } catch (err: any) {
-       toast.error('Erro inesperado ao atualizar status.');
+       toast.error('Erro inesperado.');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleDownloadFile = async (url: string, label: string, protocol: string) => {
+    const toastId = toast.loading('Preparando download...');
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Tenta extrair extensão da URL ou do blob type
+      const extension = url.split('.').pop()?.split('?')[0] || (blob.type.includes('pdf') ? 'pdf' : 'jpg');
+      const filename = `${protocol}-${label.replace(/\s+/g, '-')}.${extension}`;
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      
+      toast.success('Download concluído!', { id: toastId });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Erro ao baixar arquivo.', { id: toastId });
+      // Fallback: abrir em nova aba se o fetch falhar (ex: CORS)
+      window.open(url, '_blank');
     }
   };
 
@@ -106,15 +133,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     const method = req.paymentMethod?.toLowerCase() || '';
     if (method === 'pix' && !req.pixKey) return true;
     if (method === 'boleto' && (!req.boletoUrl || req.boletoUrl === '')) return true;
-    if (method.includes('transferencia')) {
-        if (!req.transferBankName || !req.transferAccountType || !req.transferAgency || 
-            !req.transferAccount || !req.transferCpfCnpj || !req.transferBeneficiaryName) return true;
-    }
     if (req.hasInvoice === 'yes' && (!req.invoiceUrl || req.invoiceUrl === 'Pendente via WhatsApp')) return true;
     return false;
   };
 
-  // Helper para contar anexos reais
   const getAttachmentCount = (req: CSPRequest) => {
     const countField = (field: string | undefined) => {
       if (!field || field === 'Pendente via WhatsApp' || field === '[]' || field === '""') return 0;
@@ -126,7 +148,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         return 1;
       }
     };
-
     return countField(req.invoiceUrl) + countField(req.boletoUrl) + countField(req.transferUrl);
   };
 
@@ -143,30 +164,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   });
 
   const sortedRequests = [...filteredRequests].sort((a, b) => {
-    const isAPriority = a.status === 'pending' || a.status === 'approved';
-    const isBPriority = b.status === 'pending' || b.status === 'approved';
-    if (isAPriority && isBPriority) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-    if (isAPriority) return -1;
-    if (isBPriority) return 1;
+    if (a.status === 'pending' && b.status !== 'pending') return -1;
+    if (a.status !== 'pending' && b.status === 'pending') return 1;
     return new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime();
   });
 
-  const openDetails = (req: CSPRequest) => {
-    setSelectedRequest(req);
-    setRejectionReason((req as any).rejectionReason || '');
-  };
-
-  const copyProtocol = (id: string) => {
-    navigator.clipboard.writeText(id);
-    toast.success('Protocolo copiado!');
-  };
-
-  const renderAttachmentLinks = (serializedUrls: string | undefined, label: string) => {
+  const renderAttachmentLinks = (serializedUrls: string | undefined, label: string, protocol: string) => {
     if (!serializedUrls || serializedUrls === 'Pendente via WhatsApp' || serializedUrls === '[]' || serializedUrls === '""') {
         return (
             <div>
                 <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{label}</span>
-                <span className="text-[11px] text-slate-400 italic">Não enviado / Pendente</span>
+                <span className="text-[11px] text-slate-400 italic">Pendente / Não enviado</span>
             </div>
         );
     }
@@ -179,14 +187,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         urls = [serializedUrls];
     }
 
-    // Filtrar URLs vazias que podem ter sobrado
     urls = urls.filter(u => u && u.trim() !== "");
 
     if (urls.length === 0) {
         return (
             <div>
                 <span className="block text-[10px] uppercase font-bold text-slate-400 mb-1">{label}</span>
-                <span className="text-[11px] text-slate-400 italic">Não enviado</span>
+                <span className="text-[11px] text-slate-400 italic">Nenhum anexo</span>
             </div>
         );
     }
@@ -194,33 +201,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     return (
         <div>
             <span className="block text-[10px] uppercase font-bold text-slate-400 mb-2">{label}</span>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
                 {urls.map((url, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-100 group hover:border-primary/30 transition-colors">
+                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-100 group hover:border-primary/30 transition-all shadow-sm">
                         <div className="flex items-center gap-2 overflow-hidden">
-                            <FileText className="w-3 h-3 text-primary shrink-0" />
-                            <span className="text-[10px] font-bold text-slate-600 truncate">
+                            <FileText className="w-4 h-4 text-primary shrink-0" />
+                            <span className="text-[11px] font-bold text-slate-600 truncate">
                                 {label} {urls.length > 1 ? `#${idx + 1}` : ''}
                             </span>
                         </div>
                         <div className="flex gap-1.5">
-                            <a 
-                                href={url} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
-                                title="Visualizar"
+                            <button 
+                                onClick={() => setPreviewData({ url, title: `${label} - ${protocol}` })}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors"
                             >
-                                <Eye className="w-4 h-4" />
-                            </a>
-                            <a 
-                                href={url} 
-                                download 
-                                className="p-1 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                                title="Baixar"
+                                <Eye className="w-3.5 h-3.5" /> Visualizar
+                            </button>
+                            <button 
+                                onClick={() => handleDownloadFile(url, label, protocol)}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
                             >
-                                <Download className="w-4 h-4" />
-                            </a>
+                                <Download className="w-3.5 h-3.5" /> Baixar
+                            </button>
                         </div>
                     </div>
                 ))}
@@ -232,6 +234,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 pb-20 relative overflow-x-hidden">
       <BackgroundAnimation />
+      
+      {/* Header Admin */}
       <div className="bg-primaryDark text-white pt-10 pb-16 px-4 md:px-8 shadow-lg relative z-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6 md:gap-4">
           <div className="order-2 md:order-1 text-center md:text-left">
@@ -239,10 +243,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                <LayoutDashboard className="w-5 h-5" />
                <span className="uppercase tracking-widest text-[10px] md:text-xs font-bold">Painel Administrativo</span>
              </div>
-             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Gestão de Solicitações</h1>
+             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Gestão Financeira</h1>
           </div>
           <div className="order-1 md:order-2 flex justify-center z-10">
-             <img src="/admin-logo.png" alt="Missão Vida" className="h-20 md:h-24 w-auto object-contain" />
+             <img src="/admin-logo.png" alt="Logo" className="h-20 md:h-24 w-auto object-contain" />
           </div>
           <div className="order-3 md:order-3 flex justify-center md:justify-end">
             <Button variant="ghost" className="text-white border border-white/20 hover:bg-white hover:text-primary transition-colors py-2 px-4" onClick={onBack}>Sair do Admin</Button>
@@ -251,138 +255,188 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-8 relative z-10">
+        {/* Filtros */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1 flex flex-col md:flex-row gap-2">
             <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input type="text" placeholder="Protocolo, Nome ou Fornecedor..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                <input type="text" placeholder="Buscar por nome ou protocolo..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
-            <div className="flex flex-col">
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Mês (Vencimento)</label>
-                <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="px-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/50 shadow-sm transition-all text-sm font-bold text-slate-600">
-                    <option value="all">Todos os Meses</option>
-                    {monthOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                </select>
-            </div>
+            <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="px-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-sm font-bold text-slate-600 outline-none">
+                <option value="all">Todos os Meses</option>
+                {monthOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide self-end">
-             <button onClick={() => setStatusFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'all' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>Recebidos</button>
-             <button onClick={() => setStatusFilter('approved')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'approved' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>A pagar</button>
-             {(['paid', 'rejected'] as const).map(status => (
-               <button key={status} onClick={() => setStatusFilter(status)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>{STATUS_CONFIG[status].label}</button>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+             {['all', 'approved', 'paid', 'rejected'].map((status) => (
+               <button 
+                  key={status} 
+                  onClick={() => setStatusFilter(status as any)} 
+                  className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'}`}
+               >
+                 {status === 'all' ? 'Recebidos' : status === 'approved' ? 'A Pagar' : STATUS_CONFIG[status as RequestStatus].label}
+               </button>
              ))}
-             <button onClick={loadData} className="p-2.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary ml-auto shrink-0"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
+             <button onClick={loadData} className="p-2.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary transition-all"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
           </div>
         </div>
 
+        {/* Tabela de Solicitações */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
            <div className="overflow-x-auto">
              <table className="w-full text-left border-collapse">
                <thead>
-                 <tr className="bg-slate-50/50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                 <tr className="bg-slate-50/50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400 font-black">
                    <th className="px-6 py-4">Status</th>
-                   <th className="px-6 py-4">Protocolo / Datas</th>
+                   <th className="px-6 py-4">Protocolo / Vencimento</th>
                    <th className="px-6 py-4">Solicitante</th>
                    <th className="px-6 py-4 text-right">Valor</th>
-                   <th className="px-6 py-4 text-center">Ações</th>
+                   <th className="px-6 py-4 text-center">Detalhes</th>
                  </tr>
                </thead>
                <tbody className="divide-y divide-slate-100">
                  {sortedRequests.length > 0 ? sortedRequests.map(req => {
-                   const attachmentCount = getAttachmentCount(req);
+                   const count = getAttachmentCount(req);
                    return (
                    <tr key={req.id} className="hover:bg-primary/5 transition-colors group">
                      <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_CONFIG[req.status].color}`}>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${STATUS_CONFIG[req.status].color}`}>
                                 {STATUS_CONFIG[req.status].icon} {STATUS_CONFIG[req.status].label}
                             </span>
-                            {isIssue(req) && (
-                                <div className="text-amber-500" title="Dados incompletos">
-                                    <AlertTriangle className="w-4 h-4" />
-                                </div>
-                            )}
+                            {isIssue(req) && <AlertTriangle className="w-4 h-4 text-amber-500" />}
                         </div>
                      </td>
                      <td className="px-6 py-4">
-                       <div className="flex items-center gap-3 mb-1">
-                          <div className="font-mono text-sm font-black text-slate-900 leading-none">{req.id}</div>
-                          {attachmentCount > 0 && (
-                            <span className="inline-flex items-center gap-1 text-base font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md" title={`${attachmentCount} anexo(s)`}>
-                               <Paperclip className="w-3.5 h-3.5" /> {attachmentCount}
+                       <div className="flex items-center gap-2 mb-1">
+                          <div className="font-mono text-sm font-black text-slate-900">{req.id}</div>
+                          {count > 0 && (
+                            <span className="inline-flex items-center gap-1.5 text-base font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                               <Paperclip className="w-3.5 h-3.5" /> {count}
                             </span>
                           )}
                        </div>
-                       <div className="text-xs text-slate-500">Vence: {req.dueDate ? new Date(req.dueDate).toLocaleDateString('pt-BR') : '—'}</div>
+                       <div className="text-[10px] text-slate-500 font-bold">VENCE: {new Date(req.dueDate).toLocaleDateString('pt-BR')}</div>
                      </td>
-                     <td className="px-6 py-4 font-medium text-slate-900">{req.requesterName}</td>
-                     <td className="px-6 py-4 text-right font-medium text-slate-900">{formatCurrency(req.value)}</td>
+                     <td className="px-6 py-4 font-bold text-slate-900 text-sm">{req.requesterName}</td>
+                     <td className="px-6 py-4 text-right font-black text-slate-900 text-base">{formatCurrency(req.value)}</td>
                      <td className="px-6 py-4 text-center">
-                       <button onClick={() => openDetails(req)} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"><Eye className="w-5 h-5" /></button>
+                       <button onClick={() => { setSelectedRequest(req); setRejectionReason((req as any).rejectionReason || ''); }} className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Eye className="w-6 h-6" /></button>
                      </td>
                    </tr>
-                 )}) : <tr><td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada.</td></tr>}
+                 )}) : <tr><td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação filtrada.</td></tr>}
                </tbody>
              </table>
            </div>
         </div>
       </div>
 
+      {/* Modal de Detalhes */}
       {selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-3">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+             <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+               <h2 className="text-xl font-black text-slate-900 flex items-center gap-3 tracking-tighter">
                  {selectedRequest.id} 
-                 <button onClick={() => copyProtocol(selectedRequest.id)} className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-md hover:bg-primary/5"><Copy className="w-4 h-4" /></button>
-                 {isIssue(selectedRequest) && <AlertTriangle className="w-5 h-5 text-amber-500" title="Dados incompletos" />}
+                 <button onClick={() => { navigator.clipboard.writeText(selectedRequest.id); toast.success('Copiado!'); }} className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-white shadow-sm border border-transparent hover:border-slate-100"><Copy className="w-4 h-4" /></button>
                </h2>
-               <button onClick={() => setSelectedRequest(null)} className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100"><X className="w-6 h-6" /></button>
+               <button onClick={() => setSelectedRequest(null)} className="text-slate-400 hover:text-danger p-2 rounded-full hover:bg-red-50 transition-colors"><X className="w-6 h-6" /></button>
              </div>
-             <div className="p-6 overflow-y-auto space-y-6">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400">Dados Gerais</h3>
-                    <div><span className="block text-xs text-slate-500">Valor</span> <span className="text-xl font-bold text-primary">{formatCurrency(selectedRequest.value)}</span></div>
-                    <div><span className="block text-xs text-slate-500">Fornecedor</span> <span className="font-medium text-slate-900">{selectedRequest.supplierName}</span></div>
-                    <div><span className="block text-xs text-slate-500">Vencimento</span> <span className="font-medium text-slate-900">{new Date(selectedRequest.dueDate).toLocaleString('pt-BR')}</span></div>
+             
+             <div className="p-8 overflow-y-auto space-y-8">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-5">
+                    <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Identificação</h3>
+                    <div><span className="block text-xs text-slate-400 font-bold uppercase mb-1">Valor</span> <span className="text-2xl font-black text-primary">{formatCurrency(selectedRequest.value)}</span></div>
+                    <div><span className="block text-xs text-slate-400 font-bold uppercase mb-1">Fornecedor</span> <span className="font-bold text-slate-800">{selectedRequest.supplierName}</span></div>
+                    <div><span className="block text-xs text-slate-400 font-bold uppercase mb-1">Vencimento</span> <span className="font-bold text-slate-800">{new Date(selectedRequest.dueDate).toLocaleString('pt-BR')}</span></div>
                   </div>
-                  <div className="space-y-4">
-                    <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400">Pagamento</h3>
-                    <div><span className="block text-xs text-slate-500">Forma</span> <span className="font-bold text-slate-800">{selectedRequest.paymentMethod}</span></div>
+                  <div className="space-y-5">
+                    <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Pagamento</h3>
+                    <div><span className="block text-xs text-slate-400 font-bold uppercase mb-1">Forma</span> <span className="font-black text-slate-800 px-3 py-1 bg-slate-100 rounded-lg">{selectedRequest.paymentMethod}</span></div>
                     {selectedRequest.paymentMethod === 'PIX' && (
-                        <div><span className="block text-xs text-slate-500">Chave PIX</span> <span className="font-bold text-slate-800 break-all">{selectedRequest.pixKey || 'N/A'}</span></div>
+                        <div><span className="block text-xs text-slate-400 font-bold uppercase mb-1">Chave PIX</span> <span className="font-bold text-slate-800 break-all">{selectedRequest.pixKey || 'N/A'}</span></div>
                     )}
                   </div>
                </div>
 
-               {/* Seção de Anexos */}
-               <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" /> Anexos da Solicitação
+               {/* Seção de Anexos com Visualizar/Baixar */}
+               <div className="space-y-4 pt-6 border-t border-slate-100">
+                  <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest flex items-center gap-2">
+                    <Paperclip className="w-4 h-4" /> Arquivos Anexados
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                    {renderAttachmentLinks(selectedRequest.invoiceUrl, 'Nota Fiscal')}
-                    {renderAttachmentLinks(selectedRequest.boletoUrl, 'Boleto(s)')}
-                    {selectedRequest.paymentMethod === 'Transferência' && renderAttachmentLinks(selectedRequest.transferUrl, 'Dados Bancários')}
+                  <div className="grid grid-cols-1 gap-4 bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                    {renderAttachmentLinks(selectedRequest.invoiceUrl, 'Nota Fiscal', selectedRequest.id)}
+                    {renderAttachmentLinks(selectedRequest.boletoUrl, 'Boleto Bancário', selectedRequest.id)}
+                    {selectedRequest.paymentMethod === 'Transferência' && renderAttachmentLinks(selectedRequest.transferUrl, 'Dados de Transferência', selectedRequest.id)}
                   </div>
                </div>
 
-               <div className="space-y-2">
-                 <label className="text-xs uppercase tracking-wider font-bold text-slate-400">Motivo da Rejeição / Observações Internas</label>
-                 <textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Obrigatório ao rejeitar (mín. 5 caracteres)..." rows={2} className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+               <div className="space-y-3">
+                 <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Observações da Rejeição</label>
+                 <textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Descreva o motivo caso vá rejeitar esta solicitação..." rows={3} className="w-full px-5 py-4 rounded-2xl border border-slate-200 text-sm focus:ring-4 focus:ring-primary/5 outline-none transition-all bg-white" />
                </div>
                
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                 <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-1">Descrição do Solicitante</h3>
-                 <p className="text-slate-700 text-sm italic">"{selectedRequest.description}"</p>
+               <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200">
+                 <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2">Descrição do Solicitante</h3>
+                 <p className="text-slate-600 text-sm font-medium leading-relaxed italic">"{selectedRequest.description}"</p>
                </div>
              </div>
-             <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-2 justify-center">
-               <Button variant="ghost" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'pending')} disabled={isUpdating} className="border border-slate-200">Reverter p/ Recebidos</Button>
-               <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating}>Aprovar</Button>
-               <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700">Marcar Pago</Button>
-               <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5}>Rejeitar</Button>
+             
+             <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-3 justify-center">
+               <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="font-bold">Aprovar Pagamento</Button>
+               <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700 font-bold">Marcar como Pago</Button>
+               <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold">Rejeitar Pedido</Button>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Preview de Arquivo */}
+      {previewData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10 bg-slate-900/90 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-6xl h-full max-h-full rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl">
+             <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
+               <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                   <FileText className="w-6 h-6 text-primary" />
+                 </div>
+                 <h3 className="font-black text-slate-900 tracking-tight">{previewData.title}</h3>
+               </div>
+               <button 
+                  onClick={() => setPreviewData(null)} 
+                  className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-danger transition-all"
+                >
+                 <X className="w-4 h-4" /> Fechar Visualização
+               </button>
+             </div>
+             <div className="flex-1 bg-slate-100 overflow-hidden relative">
+                {previewData.url.toLowerCase().includes('.pdf') || previewData.url.includes('blob') ? (
+                  <iframe 
+                    src={`${previewData.url}#toolbar=0&navpanes=0`} 
+                    className="w-full h-full border-0" 
+                    title="PDF Preview"
+                  />
+                ) : (
+                  <div className="w-full h-full overflow-auto p-10 flex items-center justify-center">
+                    <img 
+                      src={previewData.url} 
+                      alt="Preview" 
+                      className="max-w-full max-h-full object-contain rounded-xl shadow-2xl border-8 border-white" 
+                    />
+                  </div>
+                )}
+             </div>
+             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-center">
+                <button 
+                  onClick={() => {
+                    const parts = previewData.title.split(' - ');
+                    handleDownloadFile(previewData.url, parts[0], parts[1]);
+                  }}
+                  className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all"
+                >
+                  <Download className="w-5 h-5" /> Baixar este arquivo agora
+                </button>
              </div>
           </div>
         </div>
