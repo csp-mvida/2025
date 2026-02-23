@@ -4,11 +4,6 @@ export interface Department {
   active: boolean;
 }
 
-export interface Budget {
-  id: string;
-  name: string;
-}
-
 export type RequestStatus = 'pending' | 'approved' | 'paid' | 'rejected' | 'draft';
 
 export interface FileMeta {
@@ -28,8 +23,7 @@ export interface CSPFormData {
   // Step 2: Payment
   paymentAccount: string;
   isSpecificBudget: 'yes' | 'no';
-  budgetId?: string; // UUID da verba
-  specificBudgetName?: string; // Nome para exibição/resumo
+  specificBudgetName?: string;
   supplierName: string;
   value: string; // Raw string, parsed later
   paymentMethod: 'PIX' | 'Boleto' | 'Transferência' | '';
@@ -70,7 +64,6 @@ export interface CSPFormData {
   description: string;
   authNumber?: string;
   termsAccepted: boolean;
-  id?: string; // Protocolo
 }
 
 export interface CSPRequest extends CSPFormData {
@@ -88,8 +81,6 @@ export const INITIAL_DATA: CSPFormData = {
   dueDate: '',
   paymentAccount: '',
   isSpecificBudget: 'no',
-  budgetId: '',
-  specificBudgetName: '',
   supplierName: '',
   value: '',
   paymentMethod: '',

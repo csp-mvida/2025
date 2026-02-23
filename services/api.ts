@@ -1,5 +1,5 @@
 import { supabase } from '../src/integrations/supabase/client';
-import { Department, CSPFormData, CSPRequest, RequestStatus, Budget } from '../types';
+import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
 const STORAGE_BUCKET = 'uploads'; 
 const TABLE_NAME = 'payment_requests';
@@ -22,22 +22,6 @@ export const fetchDepartments = async (): Promise<Department[]> => {
     name: d.name,
     active: d.is_active
   }));
-};
-
-// Fetch Budgets from Supabase
-export const fetchBudgets = async (): Promise<Budget[]> => {
-  const { data, error } = await supabase
-    .from('budgets')
-    .select('id, name')
-    .eq('is_active', true)
-    .order('name');
-
-  if (error) {
-    console.error('Error fetching budgets:', error);
-    return [];
-  }
-
-  return data;
 };
 
 // Fetch Authorizers from Supabase
@@ -170,7 +154,6 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
     status: 'pending' as RequestStatus,
     invoice_attachment_path: url_anexo,
     is_budget_specific: data.isSpecificBudget === 'yes',
-    budget_id: data.isSpecificBudget === 'yes' ? data.budgetId : null,
     authorizer_id: authorizerId,
     payment_account_id: paymentAccountId,
     agreed_terms: data.termsAccepted,
@@ -195,7 +178,6 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     dueDate: data.due_date,
     paymentAccount: data.payment_account_id,
     isSpecificBudget: data.is_budget_specific ? 'yes' : 'no',
-    budgetId: data.budget_id,
     supplierName: data.vendor_name,
     value: data.amount_cents?.toString() || '0',
     paymentMethod: data.payment_method || '',
@@ -233,7 +215,6 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     dueDate: req.due_date,
     paymentAccount: req.payment_account_id,
     isSpecificBudget: req.is_budget_specific ? 'yes' : 'no',
-    budgetId: req.budget_id,
     supplierName: req.vendor_name,
     value: req.amount_cents?.toString() || '0',
     paymentMethod: req.payment_method || '',
@@ -266,7 +247,13 @@ export const updateRequestStatus = async (id: string, status: RequestStatus, rea
   const { error, status: httpStatus } = await supabase.from(TABLE_NAME).update(payload).eq('protocol', id);
 
   if (error) {
-    console.error('[updateRequestStatus] CRITICAL ERROR:', error.message);
+    console.error('[updateRequestStatus] CRITICAL ERROR:');
+    console.error('- Protocolo:', id);
+    console.error('- Status HTTP:', httpStatus);
+    console.error('- Payload:', JSON.stringify(payload, null, 2));
+    console.error('- Message:', error.message);
+    console.error('- Details:', error.details);
+    console.error('- Code:', error.code);
   }
 
   return !error;
