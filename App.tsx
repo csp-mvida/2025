@@ -538,8 +538,8 @@ function App() {
   const renderBoletoFields = () => (
     <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300 space-y-4">
       <label className="block text-sm font-medium text-slate-700">Anexos do Boleto <span className="text-accent">*</span></label>
-      <div className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
-        <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'boleto')} />
+      <label className="border-2 border-dashed border-primary/30 bg-primary/5 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group block">
+        <input type="file" multiple className="sr-only" onChange={(e) => handleFileChange(e, 'boleto')} />
         <div className="flex flex-col items-center gap-2">
           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
             {isUploadingBoleto ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
@@ -550,7 +550,7 @@ function App() {
             <p className="text-[10px] text-slate-600 font-bold">{formData.boletoFilesMeta?.length || 0}/10 boletos anexados</p>
           </div>
         </div>
-      </div>
+      </label>
 
       {/* Lista de Boletos Enviados */}
       {formData.boletoFilesMeta && formData.boletoFilesMeta.length > 0 && (
@@ -592,8 +592,8 @@ function App() {
         {/* Upload Comprovante Bancário (Opcional) */}
         <div className="pt-4 space-y-2">
             <label className="block text-sm font-medium text-slate-700">Comprovante de Dados Bancários (Opcional)</label>
-            <div className="border-2 border-dashed border-slate-200 bg-slate-50 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
-                <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'transfer')} />
+            <label className="border-2 border-dashed border-slate-200 bg-slate-50 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer relative group block">
+                <input type="file" multiple className="sr-only" onChange={(e) => handleFileChange(e, 'transfer')} />
                 <div className="flex flex-col items-center gap-2">
                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
                         {isUploadingTransfer ? <RefreshCw className="w-5 h-5 text-primary animate-spin" /> : <UploadCloud className="w-5 h-5 text-primary" />}
@@ -604,7 +604,7 @@ function App() {
                         <p className="text-[10px] text-slate-600 font-bold">{formData.transferFilesMeta?.length || 0}/10 arquivos anexados</p>
                     </div>
                 </div>
-            </div>
+            </label>
             
             {/* Lista de Arquivos Enviados */}
             {formData.transferFilesMeta && formData.transferFilesMeta.length > 0 && (
@@ -721,8 +721,8 @@ function App() {
       {formData.hasInvoice === 'yes' && (
         <div className="space-y-4">
           <label className="block text-sm font-medium text-slate-700 text-center md:text-left">Anexos da Nota Fiscal <span className="text-accent">*</span></label>
-          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-10 text-center hover:border-primary/50 transition-colors cursor-pointer relative group">
-            <input type="file" multiple className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(e, 'invoice')} />
+          <label className="border-2 border-dashed border-slate-200 rounded-2xl p-6 md:p-10 text-center hover:border-primary/50 transition-colors cursor-pointer relative group block">
+            <input type="file" multiple className="sr-only" onChange={(e) => handleFileChange(e, 'invoice')} />
             <div className="flex flex-col items-center gap-2">
               <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                 {isUploading ? <RefreshCw className="w-6 h-6 text-primary animate-spin" /> : <UploadCloud className="w-6 h-6 text-primary" />}
@@ -733,7 +733,7 @@ function App() {
                 <p className="text-[10px] text-slate-600 font-bold">{formData.invoiceFilesMeta?.length || 0}/10 arquivos selecionados</p>
               </div>
             </div>
-          </div>
+          </label>
 
           {/* Lista de Arquivos Enviados */}
           {formData.invoiceFilesMeta && formData.invoiceFilesMeta.length > 0 && (
