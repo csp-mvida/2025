@@ -34,7 +34,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [monthFilter, setMonthFilter] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [monthFilter, setMonthFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all'>('all');
   const [selectedRequest, setSelectedRequest] = useState<CSPRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -45,16 +45,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   // State para o Preview de Arquivo
   const [previewData, setPreviewData] = useState<{ url: string, title: string } | null>(null);
 
+  // Filtro de meses iniciando em Jan/2026
   const monthOptions = React.useMemo(() => {
     const options = [];
     const now = new Date();
-    const currentYear = 2025; // Mantendo o ano base do projeto
-    const currentMonth = now.getMonth();
-    for (let m = 0; m <= 11; m++) {
-      const date = new Date(currentYear, m, 1);
-      const monthLabel = date.toLocaleString('pt-BR', { month: 'short' });
-      const value = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
-      options.push({ label: `${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}/2025`, value });
+    const startYear = 2026;
+    const currentYear = Math.max(startYear, now.getFullYear());
+    const currentMonth = (currentYear === now.getFullYear()) ? now.getMonth() : 11;
+
+    for (let y = startYear; y <= currentYear; y++) {
+      const stopMonth = (y === currentYear) ? currentMonth : 11;
+      for (let m = 0; m <= stopMonth; m++) {
+        const date = new Date(y, m, 1);
+        const monthLabel = date.toLocaleString('pt-BR', { month: 'short' });
+        const value = `${y}-${String(m + 1).padStart(2, '0')}`;
+        options.push({ 
+          label: `${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}/${y}`, 
+          value 
+        });
+      }
     }
     return options.reverse();
   }, []);
@@ -249,13 +258,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     if (!targetStatus) return null;
     
     return (
-      <button 
+      <Button 
+        variant="ghost" 
+        size="sm" 
         onClick={() => handleStatusUpdate(selectedRequest.id, targetStatus!)} 
         disabled={isUpdating} 
-        className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
+        className="text-slate-400 font-bold hover:text-slate-600 border border-slate-200"
       >
-        <RefreshCw className="w-3.5 h-3.5" /> {label}
-      </button>
+        <RefreshCw className="w-4 h-4 mr-2" /> {label}
+      </Button>
     );
   };
 
@@ -291,7 +302,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                 <input type="text" placeholder="Buscar por nome ou protocolo..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
             <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="px-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-sm font-bold text-slate-600 outline-none">
-                <option value="all">Todos os Meses</option>
+                <option value="all">MÊS (VENCIMENTO)</option>
                 {monthOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
@@ -421,48 +432,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                </div>
              </div>
              
-             {/* Footer Elite - Unificado e Elegante */}
-             <div className="px-6 py-5 border-t border-slate-100 bg-slate-50 flex flex-wrap items-center justify-end gap-2 md:gap-3">
-               
-               {/* Grupo A: Secundários */}
-               <div className="flex items-center gap-2">
+             {/* Footer com Layout de duas linhas otimizado */}
+             <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col gap-5">
+               {/* Linha 1: Ações Principais */}
+               <div className="flex flex-wrap justify-center items-center gap-4">
                  {renderRevertButton()}
-                 <button 
-                  onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} 
-                  disabled={isUpdating} 
-                  className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary hover:bg-primary/5 transition-all"
-                 >
-                   Aprovar Pagamento
-                 </button>
+                 <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="font-bold min-w-[140px]">Aprovar Pagamento</Button>
+                 <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700 font-bold min-w-[140px]">Marcar como Pago</Button>
                </div>
-
-               {/* Separador A|B */}
-               <div className="hidden md:block h-6 w-px bg-emerald-500/20 mx-1"></div>
-
-               {/* Grupo B: Principal */}
-               <Button 
-                variant="primary" 
-                size="sm" 
-                onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} 
-                disabled={isUpdating} 
-                className="bg-emerald-600 hover:bg-emerald-700 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-600/20 min-w-[140px]"
-               >
-                 Marcar como Pago
-               </Button>
-
-               {/* Separador B|C */}
-               <div className="hidden md:block h-6 w-px bg-emerald-500/20 mx-1"></div>
-
-               {/* Grupo C: Perigoso */}
-               <Button 
-                variant="danger" 
-                size="sm" 
-                onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} 
-                disabled={isUpdating || rejectionReason.trim().length < 5} 
-                className="font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-600/20"
-               >
-                 Rejeitar Pedido
-               </Button>
+               
+               {/* Linha 2: Ação Destrutiva Isolada */}
+               <div className="flex justify-center pt-2">
+                 <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold w-full md:w-auto md:min-w-[280px]">Rejeitar Pedido</Button>
+               </div>
              </div>
           </div>
         </div>
