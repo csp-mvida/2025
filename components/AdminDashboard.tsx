@@ -249,15 +249,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     if (!targetStatus) return null;
     
     return (
-      <Button 
-        variant="ghost" 
-        size="sm" 
+      <button 
         onClick={() => handleStatusUpdate(selectedRequest.id, targetStatus!)} 
         disabled={isUpdating} 
-        className="text-slate-400 font-bold hover:text-slate-600 border border-slate-200"
+        className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary hover:bg-primary/5 transition-all flex items-center gap-2"
       >
-        <RefreshCw className="w-4 h-4 mr-2" /> {label}
-      </Button>
+        <RefreshCw className="w-3.5 h-3.5" /> {label}
+      </button>
     );
   };
 
@@ -423,19 +421,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                </div>
              </div>
              
-             {/* Footer com Layout de duas linhas otimizado */}
-             <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col gap-4">
-               {/* Linha 1: Ações Primárias */}
-               <div className="flex flex-wrap justify-center items-center gap-3">
-                 {renderRevertButton()}
-                 <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="font-bold">Aprovar Pagamento</Button>
-                 <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700 font-bold">Marcar como Pago</Button>
-               </div>
+             {/* Footer Elite - Unificado e Elegante */}
+             <div className="px-6 py-5 border-t border-slate-100 bg-slate-50 flex flex-wrap items-center justify-end gap-2 md:gap-3">
                
-               {/* Linha 2: Ação Destrutiva Isolada */}
-               <div className="flex justify-center border-t border-slate-200/50 pt-4">
-                 <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold w-full md:w-auto md:min-w-[200px]">Rejeitar Pedido</Button>
+               {/* Grupo A: Secundários */}
+               <div className="flex items-center gap-2">
+                 {renderRevertButton()}
+                 <button 
+                  onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} 
+                  disabled={isUpdating} 
+                  className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary hover:bg-primary/5 transition-all"
+                 >
+                   Aprovar Pagamento
+                 </button>
                </div>
+
+               {/* Separador A|B */}
+               <div className="hidden md:block h-6 w-px bg-emerald-500/20 mx-1"></div>
+
+               {/* Grupo B: Principal */}
+               <Button 
+                variant="primary" 
+                size="sm" 
+                onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} 
+                disabled={isUpdating} 
+                className="bg-emerald-600 hover:bg-emerald-700 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-600/20 min-w-[140px]"
+               >
+                 Marcar como Pago
+               </Button>
+
+               {/* Separador B|C */}
+               <div className="hidden md:block h-6 w-px bg-emerald-500/20 mx-1"></div>
+
+               {/* Grupo C: Perigoso */}
+               <Button 
+                variant="danger" 
+                size="sm" 
+                onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} 
+                disabled={isUpdating || rejectionReason.trim().length < 5} 
+                className="font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-600/20"
+               >
+                 Rejeitar Pedido
+               </Button>
              </div>
           </div>
         </div>
