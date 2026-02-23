@@ -31,7 +31,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const currentMonthValue = new Date().toISOString().slice(0, 7);
   const [monthFilter, setMonthFilter] = useState<string>(currentMonthValue);
   
-  const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all' | 'pendencias'>('all');
+  const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all'>('all');
   const [selectedRequest, setSelectedRequest] = useState<CSPRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -117,7 +117,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     
     let matchesFilter = false;
     if (statusFilter === 'all') matchesFilter = req.status === 'pending';
-    else if (statusFilter === 'pendencias') matchesFilter = req.status === 'pending' && isIssue(req);
     else matchesFilter = req.status === statusFilter;
     
     return matchesMonth && matchesSearch && matchesFilter;
@@ -180,9 +179,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide self-end">
              <button onClick={() => setStatusFilter('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'all' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>Recebidos</button>
-             <button onClick={() => setStatusFilter('pendencias')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap flex items-center gap-1.5 ${statusFilter === 'pendencias' ? 'bg-amber-500 text-white border-amber-500 shadow-md' : 'bg-white text-amber-600 border-amber-100 hover:bg-amber-50'}`}>
-               <AlertTriangle className="w-4 h-4" /> Incompletos
-             </button>
              <button onClick={() => setStatusFilter('approved')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'approved' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>A pagar</button>
              {(['paid', 'rejected'] as const).map(status => (
                <button key={status} onClick={() => setStatusFilter(status)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>{STATUS_CONFIG[status].label}</button>
@@ -207,7 +203,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                  {sortedRequests.length > 0 ? sortedRequests.map(req => (
                    <tr key={req.id} className="hover:bg-primary/5 transition-colors group">
                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_CONFIG[req.status].color}`}>{STATUS_CONFIG[req.status].icon} {STATUS_CONFIG[req.status].label}</span>
+                        <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_CONFIG[req.status].color}`}>
+                                {STATUS_CONFIG[req.status].icon} {STATUS_CONFIG[req.status].label}
+                            </span>
+                            {isIssue(req) && (
+                                <div className="text-amber-500" title="Dados incompletos">
+                                    <AlertTriangle className="w-4 h-4" />
+                                </div>
+                            )}
+                        </div>
                      </td>
                      <td className="px-6 py-4">
                        <div className="font-mono text-sm font-black text-slate-900 leading-none mb-1">{req.id}</div>
@@ -230,7 +235,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-3">{selectedRequest.id} <button onClick={() => copyProtocol(selectedRequest.id)} className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-md hover:bg-primary/5"><Copy className="w-4 h-4" /></button></h2>
+               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-3">
+                 {selectedRequest.id} 
+                 <button onClick={() => copyProtocol(selectedRequest.id)} className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-md hover:bg-primary/5"><Copy className="w-4 h-4" /></button>
+                 {isIssue(selectedRequest) && <AlertTriangle className="w-5 h-5 text-amber-500" title="Dados incompletos" />}
+               </h2>
                <button onClick={() => setSelectedRequest(null)} className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100"><X className="w-6 h-6" /></button>
              </div>
              <div className="p-6 overflow-y-auto space-y-6">
