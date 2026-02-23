@@ -24,6 +24,22 @@ export const fetchDepartments = async (): Promise<Department[]> => {
   }));
 };
 
+// NEW: Fetch Budgets from Supabase
+export const fetchBudgets = async (): Promise<{ id: string; name: string }[]> => {
+  const { data, error } = await supabase
+    .from('budgets')
+    .select('id, name')
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching budgets:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
 // Fetch Authorizers from Supabase
 export const fetchAuthorizers = async (): Promise<{ id: string; name: string }[]> => {
   const { data, error } = await supabase
@@ -154,6 +170,8 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
     status: 'pending' as RequestStatus,
     invoice_attachment_path: url_anexo,
     is_budget_specific: data.isSpecificBudget === 'yes',
+    // FIX: Envia o budget_id se for verba específica
+    budget_id: data.isSpecificBudget === 'yes' ? (data as any).specificBudgetId : null,
     authorizer_id: authorizerId,
     payment_account_id: paymentAccountId,
     agreed_terms: data.termsAccepted,
