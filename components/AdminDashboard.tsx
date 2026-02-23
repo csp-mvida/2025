@@ -52,7 +52,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const loadData = async () => {
     setLoading(true);
     const data = await getRequests();
-    setRequests(data);
+    // Filtra rascunhos na origem para garantir que nunca apareçam no Admin
+    setRequests(data.filter(r => r.status !== 'draft'));
     setLoading(false);
   };
 
@@ -113,10 +114,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     const term = searchTerm.toLowerCase();
     const matchesMonth = monthFilter === 'all' || (req.dueDate && req.dueDate.startsWith(monthFilter));
     const matchesSearch = req.requesterName.toLowerCase().includes(term) || req.id.toLowerCase().includes(term) || req.supplierName.toLowerCase().includes(term);
+    
     let matchesFilter = false;
     if (statusFilter === 'all') matchesFilter = req.status === 'pending';
     else if (statusFilter === 'pendencias') matchesFilter = req.status === 'pending' && isIssue(req);
     else matchesFilter = req.status === statusFilter;
+    
     return matchesMonth && matchesSearch && matchesFilter;
   });
 
@@ -181,8 +184,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                <AlertTriangle className="w-4 h-4" /> Incompletos
              </button>
              <button onClick={() => setStatusFilter('approved')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === 'approved' ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>A pagar</button>
-             {(['paid', 'rejected', 'draft'] as const).map(status => (
-               <button key={status} onClick={() => setStatusFilter(status)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>{status === 'draft' ? 'Rascunhos' : STATUS_CONFIG[status].label}</button>
+             {(['paid', 'rejected'] as const).map(status => (
+               <button key={status} onClick={() => setStatusFilter(status)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>{STATUS_CONFIG[status].label}</button>
              ))}
              <button onClick={loadData} className="p-2.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary ml-auto shrink-0"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
           </div>
