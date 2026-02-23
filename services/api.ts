@@ -55,7 +55,7 @@ export const fetchPaymentAccounts = async (): Promise<{ id: string; label: strin
   return data.map(a => ({ id: a.id, label: a.label }));
 };
 
-// Fetch Budgets from Supabase (Used for lookup if needed)
+// Fetch Budgets from Supabase
 export const fetchBudgets = async (): Promise<{ id: string; name: string }[]> => {
   const { data, error } = await supabase
     .from('budgets')
@@ -134,7 +134,7 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
 };
 
 /**
- * Atualiza o registro DRAFT com a URL do anexo
+ * Atualiza o registro com as URLs finais
  */
 export const updateRequestAttachments = async (protocolId: string, type: 'invoice' | 'boleto' | 'transfer', url: string): Promise<boolean> => {
   const field = type === 'invoice' ? 'invoice_attachment_path' : type === 'boleto' ? 'boleto_attachment_path' : 'transfer_attachment_path';
@@ -143,36 +143,21 @@ export const updateRequestAttachments = async (protocolId: string, type: 'invoic
 };
 
 /**
- * Finaliza a solicitação.
+ * Finaliza a solicitação enviando os dados mapeados.
  */
 export const submitRequest = async (data: CSPFormData, requestId: string, authorizerId: string, paymentAccountId: string, isUrgent: boolean): Promise<boolean> => {
-  const url_anexo = data.hasInvoice === 'yes' && data.invoiceUrl ? data.invoiceUrl : 'Pendente via WhatsApp';
   const mappedPaymentMethod = data.paymentMethod.toLowerCase().replace('transferência', 'transferencia');
 
-  // Lógica de Resolução de Budget ID (Correção do Erro 23514)
   let finalBudgetId = null;
   if (data.isSpecificBudget === 'yes') {
     const budgetName = data.specificBudgetName;
-    if (!budgetName) {
-        console.error('[submitRequest] Falha: Nome da verba não fornecido.');
-        return false;
-    }
-
-    // Busca o ID via nome diretamente no Supabase para garantir o PATCH correto
-    const { data: budgetLookup, error: lookupError } = await supabase
+    const { data: budgetLookup } = await supabase
       .from('budgets')
       .select('id')
       .eq('name', budgetName)
       .maybeSingle();
-
-    if (lookupError || !budgetLookup) {
-      console.error(`[submitRequest] Falha ao resolver budget_id para: ${budgetName}`, lookupError);
-      // Retorna false para que o App.tsx dispare o toast de erro apropriado
-      return false;
-    }
     
-    finalBudgetId = budgetLookup.id;
-    console.log(`[submitRequest] Budget resolvido: ${budgetName} -> ${finalBudgetId}`);
+    if (budgetLookup) finalBudgetId = budgetLookup.id;
   }
 
   const dbPayload = {
@@ -195,7 +180,7 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
     transfer_favored_name: data.paymentMethod === 'Transferência' ? data.transferBeneficiaryName : null,
     transfer_attachment_path: data.paymentMethod === 'Transferência' ? data.transferUrl : null,
     status: 'pending' as RequestStatus,
-    invoice_attachment_path: url_anexo,
+    invoice_attachment_path: data.hasInvoice === 'yes' ? data.invoiceUrl : 'Pendente via WhatsApp',
     is_budget_specific: data.isSpecificBudget === 'yes',
     budget_id: finalBudgetId, 
     authorizer_id: authorizerId,
@@ -206,11 +191,6 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
   };
 
   const { error } = await supabase.from(TABLE_NAME).update(dbPayload).eq('protocol', requestId);
-  
-  if (error) {
-    console.error('[submitRequest] Erro no update final:', error);
-  }
-
   return !error;
 };
 
@@ -297,17 +277,6 @@ export const updateRequestStatus = async (id: string, status: RequestStatus, rea
   if (reason !== undefined) payload.rejection_reason = reason;
   if (status === 'paid') payload.paid_at = new Date().toISOString();
 
-  const { error, status: httpStatus } = await supabase.from(TABLE_NAME).update(payload).eq('protocol', id);
-
-  if (error) {
-    console.error('[updateRequestStatus] CRITICAL ERROR:');
-    console.error('- Protocolo:', id);
-    console.error('- Status HTTP:', httpStatus);
-    console.error('- Payload:', JSON.stringify(payload, null, 2));
-    console.error('- Message:', error.message);
-    console.error('- Details:', error.details);
-    console.error('- Code:', error.code);
-  }
-
+  const { error } = await supabase.from(TABLE_NAME).update(payload).eq('protocol', id);
   return !error;
 };
