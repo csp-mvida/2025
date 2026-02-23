@@ -423,11 +423,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                </div>
              </div>
              
-             <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-3 justify-center">
-               {renderRevertButton()}
-               <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="font-bold">Aprovar Pagamento</Button>
-               <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700 font-bold">Marcar como Pago</Button>
-               <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold">Rejeitar Pedido</Button>
+             {/* Footer com Layout de duas linhas otimizado */}
+             <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col gap-4">
+               {/* Linha 1: Ações Primárias */}
+               <div className="flex flex-wrap justify-center items-center gap-3">
+                 {renderRevertButton()}
+                 <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="font-bold">Aprovar Pagamento</Button>
+                 <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700 font-bold">Marcar como Pago</Button>
+               </div>
+               
+               {/* Linha 2: Ação Destrutiva Isolada */}
+               <div className="flex justify-center border-t border-slate-200/50 pt-4">
+                 <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold w-full md:w-auto md:min-w-[200px]">Rejeitar Pedido</Button>
+               </div>
              </div>
           </div>
         </div>
