@@ -55,6 +55,22 @@ export const fetchPaymentAccounts = async (): Promise<{ id: string; label: strin
   return data.map(a => ({ id: a.id, label: a.label }));
 };
 
+// Fetch Budgets from Supabase (Used for lookup if needed)
+export const fetchBudgets = async (): Promise<{ id: string; name: string }[]> => {
+  const { data, error } = await supabase
+    .from('budgets')
+    .select('id, name')
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching budgets:', error);
+    return [];
+  }
+
+  return data || [];
+};
+
 /**
  * Upload File to Supabase Storage
  */
@@ -133,6 +149,31 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
   const url_anexo = data.hasInvoice === 'yes' && data.invoiceUrl ? data.invoiceUrl : 'Pendente via WhatsApp';
   const mappedPaymentMethod = data.paymentMethod.toLowerCase().replace('transferência', 'transferencia');
 
+  // Lógica de Resolução de Budget ID (Correção do Erro 23514)
+  let finalBudgetId = null;
+  if (data.isSpecificBudget === 'yes') {
+    const budgetName = data.specificBudgetName;
+    if (!budgetName) {
+        console.error('[submitRequest] Falha: Nome da verba não fornecido.');
+        return false;
+    }
+
+    // Busca o ID via nome diretamente no Supabase para garantir o PATCH correto
+    const { data: budgetLookup, error: lookupError } = await supabase
+      .from('budgets')
+      .select('id')
+      .eq('name', budgetName)
+      .maybeSingle();
+
+    if (lookupError || !budgetLookup) {
+      console.error(`[submitRequest] Falha ao resolver budget_id para: ${budgetName}`, lookupError);
+      return false;
+    }
+    
+    finalBudgetId = budgetLookup.id;
+    console.log(`[submitRequest] Budget resolvido: ${budgetName} -> ${finalBudgetId}`);
+  }
+
   const dbPayload = {
     requester_name: data.requesterName,
     requester_whatsapp: data.whatsapp,
@@ -154,6 +195,7 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
     status: 'pending' as RequestStatus,
     invoice_attachment_path: url_anexo,
     is_budget_specific: data.isSpecificBudget === 'yes',
+    budget_id: finalBudgetId, // Campo corrigido
     authorizer_id: authorizerId,
     payment_account_id: paymentAccountId,
     agreed_terms: data.termsAccepted,
@@ -162,6 +204,11 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
   };
 
   const { error } = await supabase.from(TABLE_NAME).update(dbPayload).eq('protocol', requestId);
+  
+  if (error) {
+    console.error('[submitRequest] Erro no update final:', error);
+  }
+
   return !error;
 };
 
