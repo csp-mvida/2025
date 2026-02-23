@@ -301,8 +301,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                        <div className="flex items-center gap-2 mb-1">
                           <div className="font-mono text-sm font-black text-slate-900 leading-none">{req.id}</div>
                           {attachmentCount > 0 && (
-                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md" title={`${attachmentCount} anexo(s)`}>
-                               <FileText className="w-2.5 h-2.5" /> {attachmentCount}
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md" title={`${attachmentCount} anexo(s)`}>
+                               <FileText className="w-3 h-3" /> {attachmentCount}
                             </span>
                           )}
                        </div>
