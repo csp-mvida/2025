@@ -149,20 +149,24 @@ function App() {
 
   const handleChange = (field: keyof CSPFormData, value: any) => {
     setFormData(prev => {
-        const newState = { ...prev, [field]: value };
+        let processedValue = value;
+
+        // Limpeza de caracteres não numéricos para PIX
+        if (field === 'pixKey') {
+            if (prev.pixKeyType === 'cpf' || prev.pixKeyType === 'cnpj' || prev.pixKeyType === 'phone') {
+                processedValue = value.replace(/\D/g, '');
+            }
+        }
+
+        const newState = { ...prev, [field]: processedValue };
 
         // Task 5: Clear specific fields when payment method changes
         if (field === 'paymentMethod') {
-            // Clear PIX fields
             newState.pixKey = '';
             newState.pixKeyType = '';
-            
-            // Clear Boleto fields
             newState.boletoUrl = '';
             newState.boletoUrls = [];
             newState.boletoFilesMeta = [];
-            
-            // Clear Transfer fields
             newState.transferBankName = '';
             newState.transferAccountType = '';
             newState.transferAgency = '';
@@ -173,14 +177,20 @@ function App() {
             newState.transferUrls = [];
             newState.transferFilesMeta = [];
         }
+
+        // Limpar chave se mudar o tipo de chave PIX
+        if (field === 'pixKeyType') {
+            newState.pixKey = '';
+        }
         
-        // Apply formatting for specific fields
+        // Apply formatting for transfer CPF/CNPJ
         if (field === 'transferCpfCnpj') {
             newState.transferCpfCnpj = formatCpfCnpj(value);
         }
         
         return newState;
     });
+    
     if (errors[field]) setErrors(prev => {
       const next = { ...prev };
       delete next[field];
@@ -264,7 +274,7 @@ function App() {
     else if (isTransfer) setIsUploadingTransfer(true);
 
     try {
-      const newUrls: string[] = isInvoice ? [...(formData.invoiceUrls || [])] : isBoleto ? [...(formData.boletoUrls || [])] : [...(formData.transferUrls || [])];
+      const newUrls: string[] = isInvoice ? [...(formData.invoiceUrls || [])] : isBoleto ? [...(formData.boletoUrls || [])] : [...(formData.transferUrls || [] )];
       const newMeta: FileMeta[] = isInvoice ? [...(formData.invoiceFilesMeta || [])] : isBoleto ? [...(formData.boletoFilesMeta || [])] : [...(formData.transferFilesMeta || [])];
 
       for (let i = 0; i < files.length; i++) {
@@ -344,6 +354,10 @@ function App() {
           toast.error("Selecione o tipo de chave PIX.");
         }
         if (!formData.pixKey) errs.pixKey = "Chave PIX é obrigatória";
+        
+        if (formData.pixKeyType === 'email' && formData.pixKey && (!formData.pixKey.includes('@') || !formData.pixKey.includes('.'))) {
+          errs.pixKey = "E-mail inválido";
+        }
       }
       
       if (formData.paymentMethod === 'Boleto' && (!formData.boletoUrls || formData.boletoUrls.length === 0)) errs.boletoFile = "Anexo do boleto necessário";
@@ -466,6 +480,13 @@ function App() {
         return next;
       });
     }
+  };
+
+  const getPixKeyDisplayValue = () => {
+    if (!formData.pixKey) return '';
+    if (formData.pixKeyType === 'cpf' || formData.pixKeyType === 'cnpj') return formatCpfCnpj(formData.pixKey);
+    if (formData.pixKeyType === 'phone') return formatPhone(formData.pixKey);
+    return formData.pixKey;
   };
 
   const renderStep1 = () => (
@@ -635,31 +656,44 @@ function App() {
           <option value="Transferência">Transferência</option>
         </Select>
       </div>
+
       {formData.paymentMethod === 'PIX' && (
-        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300 space-y-4">
-          <Select 
-            label="Tipo de chave PIX" 
-            value={formData.pixKeyType} 
-            onChange={e => handleChange('pixKeyType', e.target.value)} 
-            required 
-            error={errors.pixKeyType}
-          >
-            <option value="">Selecione o tipo...</option>
-            <option value="cpf">CPF</option>
-            <option value="cnpj">CNPJ</option>
-            <option value="email">E-mail</option>
-            <option value="phone">Telefone</option>
-            <option value="random">Aleatória</option>
-          </Select>
+        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300 space-y-5">
+          <div className="space-y-3">
+            <label className="block text-sm md:text-base font-medium text-slate-700 mb-1.5 text-center md:text-left leading-tight">Tipo de chave PIX <span className="text-accent">*</span></label>
+            <div className="flex flex-wrap justify-center md:justify-start gap-2">
+              {[
+                { id: 'cpf', label: 'CPF' },
+                { id: 'cnpj', label: 'CNPJ' },
+                { id: 'email', label: 'E-mail' },
+                { id: 'phone', label: 'Telefone' },
+                { id: 'random', label: 'Aleatória' }
+              ].map(type => (
+                <button
+                  key={type.id}
+                  onClick={() => handleChange('pixKeyType', type.id)}
+                  className={`px-4 py-2.5 rounded-xl text-xs md:text-sm font-black uppercase tracking-widest border transition-all ${
+                    formData.pixKeyType === type.id 
+                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105' 
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-primary/50'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+            {errors.pixKeyType && <p className="text-xs text-danger text-center md:text-left">{errors.pixKeyType}</p>}
+          </div>
           
           <Input 
             label="Chave PIX" 
-            value={formData.pixKey} 
+            value={getPixKeyDisplayValue()} 
             onChange={e => handleChange('pixKey', e.target.value)} 
             required 
             error={errors.pixKey} 
-            placeholder={!formData.pixKeyType ? "Selecione o tipo de chave primeiro" : "Digite a chave PIX aqui"}
+            placeholder={!formData.pixKeyType ? "Selecione o tipo primeiro" : `Digite sua chave ${formData.pixKeyType?.toUpperCase()} aqui`}
             disabled={!formData.pixKeyType}
+            className="font-mono"
           />
         </div>
       )}
@@ -782,7 +816,7 @@ function App() {
       // Detalhes de Pagamento
       ...(formData.paymentMethod === 'PIX' ? [
         { label: 'Tipo Chave PIX', value: formData.pixKeyType?.toUpperCase() || 'N/A' },
-        { label: 'Chave PIX', value: formData.pixKey || 'N/A' }
+        { label: 'Chave PIX', value: getPixKeyDisplayValue() || 'N/A' }
       ] : []),
       
       ...(formData.paymentMethod === 'Transferência' ? [
