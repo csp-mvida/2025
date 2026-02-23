@@ -17,19 +17,19 @@ interface RequestTrackerProps {
 const STATUS_MAP: Record<RequestStatus, { label: string; color: string; icon: React.ReactNode; desc: string }> = {
   pending: { 
     label: 'Em análise', 
-    color: 'bg-accent/10 text-accent border-accent/20', 
+    color: 'bg-amber-100 text-amber-700 border-amber-200', 
     icon: <Clock className="w-5 h-5" />,
     desc: 'Sua solicitação foi recebida e está aguardando análise do setor financeiro.'
   },
   approved: { 
     label: 'Aprovado para pagamento', 
-    color: 'bg-primary/10 text-primary border-primary/20', 
+    color: 'bg-blue-100 text-blue-700 border-blue-200', 
     icon: <CheckCircle className="w-5 h-5" />,
     desc: 'Tudo certo! Sua solicitação foi aprovada e entrará na fila de pagamentos.'
   },
   paid: { 
     label: 'Pago', 
-    color: 'bg-emerald-600/10 text-emerald-600 border-emerald-600/20', 
+    color: 'bg-primary/10 text-primary border-primary/20', 
     icon: <CheckCircle className="w-5 h-5" />,
     desc: 'Pagamento realizado com sucesso.'
   },
@@ -41,7 +41,7 @@ const STATUS_MAP: Record<RequestStatus, { label: string; color: string; icon: Re
   },
   draft: {
     label: 'Rascunho',
-    color: 'bg-slate-200/50 text-slate-600 border-slate-300/50',
+    color: 'bg-slate-200 text-slate-600 border-slate-300',
     icon: <FileText className="w-5 h-5" />,
     desc: 'Esta solicitação ainda está em rascunho e não foi enviada para análise.'
   }
