@@ -22,7 +22,7 @@ interface AdminDashboardProps {
 }
 
 const STATUS_CONFIG: Record<RequestStatus, { label: string; color: string; icon: React.ReactNode }> = {
-  pending: { label: 'Em análise', color: 'bg-accent/10 text-accent border-accent/20', icon: <Clock className="w-3 h-3" /> },
+  pending: { label: 'Recebidos', color: 'bg-accent/10 text-accent border-accent/20', icon: <Clock className="w-3 h-3" /> },
   approved: { label: 'A pagar', color: 'bg-primary/10 text-primary border-primary/20', icon: <CheckCircle className="w-3 h-3" /> },
   paid: { label: 'Pago', color: 'bg-primaryDark/10 text-primaryDark border-primaryDark/20', icon: <CheckCircle className="w-3 h-3" /> },
   rejected: { label: 'Rejeitado', color: 'bg-danger/10 text-danger border-danger/20', icon: <X className="w-3 h-3" /> },
@@ -239,10 +239,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     let targetStatus: RequestStatus | null = null;
     
     if (selectedRequest.status === 'approved' || selectedRequest.status === 'rejected') {
-      label = "Voltar para Pendente";
+      label = "Voltar para Recebidos";
       targetStatus = 'pending';
     } else if (selectedRequest.status === 'paid') {
-      label = "Voltar para A Pagar";
+      label = "Voltar para A pagar";
       targetStatus = 'approved';
     }
     
@@ -304,7 +304,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                   onClick={() => setStatusFilter(status as any)} 
                   className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'}`}
                >
-                 {status === 'all' ? 'Recebidos' : status === 'approved' ? 'A Pagar' : STATUS_CONFIG[status as RequestStatus].label}
+                 {status === 'all' ? 'Recebidos' : status === 'approved' ? 'A pagar' : STATUS_CONFIG[status as RequestStatus].label}
                </button>
              ))}
              <button onClick={loadData} className="p-2.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary transition-all"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
