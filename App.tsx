@@ -25,7 +25,7 @@ import {
 from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
-import { BackgroundAnimation } from './BackgroundAnimation';
+import { BackgroundAnimation } from './components/BackgroundAnimation';
 import { RequestTracker } from './components/RequestTracker';
 
 function App() {
