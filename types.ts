@@ -29,6 +29,7 @@ export interface CSPFormData {
   paymentMethod: 'PIX' | 'Boleto' | 'Transferência' | '';
   
   // PIX fields
+  pixKeyType?: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random' | '';
   pixKey?: string;
   
   // Boleto fields
@@ -84,6 +85,8 @@ export const INITIAL_DATA: CSPFormData = {
   supplierName: '',
   value: '',
   paymentMethod: '',
+  pixKeyType: '',
+  pixKey: '',
   hasInvoice: 'yes',
   invoiceSentViaWhatsapp: false,
   description: '',

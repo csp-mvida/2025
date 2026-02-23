@@ -25,7 +25,7 @@ import {
 from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
-import { BackgroundAnimation } from './components/BackgroundAnimation';
+import { BackgroundAnimation } from './BackgroundAnimation';
 import { RequestTracker } from './components/RequestTracker';
 
 function App() {
@@ -155,6 +155,7 @@ function App() {
         if (field === 'paymentMethod') {
             // Clear PIX fields
             newState.pixKey = '';
+            newState.pixKeyType = '';
             
             // Clear Boleto fields
             newState.boletoUrl = '';
@@ -336,6 +337,14 @@ function App() {
       if (!formData.supplierName) errs.supplierName = "Fornecedor é obrigatório";
       if (!formData.value || parseInt(formData.value) === 0) errs.value = "Valor é obrigatório";
       if (!formData.paymentMethod) errs.paymentMethod = "Forma é obrigatória";
+      
+      if (formData.paymentMethod === 'PIX') {
+        if (!formData.pixKeyType) {
+          errs.pixKeyType = "Selecione o tipo de chave PIX";
+          toast.error("Selecione o tipo de chave PIX.");
+        }
+        if (!formData.pixKey) errs.pixKey = "Chave PIX é obrigatória";
+      }
       
       if (formData.paymentMethod === 'Boleto' && (!formData.boletoUrls || formData.boletoUrls.length === 0)) errs.boletoFile = "Anexo do boleto necessário";
       
@@ -627,8 +636,31 @@ function App() {
         </Select>
       </div>
       {formData.paymentMethod === 'PIX' && (
-        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300">
-          <Input label="Chave PIX" value={formData.pixKey} onChange={e => handleChange('pixKey', e.target.value)} required error={errors.pixKey} placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória" />
+        <div className="md:col-span-2 animate-in slide-in-from-top-4 duration-300 space-y-4">
+          <Select 
+            label="Tipo de chave PIX" 
+            value={formData.pixKeyType} 
+            onChange={e => handleChange('pixKeyType', e.target.value)} 
+            required 
+            error={errors.pixKeyType}
+          >
+            <option value="">Selecione o tipo...</option>
+            <option value="cpf">CPF</option>
+            <option value="cnpj">CNPJ</option>
+            <option value="email">E-mail</option>
+            <option value="phone">Telefone</option>
+            <option value="random">Aleatória</option>
+          </Select>
+          
+          <Input 
+            label="Chave PIX" 
+            value={formData.pixKey} 
+            onChange={e => handleChange('pixKey', e.target.value)} 
+            required 
+            error={errors.pixKey} 
+            placeholder={!formData.pixKeyType ? "Selecione o tipo de chave primeiro" : "Digite a chave PIX aqui"}
+            disabled={!formData.pixKeyType}
+          />
         </div>
       )}
       {formData.paymentMethod === 'Boleto' && renderBoletoFields()}
@@ -749,6 +781,7 @@ function App() {
       
       // Detalhes de Pagamento
       ...(formData.paymentMethod === 'PIX' ? [
+        { label: 'Tipo Chave PIX', value: formData.pixKeyType?.toUpperCase() || 'N/A' },
         { label: 'Chave PIX', value: formData.pixKey || 'N/A' }
       ] : []),
       
