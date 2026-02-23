@@ -10,6 +10,13 @@ import {
 } from './ui/Icons';
 import { BackgroundAnimation } from './BackgroundAnimation';
 
+// Ícone de Clipe definido localmente para cumprir a regra de não editar outros arquivos
+const Paperclip = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.51a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+  </svg>
+);
+
 interface AdminDashboardProps {
   onBack: () => void;
 }
@@ -298,11 +305,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                         </div>
                      </td>
                      <td className="px-6 py-4">
-                       <div className="flex items-center gap-2 mb-1">
+                       <div className="flex items-center gap-3 mb-1">
                           <div className="font-mono text-sm font-black text-slate-900 leading-none">{req.id}</div>
                           {attachmentCount > 0 && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md" title={`${attachmentCount} anexo(s)`}>
-                               <FileText className="w-3 h-3" /> {attachmentCount}
+                            <span className="inline-flex items-center gap-1 text-base font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md" title={`${attachmentCount} anexo(s)`}>
+                               <Paperclip className="w-3.5 h-3.5" /> {attachmentCount}
                             </span>
                           )}
                        </div>
