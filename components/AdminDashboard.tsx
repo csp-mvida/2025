@@ -107,6 +107,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     return false;
   };
 
+  // Helper para contar anexos reais
+  const getAttachmentCount = (req: CSPRequest) => {
+    const countField = (field: string | undefined) => {
+      if (!field || field === 'Pendente via WhatsApp' || field === '[]' || field === '""') return 0;
+      try {
+        const parsed = JSON.parse(field);
+        if (Array.isArray(parsed)) return parsed.filter(u => u && u.trim() !== "").length;
+        return 1;
+      } catch (e) {
+        return 1;
+      }
+    };
+
+    return countField(req.invoiceUrl) + countField(req.boletoUrl) + countField(req.transferUrl);
+  };
+
   const filteredRequests = requests.filter(req => {
     const term = searchTerm.toLowerCase();
     const matchesMonth = monthFilter === 'all' || (req.dueDate && req.dueDate.startsWith(monthFilter));
@@ -265,7 +281,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                  </tr>
                </thead>
                <tbody className="divide-y divide-slate-100">
-                 {sortedRequests.length > 0 ? sortedRequests.map(req => (
+                 {sortedRequests.length > 0 ? sortedRequests.map(req => {
+                   const attachmentCount = getAttachmentCount(req);
+                   return (
                    <tr key={req.id} className="hover:bg-primary/5 transition-colors group">
                      <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -280,7 +298,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                         </div>
                      </td>
                      <td className="px-6 py-4">
-                       <div className="font-mono text-sm font-black text-slate-900 leading-none mb-1">{req.id}</div>
+                       <div className="flex items-center gap-2 mb-1">
+                          <div className="font-mono text-sm font-black text-slate-900 leading-none">{req.id}</div>
+                          {attachmentCount > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md" title={`${attachmentCount} anexo(s)`}>
+                               <FileText className="w-2.5 h-2.5" /> {attachmentCount}
+                            </span>
+                          )}
+                       </div>
                        <div className="text-xs text-slate-500">Vence: {req.dueDate ? new Date(req.dueDate).toLocaleDateString('pt-BR') : '—'}</div>
                      </td>
                      <td className="px-6 py-4 font-medium text-slate-900">{req.requesterName}</td>
@@ -289,7 +314,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                        <button onClick={() => openDetails(req)} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"><Eye className="w-5 h-5" /></button>
                      </td>
                    </tr>
-                 )) : <tr><td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada.</td></tr>}
+                 )}) : <tr><td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação encontrada.</td></tr>}
                </tbody>
              </table>
            </div>
