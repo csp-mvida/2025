@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Search, ChevronLeft, Clock, CheckCircle, X, AlertTriangle, FileText, Download, RefreshCw } from './ui/Icons';
+import { Search, ChevronLeft, Clock, CheckCircle, X, AlertTriangle, FileText, RefreshCw } from './ui/Icons';
 import { getRequestByProtocol } from '../services/api';
 import { CSPRequest, RequestStatus, Department } from '../types';
 import { formatCurrency } from '../utils/formatters';
@@ -22,7 +22,7 @@ const STATUS_MAP: Record<RequestStatus, { label: string; color: string; icon: Re
     desc: 'Sua solicitação foi recebida e está aguardando análise do setor financeiro.'
   },
   approved: { 
-    label: 'Aprovado', 
+    label: 'Aprovado para pagamento', 
     color: 'bg-primary/10 text-primary border-primary/20', 
     icon: <CheckCircle className="w-5 h-5" />,
     desc: 'Tudo certo! Sua solicitação foi aprovada e entrará na fila de pagamentos.'
@@ -81,7 +81,6 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
   }, [initialProtocol]);
 
   const getDepartmentName = (id: string) => departments.find(d => d.id === id)?.name || 'N/A';
-  const getPaymentAccountLabel = (id: string) => paymentAccounts.find(p => p.id === id)?.label || 'N/A';
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -112,7 +111,7 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
           <div className={`p-8 text-center border-b ${STATUS_MAP[request.status].color}`}>
             <div className="inline-flex p-3 rounded-full bg-white/50 mb-4">{STATUS_MAP[request.status].icon}</div>
-            <h2 className="text-2xl font-black uppercase tracking-widest">{STATUS_MAP[request.status].label}</h2>
+            <h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{STATUS_MAP[request.status].label}</h2>
             <p className="text-sm font-medium mt-1">{STATUS_MAP[request.status].desc}</p>
             
             {/* Informação de Pagamento */}
