@@ -39,6 +39,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [selectedRequest, setSelectedRequest] = useState<CSPRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   
+  // State para feedback de cópia
+  const [copiedProtocol, setCopiedProtocol] = useState(false);
+  
   // State para o Preview de Arquivo
   const [previewData, setPreviewData] = useState<{ url: string, title: string } | null>(null);
 
@@ -89,7 +92,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           paidAt: newStatus === 'paid' ? new Date().toISOString() : r.paidAt 
         } as any : r));
         
-        toast.success(newStatus === 'rejected' ? 'Solicitação rejeitada' : `Status atualizado`);
+        toast.success(`Status atualizado para ${STATUS_CONFIG[newStatus].label}`);
         setSelectedRequest(null);
       } else {
         toast.error('Erro ao atualizar status.');
@@ -108,7 +111,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       
-      // Tenta extrair extensão da URL ou do blob type
       const extension = url.split('.').pop()?.split('?')[0] || (blob.type.includes('pdf') ? 'pdf' : 'jpg');
       const filename = `${protocol}-${label.replace(/\s+/g, '-')}.${extension}`;
       
@@ -124,7 +126,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Erro ao baixar arquivo.', { id: toastId });
-      // Fallback: abrir em nova aba se o fetch falhar (ex: CORS)
       window.open(url, '_blank');
     }
   };
@@ -228,6 +229,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                 ))}
             </div>
         </div>
+    );
+  };
+
+  const renderRevertButton = () => {
+    if (!selectedRequest) return null;
+    
+    let label = "";
+    let targetStatus: RequestStatus | null = null;
+    
+    if (selectedRequest.status === 'approved' || selectedRequest.status === 'rejected') {
+      label = "Voltar para Pendente";
+      targetStatus = 'pending';
+    } else if (selectedRequest.status === 'paid') {
+      label = "Voltar para A Pagar";
+      targetStatus = 'approved';
+    }
+    
+    if (!targetStatus) return null;
+    
+    return (
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={() => handleStatusUpdate(selectedRequest.id, targetStatus!)} 
+        disabled={isUpdating} 
+        className="text-slate-400 font-bold hover:text-slate-600 border border-slate-200"
+      >
+        <RefreshCw className="w-4 h-4 mr-2" /> {label}
+      </Button>
     );
   };
 
@@ -338,7 +368,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                <h2 className="text-xl font-black text-slate-900 flex items-center gap-3 tracking-tighter">
                  {selectedRequest.id} 
-                 <button onClick={() => { navigator.clipboard.writeText(selectedRequest.id); toast.success('Copiado!'); }} className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-white shadow-sm border border-transparent hover:border-slate-100"><Copy className="w-4 h-4" /></button>
+                 <button 
+                  onClick={() => { 
+                    navigator.clipboard.writeText(selectedRequest.id); 
+                    setCopiedProtocol(true);
+                    setTimeout(() => setCopiedProtocol(false), 2000);
+                    toast.success('Protocolo copiado!'); 
+                  }} 
+                  className="p-1.5 text-slate-400 hover:text-primary transition-colors rounded-lg hover:bg-white shadow-sm border border-transparent hover:border-slate-100"
+                >
+                  {copiedProtocol ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                </button>
                </h2>
                <button onClick={() => setSelectedRequest(null)} className="text-slate-400 hover:text-danger p-2 rounded-full hover:bg-red-50 transition-colors"><X className="w-6 h-6" /></button>
              </div>
@@ -384,6 +424,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              </div>
              
              <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-wrap gap-3 justify-center">
+               {renderRevertButton()}
                <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="font-bold">Aprovar Pagamento</Button>
                <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700 font-bold">Marcar como Pago</Button>
                <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold">Rejeitar Pedido</Button>
