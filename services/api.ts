@@ -1,8 +1,32 @@
+transfer).">
 import { supabase } from '../src/integrations/supabase/client';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
 const STORAGE_BUCKET = 'uploads'; 
 const TABLE_NAME = 'payment_requests';
+
+// Mapeamento centralizado de formas de pagamento para o banco de dados
+const PAYMENT_METHOD_MAP = {
+  toDb: (uiMethod: string): string => {
+    const map: Record<string, string> = {
+      'PIX': 'pix',
+      'Boleto': 'boleto',
+      'Transferência': 'transfer',
+      'Dinheiro': 'cash'
+    };
+    return map[uiMethod] || uiMethod.toLowerCase();
+  },
+  fromDb: (dbMethod: string): string => {
+    const map: Record<string, string> = {
+      'pix': 'PIX',
+      'boleto': 'Boleto',
+      'transfer': 'Transferência',
+      'transferencia': 'Transferência', // Legado
+      'cash': 'Dinheiro'
+    };
+    return map[dbMethod] || dbMethod;
+  }
+};
 
 // Fetch Departments from Supabase
 export const fetchDepartments = async (): Promise<Department[]> => {
@@ -52,7 +76,6 @@ export const fetchPaymentAccounts = async (): Promise<{ id: string; label: strin
     return [];
   }
 
-  // CORREÇÃO: Usar a.id (UUID) em vez de a.label
   return data.map(a => ({ id: a.id, label: a.label }));
 };
 
@@ -139,7 +162,8 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
  * Finaliza a solicitação enviando os dados mapeados.
  */
 export const submitRequest = async (data: CSPFormData, requestId: string, authorizerId: string, paymentAccountId: string, isUrgent: boolean): Promise<boolean> => {
-  const mappedPaymentMethod = data.paymentMethod.toLowerCase().replace('transferência', 'transferencia');
+  // Aplica o mapeamento correto para o banco de dados
+  const mappedPaymentMethod = PAYMENT_METHOD_MAP.toDb(data.paymentMethod);
 
   let finalBudgetId = null;
   if (data.isSpecificBudget === 'yes') {
@@ -202,7 +226,8 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     isSpecificBudget: data.is_budget_specific ? 'yes' : 'no',
     supplierName: data.vendor_name,
     value: data.amount_cents?.toString() || '0',
-    paymentMethod: data.payment_method || '',
+    // Mapeia de volta para a UI
+    paymentMethod: PAYMENT_METHOD_MAP.fromDb(data.payment_method || ''),
     pixKeyType: data.pix_key_type || '',
     pixKey: data.pix_key || '',
     hasInvoice: data.invoice_attachment_path ? 'yes' : 'no',
@@ -242,7 +267,8 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     isSpecificBudget: req.is_budget_specific ? 'yes' : 'no',
     supplierName: req.vendor_name,
     value: req.amount_cents?.toString() || '0',
-    paymentMethod: req.payment_method || '',
+    // Mapeia de volta para a UI
+    paymentMethod: PAYMENT_METHOD_MAP.fromDb(req.payment_method || ''),
     pixKeyType: req.pix_key_type || '',
     pixKey: req.pix_key || '',
     hasInvoice: req.invoice_attachment_path && req.invoice_attachment_path !== 'Pendente via WhatsApp' ? 'yes' : 'no',
