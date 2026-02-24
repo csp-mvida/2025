@@ -376,7 +376,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
               <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
               <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
               
-              <div className="flex items-center gap-3 overflow-x-auto overflow-y-hidden pb-1 scrollbar-hide snap-x snap-mandatory px-4 md:px-0 w-full">
+              <div className="flex items-center gap-3 overflow-x-auto overflow-y-hidden pb-1 scrollbar-hide snap-x snap-mandatory px-4 md:px-0 w-full flex-nowrap">
                  {['all', 'approved', 'paid', 'rejected'].map((status) => (
                    <button 
                       key={status} 
