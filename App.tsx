@@ -561,30 +561,47 @@ function App() {
   );
 
   if (view === 'welcome') return (
-    <div className="min-h-screen relative flex flex-col bg-slate-50 overflow-x-hidden">
+    <div className="h-[100svh] relative flex flex-col bg-slate-50 overflow-hidden">
       <Toaster position="top-right" />
       <BackgroundAnimation />
       <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
-      <header className="relative z-30">
-        <div className="bg-primary py-2 px-6 flex items-center shadow-lg h-14">
-          <div className="flex items-center w-full justify-between">
-            <div className="w-40" />
-            <button onClick={() => setView('login')} className="flex items-center gap-2 text-emerald-400 font-black text-xs uppercase tracking-[0.2em] hover:text-white">
-              <Lock className="w-4 h-4" /> Administração
+      
+      {/* Topo: Menu Compacto */}
+      <header className="relative z-30 shrink-0">
+        <div className="bg-primary py-2 px-4 md:px-6 flex items-center shadow-lg h-12 md:h-14">
+          <div className="flex items-center w-full justify-between gap-2">
+            <div className="hidden md:block w-40" />
+            <button onClick={() => setView('login')} className="flex items-center gap-1.5 text-emerald-300 font-black text-[9px] md:text-xs uppercase tracking-[0.1em] md:tracking-[0.2em] hover:text-white transition-colors">
+              <Lock className="w-3.5 h-3.5 md:w-4 h-4" /> Administração
             </button>
-            <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.2em] w-40 justify-end">
-              <Info className="w-4 h-4" /> Regras e Prazos
+            <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-1.5 text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] md:w-40 justify-end hover:text-emerald-100 transition-colors">
+              <Info className="w-3.5 h-3.5 md:w-4 h-4" /> Regras e Prazos
             </button>
           </div>
         </div>
       </header>
-      <div className="max-w-6xl mx-auto flex-1 flex flex-col items-center justify-center p-8 relative z-10 text-center">
-        <img src="/logo.png" alt="Logo" className="h-24 mb-12 drop-shadow-2xl animate-fade-up" />
-        <h1 className="text-7xl font-bold text-slate-900 tracking-tighter mb-6 animate-fade-up">Sua plataforma de <span className="text-primary italic font-black">pagamentos.</span></h1>
-        <p className="text-xl text-slate-500 font-medium mb-14 animate-fade-up">Envie suas solicitações de forma guiada e segura.</p>
-        <div className="flex flex-col gap-4 w-full max-w-sm animate-fade-up px-4">
-          <Button size="lg" onClick={() => setView('form')}>Criar Solicitação</Button>
-          <Button variant="outline" size="lg" onClick={() => setView('track')}>Acompanhar Solicitação</Button>
+
+      {/* Centro: Logo + Título */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10 text-center">
+        <img src="/logo.png" alt="Logo" className="h-14 sm:h-16 md:h-24 mb-6 md:mb-12 drop-shadow-2xl animate-fade-up shrink-0" />
+        
+        <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold text-slate-900 tracking-tighter mb-3 md:mb-6 animate-fade-up leading-[1.1] md:leading-tight">
+          Sua plataforma de <br className="md:hidden" />
+          <span className="text-primary italic font-black">pagamentos.</span>
+        </h1>
+        
+        <p className="text-sm sm:text-base md:text-xl text-slate-500 font-medium mb-8 md:mb-14 animate-fade-up max-w-[260px] sm:max-w-xs md:max-w-none">
+          Envie suas solicitações de forma guiada e segura.
+        </p>
+        
+        {/* Rodapé: Botões */}
+        <div className="flex flex-col gap-3 w-full max-w-[280px] md:max-w-sm animate-fade-up shrink-0">
+          <Button size="lg" className="h-12 md:h-auto text-base md:text-lg py-0" onClick={() => setView('form')}>
+            Criar Solicitação
+          </Button>
+          <Button variant="outline" size="lg" className="h-12 md:h-auto text-base md:text-lg py-0" onClick={() => setView('track')}>
+            Acompanhar Solicitação
+          </Button>
         </div>
       </div>
     </div>
