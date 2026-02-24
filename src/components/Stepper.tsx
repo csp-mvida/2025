@@ -110,7 +110,7 @@ const Stepper = ({ currentStep, setCurrentStep, draft, setDraft }) => {
               <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Enviado ✅</span>
             ) : (
               <div className="flex flex-col">
-                <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">Selecionado (ainda não enviado)</span>
+                <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">Selecionado (ainda não enviado).</span>
                 <span className="text-[9px] text-gray-400">Clique em 'Enviar anexo' para concluir o envio.</span>
               </div>
             )}
