@@ -52,7 +52,8 @@ export const fetchPaymentAccounts = async (): Promise<{ id: string; label: strin
     return [];
   }
 
-  return data.map(a => ({ id: a.label, label: a.label }));
+  // CORREÇÃO: Usar a.id (UUID) em vez de a.label
+  return data.map(a => ({ id: a.id, label: a.label }));
 };
 
 // Fetch Budgets from Supabase
