@@ -320,7 +320,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Gestão Financeira</h1>
           </div>
           <div className="order-1 md:order-2 flex justify-center z-10">
-             <img src="/admin-logo.png" alt="Logo" className="h-20 md:h-24 w-auto object-contain" />
+             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white/20 shadow-xl bg-white">
+                <img src="/admin-logo.png" alt="Logo" className="w-full h-full object-contain" />
+             </div>
           </div>
           <div className="order-3 md:order-3 flex justify-center md:justify-end">
             <Button variant="ghost" className="text-white border border-white/20 hover:bg-white hover:text-primary transition-colors py-2 px-4" onClick={onBack}>Sair do Admin</Button>
