@@ -330,6 +330,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     <div className="min-h-screen bg-slate-50 text-slate-800 pb-20 relative overflow-x-hidden">
       <BackgroundAnimation />
       
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
       {/* Header Admin */}
       <div className="bg-primaryDark text-white pt-10 pb-16 px-4 md:px-8 shadow-lg relative z-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6 md:gap-4">
@@ -359,37 +364,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <input type="text" placeholder="Buscar por nome ou protocolo..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm focus:outline-none shadow-sm transition-all" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
-            <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="px-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-sm font-bold text-slate-600 outline-none">
+            <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="w-full md:w-auto px-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm text-sm font-bold text-slate-600 outline-none">
                 <option value="all">MÊS (VENCIMENTO)</option>
                 {monthOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
           
-          {/* Mobile Tab Optimization: Horizontal Scroll with Indicators */}
-          <div className="relative">
-              {/* Left Gradient Indicator */}
-              <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10 md:hidden opacity-0 group-hover:opacity-100"></div>
+          {/* Abas com Scroll Otimizado */}
+          <div className="relative w-full md:w-auto">
+              <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
+              <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
               
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory md:snap-none md:overflow-visible group">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory px-4 md:px-0">
                  {['all', 'approved', 'paid', 'rejected'].map((status) => (
                    <button 
                       key={status} 
                       onClick={() => setStatusFilter(status as any)} 
-                      className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all whitespace-nowrap snap-start ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'}`}
+                      className={`min-h-[40px] px-5 py-2 rounded-xl text-xs font-bold border transition-all whitespace-nowrap snap-start ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'}`}
                    >
                      {status === 'all' ? 'Recebidos' : status === 'approved' ? 'A pagar' : STATUS_CONFIG[status as RequestStatus].label}
                    </button>
                  ))}
-                 <button onClick={loadData} className="p-2.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary transition-all shrink-0"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
+                 <button onClick={loadData} className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-primary transition-all shrink-0"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
               </div>
-              
-              {/* Right Gradient Indicator */}
-              <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
           </div>
         </div>
 
-        {/* Tabela de Solicitações */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Desktop: Tabela de Solicitações */}
+        <div className="hidden md:block bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
            <div className="overflow-x-auto">
              <table className="w-full text-left border-collapse">
                <thead>
@@ -436,6 +438,54 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                </tbody>
              </table>
            </div>
+        </div>
+
+        {/* Mobile: Lista de Cards */}
+        <div className="md:hidden space-y-4">
+          {sortedRequests.length > 0 ? sortedRequests.map(req => {
+            const count = getAttachmentCount(req);
+            return (
+              <div key={req.id} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${STATUS_CONFIG[req.status].color}`}>
+                      {STATUS_CONFIG[req.status].icon} {STATUS_CONFIG[req.status].label}
+                    </span>
+                    {isIssue(req) && <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                    {req.closedAt && <span className="w-2 h-2 rounded-full bg-slate-400"></span>}
+                  </div>
+                  <button onClick={() => { setSelectedRequest(req); setRejectionReason(''); }} className="p-2 text-primary bg-primary/5 rounded-lg active:scale-95 transition-all"><Eye className="w-5 h-5" /></button>
+                </div>
+                
+                <div className="flex justify-between items-start gap-2">
+                  <div className="overflow-hidden">
+                    <div className="font-mono text-sm font-black text-slate-900 truncate">{req.id}</div>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Vencimento: {new Date(req.dueDate).toLocaleDateString('pt-BR')}</div>
+                  </div>
+                  {count > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-slate-700 bg-slate-100 px-2 py-1 rounded-md shrink-0">
+                      <Paperclip className="w-3 h-3" /> {count}
+                    </span>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-slate-50 flex justify-between items-end">
+                  <div>
+                    <span className="block text-[9px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Solicitante</span>
+                    <span className="font-bold text-slate-900 text-sm leading-tight block">{req.requesterName}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-[9px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Valor</span>
+                    <span className="font-black text-slate-900 text-lg leading-tight block">{formatCurrency(req.value)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          }) : (
+            <div className="py-12 text-center text-slate-400 font-medium bg-white rounded-2xl border border-dashed border-slate-200">
+              Nenhuma solicitação encontrada.
+            </div>
+          )}
         </div>
       </div>
 
