@@ -73,6 +73,7 @@ export const fetchBudgets = async (): Promise<{ id: string; name: string }[]> =>
 
 /**
  * Upload File to Supabase Storage
+ * Padrão: <categoria>/<YYYY-MM>/<protocol>/<filename>
  */
 export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto' | 'transfer' | 'receipt', protocolId: string): Promise<string> => {
   const fileExt = file.name.split('.').pop() || 'bin';
@@ -83,7 +84,13 @@ export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto' | 'tr
   else if (type === 'receipt') subfolder = 'comprovantes_pagamento';
   else subfolder = 'transferencias';
   
-  const safeFileName = `${subfolder}/${protocolId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+  // Cálculo do mês atual (Brasil)
+  const now = new Date();
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  
+  // Nome do arquivo seguro (Timestamp + Random)
+  const randomStr = Math.random().toString(36).substring(2, 9);
+  const safeFileName = `${subfolder}/${yearMonth}/${protocolId}/${Date.now()}_${randomStr}.${fileExt}`;
 
   const { error } = await supabase.storage
     .from(STORAGE_BUCKET)

@@ -1,17 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseKey = 'your-supabase-key';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const uploadFilesToSupabase = async ({ invoiceFiles, boletoFiles, transferFiles, draftId }) => {
   const invoicePaths: string[] = [];
   const boletoPaths: string[] = [];
   const transferPaths: string[] = [];
 
+  const now = new Date();
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
   const uploadFile = async (file: File, folder: string) => {
-    const { data, error } = await supabase.storage.from('uploads').upload(`${folder}/${uuidv4()}-${file.name}`, file);
+    // Sanitização básica do nome do arquivo original
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+    const path = `${folder}/${yearMonth}/${draftId}/${uuidv4()}-${sanitizedName}`;
+    
+    const { data, error } = await supabase.storage.from('uploads').upload(path, file);
     if (error) {
       throw new Error(error.message);
     }
@@ -33,12 +36,12 @@ export const uploadFilesToSupabase = async ({ invoiceFiles, boletoFiles, transfe
     transferPaths.push(path);
   }
 
-  // Save paths to the database
+  // Save paths to the database (Assuming draftId is the protocol)
   const { error } = await supabase.from('payment_requests').update({
     invoice_attachment_path: JSON.stringify(invoicePaths),
     boleto_attachment_path: JSON.stringify(boletoPaths),
     transfer_attachment_path: JSON.stringify(transferPaths),
-  }).eq('id', draftId);
+  }).eq('protocol', draftId);
 
   if (error) {
     throw new Error(error.message);
