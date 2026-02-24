@@ -508,10 +508,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                  </div>
                )}
 
-               <div className="space-y-3">
-                 <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Observações da Rejeição</label>
-                 <textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Descreva o motivo caso vá rejeitar esta solicitação..." rows={3} className="w-full px-5 py-4 rounded-2xl border border-slate-200 text-sm focus:ring-4 focus:ring-primary/5 outline-none transition-all bg-white" />
-               </div>
+               {selectedRequest.status !== 'paid' && (
+                 <div className="space-y-3">
+                   <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Observações da Rejeição</label>
+                   <textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Descreva o motivo caso vá rejeitar esta solicitação..." rows={3} className="w-full px-5 py-4 rounded-2xl border border-slate-200 text-sm focus:ring-4 focus:ring-primary/5 outline-none transition-all bg-white" />
+                 </div>
+               )}
                
                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-200">
                  <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-2">Descrição do Solicitante</h3>
