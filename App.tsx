@@ -586,7 +586,7 @@ function App() {
         <img src="/logo.png" alt="Logo" className="h-14 sm:h-16 md:h-24 mb-6 md:mb-12 drop-shadow-2xl animate-fade-up shrink-0" />
         
         <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold text-slate-900 tracking-tighter mb-3 md:mb-6 animate-fade-up leading-[1.1] md:leading-tight">
-          Sua plataforma de <br className="md:hidden" />
+          Sua plataforma de <br />
           <span className="text-primary italic font-black">pagamentos.</span>
         </h1>
         
