@@ -454,9 +454,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                {/* Seção Comprovante de Pagamento - Exclusiva Status 'paid' */}
                {selectedRequest.status === 'paid' && (
                  <div className="space-y-4 pt-6 border-t border-slate-100">
-                    <h3 className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" /> Comprovante de Pagamento
-                    </h3>
+                    <div>
+                      <h3 className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" /> Comprovante de Pagamento
+                      </h3>
+                      {(selectedRequest as any).paymentReceiptUrl && (
+                        <p className="text-[10px] font-bold text-emerald-600 mt-1 flex items-center gap-1 animate-in fade-in duration-300">
+                          Comprovante enviado ✅
+                        </p>
+                      )}
+                    </div>
                     <div className="bg-slate-50 p-6 rounded-[2rem] border border-primary/20">
                       {(selectedRequest as any).paymentReceiptUrl ? (
                         <div className="space-y-3">
