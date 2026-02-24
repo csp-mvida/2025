@@ -372,28 +372,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           
           {/* Abas com Scroll Otimizado */}
           <div className="relative w-full md:w-auto">
-              {/* Fade Indicators */}
-              <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
-              <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
+              <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
+              <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
               
-              <div className="flex items-center gap-3 overflow-x-auto overflow-y-hidden pb-1 scrollbar-hide snap-x snap-mandatory px-4 md:px-0 w-full flex-nowrap">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory px-4 md:px-0">
                  {['all', 'approved', 'paid', 'rejected'].map((status) => (
                    <button 
                       key={status} 
                       onClick={() => setStatusFilter(status as any)} 
-                      className={`
-                        min-h-[40px] min-w-[110px] px-5 py-2 rounded-xl text-xs font-bold border transition-all 
-                        whitespace-nowrap snap-start flex-none
-                        ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'}
-                      `}
+                      className={`min-h-[40px] px-5 py-2 rounded-xl text-xs font-bold border transition-all whitespace-nowrap snap-start ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'}`}
                    >
                      {status === 'all' ? 'Recebidos' : status === 'approved' ? 'A pagar' : STATUS_CONFIG[status as RequestStatus].label}
                    </button>
                  ))}
-                 <button onClick={loadData} className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-primary transition-all shrink-0 flex-none"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
-                 
-                 {/* Spacer to ensure last item isn't cut off by the right edge/fade */}
-                 <div className="w-4 flex-none md:hidden"></div>
+                 <button onClick={loadData} className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-primary transition-all shrink-0"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
               </div>
           </div>
         </div>
