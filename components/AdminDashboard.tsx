@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { CSPRequest, RequestStatus } from '../types';
-import { getRequests, updateRequestStatus, uploadInvoice, updatePaymentReceipt } from '../services/api';
+import { getRequests, updateRequestStatus, uploadInvoice, updatePaymentReceipt, closeRequest } from '../services/api';
 import { formatCurrency } from '../utils/formatters';
 import { Button } from './ui/Button';
 import { 
@@ -102,13 +102,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           ...r, 
           status: newStatus, 
           rejectionReason: reason, 
-          paidAt: newStatus === 'paid' ? new Date().toISOString() : r.paidAt 
+          paidAt: newStatus === 'paid' ? new Date().toISOString() : r.paidAt,
+          closedAt: undefined // Limpa encerramento ao mudar status
         } as any : r));
         
         toast.success(`Status atualizado para ${STATUS_CONFIG[newStatus].label}`);
-        setSelectedRequest(prev => prev && prev.id === id ? { ...prev, status: newStatus } as any : prev);
+        setSelectedRequest(prev => prev && prev.id === id ? { ...prev, status: newStatus, closedAt: undefined } as any : prev);
         
-        // Regra 5: Limpar textarea após rejeitar com sucesso
         if (newStatus === 'rejected') {
           setRejectionReason('');
         }
@@ -146,6 +146,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     } finally {
       setIsUploadingReceipt(false);
     }
+  };
+
+  const handleCloseAtendimento = async () => {
+      if (!selectedRequest || !(selectedRequest as any).paymentReceiptUrl) return;
+
+      setIsUpdating(true);
+      try {
+          const success = await closeRequest(selectedRequest.id);
+          if (success) {
+              const now = new Date().toISOString();
+              setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, closedAt: now } as any : r));
+              setSelectedRequest(prev => prev ? { ...prev, closedAt: now } as any : null);
+              toast.success('Atendimento encerrado com sucesso!');
+          } else {
+              toast.error('Erro ao encerrar atendimento.');
+          }
+      } catch (e) {
+          toast.error('Ocorreu um erro.');
+      } finally {
+          setIsUpdating(false);
+      }
   };
 
   const handleDownloadFile = async (url: string, label: string, protocol: string) => {
@@ -343,17 +364,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                 {monthOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-             {['all', 'approved', 'paid', 'rejected'].map((status) => (
-               <button 
-                  key={status} 
-                  onClick={() => setStatusFilter(status as any)} 
-                  className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all whitespace-nowrap ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'}`}
-               >
-                 {status === 'all' ? 'Recebidos' : status === 'approved' ? 'A pagar' : STATUS_CONFIG[status as RequestStatus].label}
-               </button>
-             ))}
-             <button onClick={loadData} className="p-2.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary transition-all"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
+          
+          {/* Mobile Tab Optimization: Horizontal Scroll with Indicators */}
+          <div className="relative">
+              {/* Left Gradient Indicator */}
+              <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10 md:hidden opacity-0 group-hover:opacity-100"></div>
+              
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory md:snap-none md:overflow-visible group">
+                 {['all', 'approved', 'paid', 'rejected'].map((status) => (
+                   <button 
+                      key={status} 
+                      onClick={() => setStatusFilter(status as any)} 
+                      className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all whitespace-nowrap snap-start ${statusFilter === status ? 'bg-primary text-white border-primary shadow-md' : 'bg-white text-slate-600 hover:bg-slate-50 border-slate-200'}`}
+                   >
+                     {status === 'all' ? 'Recebidos' : status === 'approved' ? 'A pagar' : STATUS_CONFIG[status as RequestStatus].label}
+                   </button>
+                 ))}
+                 <button onClick={loadData} className="p-2.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary transition-all shrink-0"><RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} /></button>
+              </div>
+              
+              {/* Right Gradient Indicator */}
+              <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10 md:hidden"></div>
           </div>
         </div>
 
@@ -381,6 +412,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                                 {STATUS_CONFIG[req.status].icon} {STATUS_CONFIG[req.status].label}
                             </span>
                             {isIssue(req) && <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                            {req.closedAt && <span className="w-2 h-2 rounded-full bg-slate-400" title="Atendimento Encerrado"></span>}
                         </div>
                      </td>
                      <td className="px-6 py-4">
@@ -397,7 +429,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                      <td className="px-6 py-4 font-bold text-slate-900 text-sm">{req.requesterName}</td>
                      <td className="px-6 py-4 text-right font-black text-slate-900 text-base">{formatCurrency(req.value)}</td>
                      <td className="px-6 py-4 text-center">
-                       {/* Regra 1 e 2: Iniciar textarea SEMPRE vazio ao abrir o modal */}
                        <button onClick={() => { setSelectedRequest(req); setRejectionReason(''); }} className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Eye className="w-6 h-6" /></button>
                      </td>
                    </tr>
@@ -447,7 +478,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                   </div>
                </div>
 
-               {/* Seção de Anexos com Visualizar/Baixar */}
                <div className="space-y-4 pt-6 border-t border-slate-100">
                   <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest flex items-center gap-2">
                     <Paperclip className="w-4 h-4" /> Arquivos Anexados
@@ -459,19 +489,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                   </div>
                </div>
 
-               {/* Seção Comprovante de Pagamento - Exclusiva Status 'paid' */}
                {selectedRequest.status === 'paid' && (
                  <div className="space-y-4 pt-6 border-t border-slate-100">
-                    <div>
-                      <h3 className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" /> Comprovante de Pagamento
-                      </h3>
-                      {(selectedRequest as any).paymentReceiptUrl && (
-                        <p className="text-[10px] font-bold text-emerald-600 mt-1 flex items-center gap-1 animate-in fade-in duration-300">
-                          Comprovante enviado ✅
-                        </p>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" /> Comprovante de Pagamento
+                        </h3>
+                        {(selectedRequest as any).paymentReceiptUrl && (
+                          <p className="text-[10px] font-bold text-emerald-600 mt-1 flex items-center gap-1 animate-in fade-in duration-300">
+                            Comprovante enviado ✅
+                          </p>
+                        )}
+                      </div>
+                      
+                      {selectedRequest.closedAt && (
+                        <span className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg">Atendimento Encerrado</span>
                       )}
                     </div>
+
                     <div className="bg-slate-50 p-6 rounded-[2rem] border border-primary/20">
                       {(selectedRequest as any).paymentReceiptUrl ? (
                         <div className="space-y-3">
@@ -491,10 +527,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                                 >Baixar</button>
                             </div>
                           </div>
-                          <label className="block cursor-pointer text-center">
-                              <span className="text-[10px] font-black uppercase text-slate-400 hover:text-primary transition-colors">Substituir comprovante?</span>
-                              <input type="file" className="sr-only" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
-                          </label>
+                          
+                          {!selectedRequest.closedAt && (
+                              <div className="pt-4 flex flex-col items-center gap-2">
+                                <Button 
+                                    fullWidth size="sm" 
+                                    onClick={handleCloseAtendimento} 
+                                    disabled={isUpdating}
+                                    className="bg-slate-900 text-white font-black uppercase tracking-widest text-[11px] shadow-xl shadow-slate-900/20"
+                                >
+                                    Encerrar Atendimento
+                                </Button>
+                                <label className="block cursor-pointer text-center">
+                                    <span className="text-[10px] font-black uppercase text-slate-400 hover:text-primary transition-colors">Substituir comprovante?</span>
+                                    <input type="file" className="sr-only" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
+                                </label>
+                              </div>
+                          )}
                         </div>
                       ) : (
                         <div className="space-y-4">
@@ -517,6 +566,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                                {isUploadingReceipt ? 'Enviando...' : 'Enviar Comprovante de Pagamento'}
                              </Button>
                            )}
+                           <p className="text-[10px] text-center text-slate-400 italic">Envie o comprovante para habilitar o encerramento do atendimento.</p>
                         </div>
                       )}
                     </div>
@@ -526,7 +576,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                {selectedRequest.status !== 'paid' && (
                  <div className="space-y-3">
                    <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Observações da Rejeição</label>
-                   {/* Regra 3: O textarea não herda mensagens antigas automaticamente */}
                    <textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Descreva o motivo caso vá rejeitar esta solicitação..." rows={3} className="w-full px-5 py-4 rounded-2xl border border-slate-200 text-sm focus:ring-4 focus:ring-primary/5 outline-none transition-all bg-white" />
                  </div>
                )}
@@ -537,19 +586,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                </div>
              </div>
              
-             {/* Footer com Layout de duas linhas otimizado */}
              <div className="p-6 border-t border-slate-100 bg-slate-50 flex flex-col gap-5">
-               {/* Linha 1: Ações Principais */}
                <div className="flex flex-wrap justify-center items-center gap-4">
                  {renderRevertButton()}
-                 <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="font-bold min-w-[140px]">Aprovar Pagamento</Button>
-                 <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700 font-bold min-w-[140px]">Marcar como Pago</Button>
+                 {!selectedRequest.closedAt && (
+                   <>
+                    <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')} disabled={isUpdating} className="font-bold min-w-[140px]">Aprovar Pagamento</Button>
+                    <Button variant="primary" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'paid')} disabled={isUpdating} className="bg-emerald-600 hover:bg-emerald-700 font-bold min-w-[140px]">Marcar como Pago</Button>
+                   </>
+                 )}
                </div>
                
-               {/* Linha 2: Ação Destrutiva Isolada */}
                <div className="flex justify-center pt-2">
-                 {/* Regra 6 e 7: Botão desabilitado se trim(texto).length === 0 ou < 5 */}
-                 <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold w-full md:w-auto md:min-w-[280px]">Rejeitar Pedido</Button>
+                 {!selectedRequest.closedAt && (
+                    <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold w-full md:w-auto md:min-w-[280px]">Rejeitar Pedido</Button>
+                 )}
                </div>
              </div>
           </div>

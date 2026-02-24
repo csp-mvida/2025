@@ -72,6 +72,10 @@ export interface CSPRequest extends CSPFormData {
   createdAt: string;
   status: RequestStatus;
   history: { date: string; action: string; user: string }[];
+  rejectionReason?: string;
+  paidAt?: string;
+  paymentReceiptUrl?: string;
+  closedAt?: string;
 }
 
 export const INITIAL_DATA: CSPFormData = {

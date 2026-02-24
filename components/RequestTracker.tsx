@@ -56,7 +56,6 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // State para visualização de arquivo
   const [previewData, setPreviewData] = useState<{ url: string, title: string } | null>(null);
 
   const handleSearch = async (e?: React.FormEvent) => {
@@ -138,7 +137,6 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
               <h2 className="text-2xl font-black uppercase tracking-widest leading-tight">{STATUS_MAP[request.status].label}</h2>
               <p className="text-sm font-medium mt-1">{STATUS_MAP[request.status].desc}</p>
               
-              {/* Informação de Pagamento */}
               {request.status === 'paid' && (request as any).paidAt && (
                   <div className="mt-4 p-3 bg-white/40 rounded-xl border border-emerald-200/50 inline-block">
                       <span className="text-xs font-bold text-emerald-700">
@@ -147,7 +145,6 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
                   </div>
               )}
 
-              {/* Motivo da Rejeição */}
               {request.status === 'rejected' && (request as any).rejectionReason && (
                   <div className="mt-4 p-4 bg-white/60 rounded-2xl border border-red-200/50 text-left">
                       <span className="block text-[10px] uppercase font-black text-danger/60 mb-1">Motivo da Rejeição:</span>
@@ -164,14 +161,21 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
             </div>
           </div>
 
-          {/* Bloco de Comprovante de Pagamento (Apenas se Status for PAID) */}
           {request.status === 'paid' && (
             <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-8 animate-in slide-in-from-top-4 duration-500">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-primary/10 rounded-xl">
-                  <CheckCircle className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900">Comprovante de Pagamento</h3>
+              <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-xl">
+                      <CheckCircle className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900">Comprovante de Pagamento</h3>
+                  </div>
+                  
+                  {request.closedAt && (
+                      <div className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg animate-in zoom-in-95 duration-500">
+                          Atendimento Encerrado
+                      </div>
+                  )}
               </div>
               
               {(request as any).paymentReceiptUrl ? (
@@ -193,6 +197,14 @@ export const RequestTracker: React.FC<RequestTrackerProps> = ({ initialProtocol 
                       <Download className="w-5 h-5" /> Baixar Comprovante
                     </button>
                   </div>
+                  
+                  {request.closedAt && (
+                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                          <p className="text-xs text-slate-500 font-medium text-center">
+                              Este atendimento foi concluído pelo setor financeiro.
+                          </p>
+                      </div>
+                  )}
                 </div>
               ) : (
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">

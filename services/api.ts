@@ -211,7 +211,7 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
 };
 
 export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
-  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at, payment_receipt_attachment_path').eq('protocol', protocol.trim().toUpperCase()).single();
+  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at, payment_receipt_attachment_path, closed_at').eq('protocol', protocol.trim().toUpperCase()).single();
   if (error || !data) return null;
 
   return {
@@ -247,12 +247,13 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     history: [],
     rejectionReason: data.rejection_reason,
     paidAt: data.paid_at,
-    paymentReceiptUrl: data.payment_receipt_attachment_path
+    paymentReceiptUrl: data.payment_receipt_attachment_path,
+    closedAt: data.closed_at
   } as any;
 };
 
 export const getRequests = async (): Promise<CSPRequest[]> => {
-  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at, payment_receipt_attachment_path').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at, payment_receipt_attachment_path, closed_at').order('created_at', { ascending: false });
   if (error) return [];
 
   return data.map(req => ({
@@ -288,14 +289,21 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     history: [],
     rejectionReason: req.rejection_reason,
     paidAt: req.paid_at,
-    paymentReceiptUrl: req.payment_receipt_attachment_path
+    paymentReceiptUrl: req.payment_receipt_attachment_path,
+    closedAt: req.closed_at
   } as any));
 };
 
 export const updateRequestStatus = async (id: string, status: RequestStatus, reason?: string): Promise<boolean> => {
   const payload: any = { status };
   if (reason !== undefined) payload.rejection_reason = reason;
-  if (status === 'paid') payload.paid_at = new Date().toISOString();
+  if (status === 'paid') {
+      payload.paid_at = new Date().toISOString();
+  } else {
+      // Reabertura: limpa encerramento se voltar status
+      payload.closed_at = null;
+      payload.closed_by = null;
+  }
 
   const { error } = await supabase.from(TABLE_NAME).update(payload).eq('protocol', id);
   return !error;
@@ -304,4 +312,15 @@ export const updateRequestStatus = async (id: string, status: RequestStatus, rea
 export const updatePaymentReceipt = async (protocolId: string, url: string): Promise<boolean> => {
   const { error } = await supabase.from(TABLE_NAME).update({ payment_receipt_attachment_path: url }).eq('protocol', protocolId);
   return !error;
+};
+
+export const closeRequest = async (id: string): Promise<boolean> => {
+    const { error } = await supabase
+        .from(TABLE_NAME)
+        .update({ 
+            closed_at: new Date().toISOString(),
+            // closed_by poderia vir do auth.user() se estivéssemos usando RLS completo com sessões
+        })
+        .eq('protocol', id);
+    return !error;
 };
