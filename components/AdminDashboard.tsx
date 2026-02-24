@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { CSPRequest, RequestStatus } from '../types';
-import { getRequests, updateRequestStatus } from '../services/api';
+import { getRequests, updateRequestStatus, uploadInvoice, updatePaymentReceipt } from '../services/api';
 import { formatCurrency } from '../utils/formatters';
 import { Button } from './ui/Button';
 import { 
   Search, Eye, CheckCircle, AlertTriangle, X, 
-  Clock, LayoutDashboard, RefreshCw, Copy, FileText, Download
+  Clock, LayoutDashboard, RefreshCw, Copy, FileText, Download, UploadCloud
 } from './ui/Icons';
 import { BackgroundAnimation } from './BackgroundAnimation';
 
@@ -39,6 +39,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   const [selectedRequest, setSelectedRequest] = useState<CSPRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   
+  // State para o comprovante de pagamento
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+
   // State para feedback de cópia
   const [copiedProtocol, setCopiedProtocol] = useState(false);
   
@@ -102,7 +106,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         } as any : r));
         
         toast.success(`Status atualizado para ${STATUS_CONFIG[newStatus].label}`);
-        setSelectedRequest(null);
+        setSelectedRequest(prev => prev && prev.id === id ? { ...prev, status: newStatus } as any : prev);
       } else {
         toast.error('Erro ao atualizar status.');
       }
@@ -110,6 +114,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
        toast.error('Erro inesperado.');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleUploadReceipt = async () => {
+    if (!receiptFile || !selectedRequest) return;
+    
+    setIsUploadingReceipt(true);
+    const toastId = toast.loading('Enviando comprovante...');
+    
+    try {
+      const url = await uploadInvoice(receiptFile, 'receipt', selectedRequest.id);
+      const success = await updatePaymentReceipt(selectedRequest.id, url);
+      
+      if (success) {
+        setRequests(prev => prev.map(r => r.id === selectedRequest.id ? { ...r, paymentReceiptUrl: url } as any : r));
+        setSelectedRequest(prev => prev ? { ...prev, paymentReceiptUrl: url } as any : null);
+        setReceiptFile(null);
+        toast.success('Comprovante enviado com sucesso!', { id: toastId });
+      } else {
+        throw new Error('Erro ao atualizar banco de dados.');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao enviar comprovante.', { id: toastId });
+    } finally {
+      setIsUploadingReceipt(false);
     }
   };
 
@@ -158,7 +188,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         return 1;
       }
     };
-    return countField(req.invoiceUrl) + countField(req.boletoUrl) + countField(req.transferUrl);
+    return countField(req.invoiceUrl) + countField(req.boletoUrl) + countField(req.transferUrl) + ((req as any).paymentReceiptUrl ? 1 : 0);
   };
 
   const filteredRequests = requests.filter(req => {
@@ -420,6 +450,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                     {selectedRequest.paymentMethod === 'Transferência' && renderAttachmentLinks(selectedRequest.transferUrl, 'Dados de Transferência', selectedRequest.id)}
                   </div>
                </div>
+
+               {/* Seção Comprovante de Pagamento - Exclusiva Status 'paid' */}
+               {selectedRequest.status === 'paid' && (
+                 <div className="space-y-4 pt-6 border-t border-slate-100">
+                    <h3 className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" /> Comprovante de Pagamento
+                    </h3>
+                    <div className="bg-slate-50 p-6 rounded-[2rem] border border-primary/20">
+                      {(selectedRequest as any).paymentReceiptUrl ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-primary/10 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-primary" />
+                                <span className="text-sm font-bold text-slate-700">Comprovante de Pagamento</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <button 
+                                  onClick={() => setPreviewData({ url: (selectedRequest as any).paymentReceiptUrl, title: `Comprovante - ${selectedRequest.id}` })}
+                                  className="px-4 py-2 text-xs font-bold text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-all"
+                                >Visualizar</button>
+                                <button 
+                                  onClick={() => handleDownloadFile((selectedRequest as any).paymentReceiptUrl, 'Comprovante', selectedRequest.id)}
+                                  className="px-4 py-2 text-xs font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all"
+                                >Baixar</button>
+                            </div>
+                          </div>
+                          <label className="block cursor-pointer text-center">
+                              <span className="text-[10px] font-black uppercase text-slate-400 hover:text-primary transition-colors">Substituir comprovante?</span>
+                              <input type="file" className="sr-only" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                           <label className="border-2 border-dashed border-primary/20 bg-white rounded-2xl p-6 text-center hover:border-primary/40 transition-colors cursor-pointer block">
+                              <input type="file" className="sr-only" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
+                              <div className="flex flex-col items-center gap-2">
+                                 <UploadCloud className="w-8 h-8 text-primary/40" />
+                                 <p className="font-bold text-slate-600 text-xs">
+                                   {receiptFile ? receiptFile.name : 'Selecione o arquivo do comprovante'}
+                                 </p>
+                              </div>
+                           </label>
+                           {receiptFile && (
+                             <Button 
+                                fullWidth size="sm" 
+                                onClick={handleUploadReceipt} 
+                                disabled={isUploadingReceipt}
+                                className="bg-primary text-white font-black uppercase tracking-widest text-[10px]"
+                             >
+                               {isUploadingReceipt ? 'Enviando...' : 'Enviar Comprovante de Pagamento'}
+                             </Button>
+                           )}
+                        </div>
+                      )}
+                    </div>
+                 </div>
+               )}
 
                <div className="space-y-3">
                  <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Observações da Rejeição</label>

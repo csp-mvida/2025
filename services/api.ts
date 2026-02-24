@@ -52,7 +52,7 @@ export const fetchPaymentAccounts = async (): Promise<{ id: string; label: strin
     return [];
   }
 
-  return data.map(a => ({ id: a.id, label: a.label }));
+  return data.map(a => ({ id: a.label, label: a.label }));
 };
 
 // Fetch Budgets from Supabase
@@ -74,12 +74,13 @@ export const fetchBudgets = async (): Promise<{ id: string; name: string }[]> =>
 /**
  * Upload File to Supabase Storage
  */
-export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto' | 'transfer', protocolId: string): Promise<string> => {
+export const uploadInvoice = async (file: File, type: 'invoice' | 'boleto' | 'transfer' | 'receipt', protocolId: string): Promise<string> => {
   const fileExt = file.name.split('.').pop() || 'bin';
   let subfolder: string;
   
   if (type === 'invoice') subfolder = 'notas_fiscais';
   else if (type === 'boleto') subfolder = 'boletos';
+  else if (type === 'receipt') subfolder = 'comprovantes_pagamento';
   else subfolder = 'transferencias';
   
   const safeFileName = `${subfolder}/${protocolId}/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
@@ -131,15 +132,6 @@ export const createDraftRequest = async (departmentId: string, authorizerId: str
   }
   
   return data?.protocol || null;
-};
-
-/**
- * Atualiza o registro com as URLs finais
- */
-export const updateRequestAttachments = async (protocolId: string, type: 'invoice' | 'boleto' | 'transfer', url: string): Promise<boolean> => {
-  const field = type === 'invoice' ? 'invoice_attachment_path' : type === 'boleto' ? 'boleto_attachment_path' : 'transfer_attachment_path';
-  const { error } = await supabase.from(TABLE_NAME).update({ [field]: url }).eq('protocol', protocolId);
-  return !error;
 };
 
 /**
@@ -195,7 +187,7 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
 };
 
 export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
-  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at').eq('protocol', protocol.trim().toUpperCase()).single();
+  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at, payment_receipt_attachment_path').eq('protocol', protocol.trim().toUpperCase()).single();
   if (error || !data) return null;
 
   return {
@@ -229,12 +221,13 @@ export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest
     transferUrl: data.transfer_attachment_path,
     history: [],
     rejectionReason: data.rejection_reason,
-    paidAt: data.paid_at
+    paidAt: data.paid_at,
+    paymentReceiptUrl: data.payment_receipt_attachment_path
   } as any;
 };
 
 export const getRequests = async (): Promise<CSPRequest[]> => {
-  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at').order('created_at', { ascending: false });
+  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at, payment_receipt_attachment_path').order('created_at', { ascending: false });
   if (error) return [];
 
   return data.map(req => ({
@@ -268,7 +261,8 @@ export const getRequests = async (): Promise<CSPRequest[]> => {
     transferUrl: req.transfer_attachment_path,
     history: [],
     rejectionReason: req.rejection_reason,
-    paidAt: req.paid_at
+    paidAt: req.paid_at,
+    paymentReceiptUrl: req.payment_receipt_attachment_path
   } as any));
 };
 
@@ -278,5 +272,10 @@ export const updateRequestStatus = async (id: string, status: RequestStatus, rea
   if (status === 'paid') payload.paid_at = new Date().toISOString();
 
   const { error } = await supabase.from(TABLE_NAME).update(payload).eq('protocol', id);
+  return !error;
+};
+
+export const updatePaymentReceipt = async (protocolId: string, url: string): Promise<boolean> => {
+  const { error } = await supabase.from(TABLE_NAME).update({ payment_receipt_attachment_path: url }).eq('protocol', protocolId);
   return !error;
 };
