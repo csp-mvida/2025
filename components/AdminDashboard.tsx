@@ -107,6 +107,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         
         toast.success(`Status atualizado para ${STATUS_CONFIG[newStatus].label}`);
         setSelectedRequest(prev => prev && prev.id === id ? { ...prev, status: newStatus } as any : prev);
+        
+        // Regra 5: Limpar textarea após rejeitar com sucesso
+        if (newStatus === 'rejected') {
+          setRejectionReason('');
+        }
       } else {
         toast.error('Erro ao atualizar status.');
       }
@@ -390,7 +395,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                      <td className="px-6 py-4 font-bold text-slate-900 text-sm">{req.requesterName}</td>
                      <td className="px-6 py-4 text-right font-black text-slate-900 text-base">{formatCurrency(req.value)}</td>
                      <td className="px-6 py-4 text-center">
-                       <button onClick={() => { setSelectedRequest(req); setRejectionReason((req as any).rejectionReason || ''); }} className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Eye className="w-6 h-6" /></button>
+                       {/* Regra 1 e 2: Iniciar textarea SEMPRE vazio ao abrir o modal */}
+                       <button onClick={() => { setSelectedRequest(req); setRejectionReason(''); }} className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"><Eye className="w-6 h-6" /></button>
                      </td>
                    </tr>
                  )}) : <tr><td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">Nenhuma solicitação filtrada.</td></tr>}
@@ -518,6 +524,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                {selectedRequest.status !== 'paid' && (
                  <div className="space-y-3">
                    <label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Observações da Rejeição</label>
+                   {/* Regra 3: O textarea não herda mensagens antigas automaticamente */}
                    <textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Descreva o motivo caso vá rejeitar esta solicitação..." rows={3} className="w-full px-5 py-4 rounded-2xl border border-slate-200 text-sm focus:ring-4 focus:ring-primary/5 outline-none transition-all bg-white" />
                  </div>
                )}
@@ -539,6 +546,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                
                {/* Linha 2: Ação Destrutiva Isolada */}
                <div className="flex justify-center pt-2">
+                 {/* Regra 6 e 7: Botão desabilitado se trim(texto).length === 0 ou < 5 */}
                  <Button variant="danger" size="sm" onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')} disabled={isUpdating || rejectionReason.trim().length < 5} className="font-bold w-full md:w-auto md:min-w-[280px]">Rejeitar Pedido</Button>
                </div>
              </div>
