@@ -561,7 +561,7 @@ function App() {
   );
 
   if (view === 'welcome') return (
-    <div className="h-[100svh] relative flex flex-col bg-slate-50 overflow-hidden">
+    <div className="min-h-[100dvh] md:h-[100svh] relative flex flex-col bg-slate-50 overflow-y-auto md:overflow-hidden">
       <Toaster position="top-right" />
       <BackgroundAnimation />
       <OrientationDrawer isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
