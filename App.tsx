@@ -25,7 +25,7 @@ import {
 from './components/ui/Icons';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LoginAdmin } from './components/LoginAdmin';
-import { BackgroundAnimation } from './components/BackgroundAnimation';
+import { BackgroundAnimation } from './BackgroundAnimation';
 import { RequestTracker } from './components/RequestTracker';
 
 function App() {
@@ -608,20 +608,20 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pt-16">
+    <div className="min-h-[100dvh] bg-slate-50 flex flex-col pt-16 overflow-y-auto">
       <Toaster position="top-right" />
       <BackgroundAnimation />
       {renderHeader()}
-      <main className="flex-1 flex flex-col items-center justify-center p-8">
+      <main className="flex-1 flex flex-col items-center justify-start md:justify-center p-4 md:p-8">
         {!isSuccess ? (
           <div className="w-full max-w-3xl animate-in fade-in zoom-in-95 duration-700">
             <div className="flex justify-between items-center mb-6">
               <button onClick={() => setView('welcome')} className="flex items-center gap-1.5 text-slate-400 hover:text-primary text-xs font-bold uppercase tracking-widest"><Home className="w-4 h-4" /> Início</button>
               <button onClick={() => resetForm()} className="flex items-center gap-1.5 text-danger font-bold uppercase text-[10px]"><Trash2 className="w-4 h-4" /> Limpar tudo</button>
             </div>
-            <div className="mb-6">
-               <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-1 block">Financeiro</span>
-               <h1 className="text-5xl font-bold text-slate-900 tracking-tighter mb-1">Nova Solicitação</h1>
+            <div className="mb-4 md:mb-6 overflow-hidden">
+               <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] md:tracking-[0.3em] mb-0.5 md:mb-1 block">Financeiro</span>
+               <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-900 tracking-tighter mb-1 whitespace-nowrap overflow-hidden text-ellipsis">Nova Solicitação</h1>
             </div>
             <Stepper currentStep={step} />
             <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-50 mb-6">
