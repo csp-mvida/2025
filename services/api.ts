@@ -165,7 +165,9 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
   const mappedPaymentMethod = PAYMENT_METHOD_MAP.toDb(data.paymentMethod);
 
   let finalBudgetId = null;
-  if (data.isSpecificBudget === 'yes') {
+  if (data.isSpecificBudget === 'yes' && !data.specificBudgetName) {
+    // skip logic if missing name
+  } else if (data.isSpecificBudget === 'yes') {
     const budgetName = data.specificBudgetName;
     const { data: budgetLookup } = await supabase
       .from('budgets')
@@ -300,7 +302,6 @@ export const updateRequestStatus = async (id: string, status: RequestStatus, rea
   if (status === 'paid') {
       payload.paid_at = new Date().toISOString();
   } else {
-      // Reabertura: limpa encerramento se voltar status
       payload.closed_at = null;
       payload.closed_by = null;
   }
@@ -318,9 +319,41 @@ export const closeRequest = async (id: string): Promise<boolean> => {
     const { error } = await supabase
         .from(TABLE_NAME)
         .update({ 
-            closed_at: new Date().toISOString(),
-            // closed_by poderia vir do auth.user() se estivéssemos usando RLS completo com sessões
+            closed_at: new Date().toISOString()
         })
         .eq('protocol', id);
     return !error;
 };
+
+/**
+ * =========================================================
+ * FUNÇÕES NOVAS DO CSP (Rastreamento e Assinatura de URL)
+ * =========================================================
+ */
+
+export async function cspGetSolicitacao(params: {
+  id_protocolo: number;
+  whatsapp_contato: string;
+}) {
+  const { data, error } = await supabase.rpc("csp_get_solicitacao", {
+    p_id_protocolo: params.id_protocolo,
+    p_whatsapp: params.whatsapp_contato,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function cspCreateSignedUrl(params: {
+  path: string;
+  bucket?: string;
+  expiresIn?: number;
+}): Promise<string> {
+  const bucket = params.bucket ?? "uploads";
+  const expiresIn = params.expiresIn ?? 60;
+
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(params.path, expiresIn);
+
+  if (error) throw new Error(error.message);
+  return data.signedUrl;
+}
