@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { supabase } from '../services/api';
-import { Button } from './ui/Button';
-import { Input } from './ui/Input';
-import { BackgroundAnimation } from './BackgroundAnimation';
-import { CheckCircle, Lock, AlertTriangle } from './ui/Icons';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { BackgroundAnimation } from '../../components/BackgroundAnimation';
+import { CheckCircle, Lock, AlertTriangle } from '../../components/ui/Icons';
 
 export function ResetPasswordPage() {
   const [password, setPassword] = useState('');
