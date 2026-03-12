@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
@@ -65,7 +64,7 @@ export async function createDraftRequest(
     return null;
   }
 
-  const protocol = uuidv4();
+  const protocol = crypto.randomUUID();
 
   const { error } = await supabase.from('payment_requests').insert({
     id: protocol,
@@ -95,7 +94,7 @@ export async function uploadInvoice(
     transfer: 'transferencias'
   };
 
-  const filePath = `${folderMap[type]}/${draftId}/${uuidv4()}-${file.name}`;
+  const filePath = `${folderMap[type]}/${draftId}/${crypto.randomUUID()}-${file.name}`;
 
   const { data, error } = await supabase.storage
     .from('uploads')
@@ -127,7 +126,7 @@ export async function submitRequest(
     amount: amountNumber > 0 ? amountNumber : 1,
     due_date: finalFormData.dueDate ? finalFormData.dueDate.split('T')[0] : null,
     beneficiary_name: finalFormData.supplierName || null,
-    payment_method: finalFormData.paymentMethod || null,
+    payment_method: finalFormData.payment_method || null,
     admin_notes: JSON.stringify({
       requesterName: finalFormData.requesterName ?? '',
       whatsapp: finalFormData.whatsapp ?? '',
