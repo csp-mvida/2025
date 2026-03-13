@@ -6,7 +6,8 @@ import { formatCurrency } from '../utils/formatters';
 import { Button } from './ui/Button';
 import { 
   Search, Eye, CheckCircle, AlertTriangle, X, 
-  Clock, LayoutDashboard, RefreshCw, Copy, FileText, Download, UploadCloud
+  Clock, LayoutDashboard, RefreshCw, Copy, FileText, Download, UploadCloud,
+  ChevronLeft
 } from './ui/Icons';
 import { BackgroundAnimation } from './BackgroundAnimation';
 import { UserManagementModal } from '../src/components/UserManagementModal';
@@ -356,8 +357,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
              </div>
           </div>
           <div className="order-3 md:order-3 flex flex-col md:flex-row items-center justify-center md:justify-end gap-3">
-            <Button variant="ghost" className="text-white border border-white/20 hover:bg-white/10 transition-colors py-2 px-4 text-xs uppercase tracking-widest font-black" onClick={() => setIsUserModalOpen(true)}>Novo Requisitante</Button>
-            <Button variant="ghost" className="text-white border border-white/20 hover:bg-white hover:text-primary transition-colors py-2 px-4" onClick={onBack}>Sair do Admin</Button>
+            <Button variant="ghost" className="text-emerald-200 hover:text-white border border-emerald-500/20 hover:bg-white/5 transition-colors py-1.5 px-3 text-[11px] font-bold" onClick={() => setIsUserModalOpen(true)}>Cadastrar requisitante</Button>
+            <Button variant="ghost" className="text-white border border-white/20 hover:bg-white hover:text-primary transition-colors py-2 px-4 flex items-center gap-2" onClick={onBack}><ChevronLeft className="w-4 h-4" /> Sair</Button>
           </div>
         </div>
       </div>
