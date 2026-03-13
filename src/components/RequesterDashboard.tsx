@@ -1,7 +1,6 @@
 import React from 'react';
-import { Button } from '../../components/ui/Button';
-import { BackgroundAnimation } from './BackgroundAnimation';
-import { PlusCircle, List, ChevronLeft, LogOut, FileText, CheckCircle, Clock } from '../../components/ui/Icons';
+import { BackgroundAnimation } from '../../components/BackgroundAnimation';
+import { PlusCircle, List, LogOut, FileText, CheckCircle, Clock, ChevronRight } from '../../components/ui/Icons';
 import { supabase } from '../services/api';
 
 interface RequesterDashboardProps {
