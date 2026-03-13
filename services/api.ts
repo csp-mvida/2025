@@ -1,4 +1,4 @@
-import { supabase as supabaseClient } from './src/integrations/supabase/client';
+import { supabase as supabaseClient } from '../src/integrations/supabase/client';
 import { Department, CSPFormData, CSPRequest, RequestStatus } from './types';
 
 export const supabase = supabaseClient;
