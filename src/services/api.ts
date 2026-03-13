@@ -1,13 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase as sharedClient } from '../integrations/supabase/client';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no projeto.');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Utilizamos a instância compartilhada do cliente para manter a sessão de autenticação
+export const supabase = sharedClient;
 
 export async function fetchDepartments() {
   const { data, error } = await supabase
@@ -182,6 +176,7 @@ export async function getRequestByProtocol(protocolId: string) {
 }
 
 export async function createRequester(name: string, email: string) {
+  // A chamada invoke enviará automaticamente o cabeçalho Authorization com a sessão do sharedClient
   const { data, error } = await supabase.functions.invoke('create-requester', {
     body: {
       full_name: name,
