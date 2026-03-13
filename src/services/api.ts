@@ -182,14 +182,15 @@ export async function getRequestByProtocol(protocolId: string) {
 }
 
 export async function createRequester(name: string, email: string) {
-  // Nota: A criação de usuários no Supabase Auth via client-side é limitada.
-  // Esta função prepara a lógica para inserção em uma tabela de perfis ou chamada futura.
-  const { data, error } = await supabase
-    .from('profiles')
-    .insert([{ full_name: name, email, role: 'requester' }]);
+  const { data, error } = await supabase.functions.invoke('create-requester', {
+    body: {
+      full_name: name,
+      email: email
+    }
+  });
 
   if (error) {
-    console.error('Erro ao cadastrar requisitante:', error);
+    console.error('Erro ao cadastrar requisitante via Edge Function:', error);
     return { success: false, error };
   }
 
