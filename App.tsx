@@ -28,9 +28,10 @@ import { LoginAdmin } from './components/LoginAdmin';
 import { BackgroundAnimation } from './components/BackgroundAnimation';
 import { RequestTracker } from './components/RequestTracker';
 import { ResetPasswordPage } from './src/components/ResetPasswordPage';
+import { ForgotPasswordPage } from './src/components/ForgotPasswordPage';
 
 function App() {
-  const [view, setView] = useState<'welcome' | 'form' | 'login' | 'admin' | 'track'>('welcome');
+  const [view, setView] = useState<'welcome' | 'form' | 'login' | 'admin' | 'track' | 'forgot-password'>('welcome');
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<CSPFormData>({ ...INITIAL_DATA });
 
@@ -558,7 +559,8 @@ function App() {
     return <ResetPasswordPage />;
   }
 
-  if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} />;
+  if (view === 'login') return <LoginAdmin onLoginSuccess={() => setView('admin')} onBack={() => setView('welcome')} onForgotPassword={() => setView('forgot-password')} />;
+  if (view === 'forgot-password') return <ForgotPasswordPage onBack={() => setView('login')} />;
   if (view === 'admin') return <AdminDashboard onBack={() => setView('welcome')} />;
   if (view === 'track') return (
     <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-6">
