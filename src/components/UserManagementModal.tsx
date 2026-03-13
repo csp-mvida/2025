@@ -54,7 +54,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <Input 
             label="Nome Completo" 
-            placeholder="Digite the name do requisitante"
+            placeholder="Digite o nome do requisitante"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -77,7 +77,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
         </form>
 
         <div className="px-8 pb-8 text-center">
-          <p className="text-[9px] text-slate-400 uppercase tracking-widest leading-relaxed">
+          <p className="text-[11px] text-slate-500 whitespace-nowrap leading-relaxed font-medium">
             O novo requisitante receberá instruções de acesso via e-mail.
           </p>
         </div>
