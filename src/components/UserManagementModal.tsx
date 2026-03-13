@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { X, CheckCircle, AlertTriangle } from '../../components/ui/Icons';
+import { X } from '../../components/ui/Icons';
 import { createRequester } from '../services/api';
 
 interface UserManagementModalProps {
@@ -19,23 +19,33 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email) {
-      toast.error('Preencha todos os campos.');
+    
+    const fullName = name.trim();
+    const emailAddr = email.trim();
+
+    if (!fullName || !emailAddr) {
+      toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
 
     setIsSaving(true);
-    const result = await createRequester(name, email);
+    
+    try {
+      const result = await createRequester(fullName, emailAddr);
 
-    if (result.success) {
-      toast.success('Requisitante cadastrado com sucesso!');
-      setName('');
-      setEmail('');
-      onClose();
-    } else {
-      toast.error('Erro ao cadastrar. Verifique os dados ou permissões.');
+      if (result.success) {
+        toast.success('Requisitante cadastrado com sucesso!');
+        setName('');
+        setEmail('');
+        onClose();
+      } else {
+        toast.error('Erro ao cadastrar requisitante. Verifique os logs.');
+      }
+    } catch (err) {
+      toast.error('Ocorreu um erro inesperado na comunicação.');
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   return (
@@ -46,7 +56,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
             <h2 className="text-xl font-black text-slate-900 tracking-tight">Cadastrar Requisitante</h2>
             <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-0.5">Gestão de Acessos</p>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-danger rounded-full transition-colors">
+          <button type="button" onClick={onClose} className="p-2 text-slate-400 hover:text-danger rounded-full transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -70,7 +80,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
 
           <div className="pt-4 flex gap-3">
             <Button variant="outline" fullWidth onClick={onClose} type="button">Cancelar</Button>
-            <Button variant="primary" fullWidth disabled={isSaving}>
+            <Button variant="primary" fullWidth type="submit" disabled={isSaving}>
               {isSaving ? 'Salvando...' : 'Confirmar'}
             </Button>
           </div>
