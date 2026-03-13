@@ -54,7 +54,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <Input 
             label="Nome Completo" 
-            placeholder="Digite o nome do requisitante"
+            placeholder="Digite the name do requisitante"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -71,7 +71,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
           <div className="pt-4 flex gap-3">
             <Button variant="outline" fullWidth onClick={onClose} type="button">Cancelar</Button>
             <Button variant="primary" fullWidth disabled={isSaving}>
-              {isSaving ? 'Salvando...' : 'Salvar Requisitante'}
+              {isSaving ? 'Salvando...' : 'Confirmar'}
             </Button>
           </div>
         </form>
