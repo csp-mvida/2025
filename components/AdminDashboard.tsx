@@ -9,6 +9,7 @@ import {
   Clock, LayoutDashboard, RefreshCw, Copy, FileText, Download, UploadCloud
 } from './ui/Icons';
 import { BackgroundAnimation } from './BackgroundAnimation';
+import { UserManagementModal } from '../src/components/UserManagementModal';
 
 // Ícone de Clipe definido localmente
 const Paperclip = ({ className }: { className?: string }) => (
@@ -48,6 +49,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   
   // State para o Preview de Arquivo
   const [previewData, setPreviewData] = useState<{ url: string, title: string } | null>(null);
+
+  // State para o Modal de Usuários
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
   // Filtro de meses iniciando em Jan/2026
   const monthOptions = React.useMemo(() => {
@@ -329,6 +333,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 pb-20 relative overflow-x-hidden">
       <BackgroundAnimation />
+      <UserManagementModal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} />
       
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -350,7 +355,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                 <img src="/admin-logo.png" alt="Logo" className="w-full h-full object-contain" />
              </div>
           </div>
-          <div className="order-3 md:order-3 flex justify-center md:justify-end">
+          <div className="order-3 md:order-3 flex flex-col md:flex-row items-center justify-center md:justify-end gap-3">
+            <Button variant="ghost" className="text-white border border-white/20 hover:bg-white/10 transition-colors py-2 px-4 text-xs uppercase tracking-widest font-black" onClick={() => setIsUserModalOpen(true)}>Novo Requisitante</Button>
             <Button variant="ghost" className="text-white border border-white/20 hover:bg-white hover:text-primary transition-colors py-2 px-4" onClick={onBack}>Sair do Admin</Button>
           </div>
         </div>
