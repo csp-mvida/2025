@@ -1,5 +1,7 @@
-import { supabase } from '../src/integrations/supabase/client';
-import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
+import { supabase as supabaseClient } from './src/integrations/supabase/client';
+import { Department, CSPFormData, CSPRequest, RequestStatus } from './types';
+
+export const supabase = supabaseClient;
 
 const STORAGE_BUCKET = 'uploads'; 
 const TABLE_NAME = 'payment_requests';
