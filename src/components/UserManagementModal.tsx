@@ -41,15 +41,23 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
     try {
       const result = await createRequester(fullName, emailAddr);
 
-      if (result.success) {
+      // Verificação rigorosa do retorno de sucesso da Edge Function
+      if (result && result.success) {
         setIsSuccess(true);
         setName('');
         setEmail('');
+        toast.success('Requisitante cadastrado com sucesso!', {
+          duration: 5000,
+          icon: '✅'
+        });
       } else {
-        toast.error('Erro ao cadastrar requisitante. Verifique os logs.');
+        // Exibe erro retornado pela função ou mensagem genérica
+        const errorMsg = result?.error?.message || 'Não foi possível cadastrar o requisitante.';
+        toast.error(errorMsg);
       }
-    } catch (err) {
-      toast.error('Ocorreu um erro inesperado na comunicação.');
+    } catch (err: any) {
+      console.error('[UserManagement] Erro na chamada:', err);
+      toast.error('Erro de conexão ao tentar cadastrar.');
     } finally {
       setIsSaving(false);
     }
