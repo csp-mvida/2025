@@ -38,6 +38,7 @@ function App() {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<CSPFormData>({ ...INITIAL_DATA });
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [session, setSession] = useState<any>(null);
 
   const routePath = useMemo(() => window.location.pathname, []);
   
@@ -71,6 +72,35 @@ function App() {
     else setInitializationAttempts(prev => prev + 1);
   }, []);
 
+  // Monitoramento de Sessão e Controle de Acesso
+  useEffect(() => {
+    if (routePath === '/reset-password') return;
+
+    // Busca inicial da sessão
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      if (currentSession && view === 'welcome') setView('requester-home');
+    });
+
+    // Listener para mudanças de estado (logout, expiração, etc)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      setSession(currentSession);
+      // Se a sessão cair e o usuário estiver em área protegida, manda para welcome
+      if (!currentSession && (view === 'requester-home' || view === 'form')) {
+        setView('welcome');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [routePath, view]);
+
+  // Bloqueio de segurança para visualizações protegidas
+  useEffect(() => {
+    if ((view === 'requester-home' || view === 'form') && !session && isDataLoaded) {
+      setView('welcome');
+    }
+  }, [view, session, isDataLoaded]);
+
   useEffect(() => {
     if (routePath === '/reset-password') return;
     const loadData = async () => {
@@ -85,11 +115,6 @@ function App() {
       setIsDataLoaded(true);
     };
     loadData();
-    
-    // Check if requester is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setView('requester-home');
-    });
   }, [routePath]);
 
   useEffect(() => {
@@ -177,7 +202,12 @@ function App() {
   if (view === 'track') return (
     <div className="min-h-screen relative bg-slate-50 flex items-center justify-center p-6">
       <BackgroundAnimation />
-      <RequestTracker departments={departments} authorizers={authorizers} paymentAccounts={paymentAccounts} onBack={() => setView('requester-home')} />
+      <RequestTracker 
+        departments={departments} 
+        authorizers={authorizers} 
+        paymentAccounts={paymentAccounts} 
+        onBack={() => setView(session ? 'requester-home' : 'welcome')} 
+      />
     </div>
   );
 
@@ -228,7 +258,12 @@ function App() {
         {!isSuccess ? (
           <div className="w-full max-w-3xl animate-in fade-in zoom-in-95 duration-700">
             <div className="flex justify-between items-center mb-6">
-              <button onClick={() => setView('requester-home')} className="flex items-center gap-1.5 text-slate-400 hover:text-primary text-xs font-bold uppercase tracking-widest"><ChevronLeft className="w-4 h-4" /> Dashboard</button>
+              <button 
+                onClick={() => setView(session ? 'requester-home' : 'welcome')} 
+                className="flex items-center gap-1.5 text-slate-400 hover:text-primary text-xs font-bold uppercase tracking-widest"
+              >
+                <ChevronLeft className="w-4 h-4" /> {session ? 'Dashboard' : 'Início'}
+              </button>
             </div>
             <Stepper currentStep={step} />
             <div className="bg-white rounded-[2.5rem] p-8 shadow-2xl border border-slate-50 mb-6">
