@@ -60,12 +60,13 @@ export async function getRequestByProtocol(protocolId: string) {
  * Cadastra um novo requisitante via Edge Function
  */
 export async function createRequester(name: string, email: string) {
+  // Payload rigoroso conforme exigido pela Edge Function
   const payload = { 
     full_name: name, 
     email: email 
   };
   
-  console.log('[api/createRequester] Payload enviado:', payload);
+  console.log('[api/createRequester] Payload enviado para invoke:', payload);
 
   try {
     const { data, error } = await supabase.functions.invoke('create-requester', {
@@ -73,13 +74,12 @@ export async function createRequester(name: string, email: string) {
     });
 
     if (error) {
-      console.error('[api/createRequester] Invoke Error:', error);
+      console.error('[api/createRequester] Invoke detectou erro:', error);
       
       let friendlyMessage = 'Falha no processamento pelo servidor.';
       
-      // Tenta extrair a mensagem JSON do corpo do erro
       try {
-        // Se o Supabase retorna um erro 4xx/5xx, ele anexa o body na mensagem
+        // Tenta extrair o JSON de erro do corpo da mensagem
         const jsonMatch = error.message.match(/\{.*\}/);
         if (jsonMatch) {
           const errorData = JSON.parse(jsonMatch[0]);
@@ -97,7 +97,7 @@ export async function createRequester(name: string, email: string) {
     return { success: true, data };
 
   } catch (err: any) {
-    console.error('[api/createRequester] Exception:', err);
+    console.error('[api/createRequester] Falha de rede ou timeout:', err);
     return { success: false, error: { message: 'Erro de conexão ou tempo de resposta excedido.' } };
   }
 }
