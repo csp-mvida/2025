@@ -7,81 +7,94 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  console.log("[create-requester] Request recebido:", req.method);
+  console.log("[create-requester] --- NOVA EXECUÇÃO ---");
 
-  // 1. CORS Preflight
+  // 1. Tratamento de CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // 2. Diagnóstico de Ambiente
-  const url = Deno.env.get('SUPABASE_URL');
-  const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  
-  console.log("[create-requester] Diagnóstico de Variáveis:");
-  console.log("- SUPABASE_URL:", url ? "Configurada (OK)" : "AUSENTE (ERRO)");
-  console.log("- SERVICE_ROLE:", serviceRole ? "Configurada (OK)" : "AUSENTE (ERRO)");
-
-  if (!url || !serviceRole) {
-    return new Response(
-      JSON.stringify({ error: 'Configuração do servidor incompleta (Variáveis de ambiente ausentes).' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
-  }
-
   try {
-    const supabaseAdmin = createClient(url, serviceRole);
-    
-    // 3. Validação de Payload
+    // 2. Diagnóstico de Ambiente
+    const url = Deno.env.get('SUPABASE_URL');
+    const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    console.log("[create-requester] Checando variáveis de ambiente:");
+    console.log("- SUPABASE_URL:", url ? "OK" : "MISSING");
+    console.log("- SUPABASE_SERVICE_ROLE_KEY:", serviceRole ? "OK" : "MISSING");
+
+    if (!url || !serviceRole) {
+      console.error("[create-requester] Variáveis de ambiente não encontradas.");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Configuração do servidor incompleta. Verifique se as variáveis SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY estão configuradas no painel do Supabase." 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    // 3. Parsing do Payload
     const body = await req.json();
-    console.log("[create-requester] Payload Bruto:", JSON.stringify(body));
+    console.log("[create-requester] Payload recebido:", JSON.stringify(body));
 
     const { full_name, email } = body;
 
     if (!full_name || !email) {
-      console.error("[create-requester] Validação falhou: campos ausentes.");
+      console.error("[create-requester] Campos ausentes:", { full_name, email });
       return new Response(
-        JSON.stringify({ error: 'Os campos full_name e email são obrigatórios.' }),
+        JSON.stringify({ 
+          success: false, 
+          error: "Nome completo e e-mail são obrigatórios para o cadastro." 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+      );
     }
 
-    // 4. Criação no Auth Admin
-    console.log(`[create-requester] Tentando criar usuário: ${email}`);
-    
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+    // 4. Inicialização do Cliente Admin e Criação
+    console.log("[create-requester] Inicializando cliente admin...");
+    const supabaseAdmin = createClient(url, serviceRole);
+
+    console.log(`[create-requester] Chamando auth.admin.createUser para: ${email}`);
+    const { data, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email,
       user_metadata: { full_name },
       email_confirm: true
     });
 
     if (userError) {
-      console.error("[create-requester] Erro no auth.admin.createUser:", userError);
+      console.error("[create-requester] Erro retornado pelo auth.admin:", userError);
       
-      // Tradução de erros comuns do Supabase Auth
-      let friendlyMessage = userError.message;
-      if (userError.message.includes("already registered")) {
-        friendlyMessage = "Este e-mail já está em uso por outro requisitante.";
+      let message = userError.message;
+      if (message.includes("already registered")) {
+        message = "Este e-mail já possui um acesso cadastrado.";
       }
 
       return new Response(
-        JSON.stringify({ error: friendlyMessage }),
+        JSON.stringify({ success: false, error: message }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+      );
     }
 
-    console.log("[create-requester] Sucesso! Usuário criado:", userData.user?.id);
-
+    // 5. Sucesso
+    console.log("[create-requester] Usuário criado com sucesso ID:", data.user?.id);
     return new Response(
-      JSON.stringify({ success: true, message: 'Requisitante cadastrado com sucesso!', user: userData.user }),
+      JSON.stringify({ 
+        success: true, 
+        message: "Requisitante cadastrado com sucesso!", 
+        user_id: data.user?.id 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 201 }
-    )
+    );
 
-  } catch (err) {
-    console.error("[create-requester] Catch Global:", err);
+  } catch (err: any) {
+    console.error("[create-requester] CATCH GLOBAL:", err.message);
     return new Response(
-      JSON.stringify({ error: `Erro interno: ${err.message || 'Falha desconhecida no servidor'}` }),
+      JSON.stringify({ 
+        success: false, 
+        error: `Erro inesperado na execução da função: ${err.message}` 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    );
   }
 })
