@@ -60,45 +60,44 @@ export async function getRequestByProtocol(protocolId: string) {
  * Cadastra um novo requisitante via Edge Function
  */
 export async function createRequester(name: string, email: string) {
-  // O payload DEVE usar full_name conforme esperado pela Edge Function
   const payload = { 
     full_name: name, 
     email: email 
   };
   
-  console.log('[api/createRequester] Enviando para Edge Function:', payload);
+  console.log('[api/createRequester] Payload enviado:', payload);
 
   try {
     const { data, error } = await supabase.functions.invoke('create-requester', {
       body: payload
     });
 
-    // O supabase-js v2 retorna o erro se o status for non-2xx
     if (error) {
-      console.error('[api/createRequester] Erro detectado no invoke:', error);
+      console.error('[api/createRequester] Invoke Error:', error);
       
-      // Tentativa de extrair a mensagem de erro do corpo JSON da resposta
-      // Se a função retornou 400 com { error: 'msg' }, o supabase-js as vezes coloca a string do JSON em error.message
-      let friendlyMessage = 'Erro ao processar o cadastro.';
+      let friendlyMessage = 'Falha no processamento pelo servidor.';
       
+      // Tenta extrair a mensagem JSON do corpo do erro
       try {
-        // Remove o prefixo padrão do Supabase se ele existir para tentar dar parse no JSON real
-        const cleanJson = error.message.replace('Edge Function returned a non-2xx status code: ', '');
-        const errorData = JSON.parse(cleanJson);
-        friendlyMessage = errorData.error || errorData.message || friendlyMessage;
+        // Se o Supabase retorna um erro 4xx/5xx, ele anexa o body na mensagem
+        const jsonMatch = error.message.match(/\{.*\}/);
+        if (jsonMatch) {
+          const errorData = JSON.parse(jsonMatch[0]);
+          friendlyMessage = errorData.error || errorData.message || friendlyMessage;
+        } else {
+          friendlyMessage = error.message;
+        }
       } catch (e) {
-        // Se não for JSON, usamos a mensagem de erro original
-        friendlyMessage = error.message || friendlyMessage;
+        friendlyMessage = error.message;
       }
 
       return { success: false, error: { message: friendlyMessage } };
     }
 
-    console.log('[api/createRequester] Sucesso:', data);
     return { success: true, data };
 
   } catch (err: any) {
-    console.error('[api/createRequester] Exceção de rede ou execução:', err);
-    return { success: false, error: { message: 'Erro de conexão com o servidor.' } };
+    console.error('[api/createRequester] Exception:', err);
+    return { success: false, error: { message: 'Erro de conexão ou tempo de resposta excedido.' } };
   }
 }
