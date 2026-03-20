@@ -58,7 +58,7 @@ export async function getRequestByProtocol(protocolId: string) {
 
 /**
  * Cadastra um novo requisitante via Edge Function
- * Diagnóstico: Captura de erro JSON real do Supabase
+ * Extrai a mensagem real do erro enviada pelo servidor
  */
 export async function createRequester(name: string, email: string) {
   const payload = { 
@@ -66,7 +66,7 @@ export async function createRequester(name: string, email: string) {
     email: email 
   };
   
-  console.log('[api/createRequester] Enviando para Edge Function:', payload);
+  console.log('[api/createRequester] Payload enviado:', payload);
 
   try {
     const { data, error } = await supabase.functions.invoke('create-requester', {
@@ -74,19 +74,18 @@ export async function createRequester(name: string, email: string) {
     });
 
     if (error) {
-      console.error('[api/createRequester] Falha no Invoke:', error);
+      console.error('[api/createRequester] Falha no invoke:', error);
       
       let friendlyMessage = 'Erro interno no servidor.';
       
-      // Se for um erro do Functions, tentamos extrair o JSON retornado pela nossa função
       try {
-        // O Supabase concatena o JSON de erro na propriedade message em alguns casos
+        // O erro do Supabase Functions contém o corpo da resposta na mensagem em formato JSON
         const jsonMatch = error.message.match(/\{.*\}/);
         if (jsonMatch) {
           const errorData = JSON.parse(jsonMatch[0]);
           friendlyMessage = errorData.error || errorData.message || friendlyMessage;
         } else if (error.message.includes('non-2xx')) {
-          friendlyMessage = 'A função de cadastro falhou. Verifique os logs no Supabase para diagnosticar variáveis de ambiente.';
+          friendlyMessage = 'A função de cadastro falhou no servidor. Verifique os logs da Edge Function no Supabase para diagnosticar variáveis de ambiente.';
         } else {
           friendlyMessage = error.message;
         }
@@ -97,9 +96,9 @@ export async function createRequester(name: string, email: string) {
       return { success: false, error: { message: friendlyMessage } };
     }
 
-    // Se retornou data mas com status de erro interno (se não usamos status codes HTTP corretamente no futuro)
-    if (data?.success === false) {
-      return { success: false, error: { message: data.error || 'Erro desconhecido.' } };
+    // Caso o invoke retorne sucesso mas o conteúdo indique erro (ex: 200 com payload de erro)
+    if (data && data.success === false) {
+      return { success: false, error: { message: data.error || 'Erro desconhecido na criação.' } };
     }
 
     return { success: true, data };
