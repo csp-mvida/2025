@@ -176,18 +176,28 @@ export async function getRequestByProtocol(protocolId: string) {
 }
 
 export async function createRequester(name: string, email: string) {
-  // A chamada invoke enviará automaticamente o cabeçalho Authorization com a sessão do sharedClient
-  const { data, error } = await supabase.functions.invoke('create-requester', {
-    body: {
-      full_name: name,
-      email: email
+  const payload = {
+    full_name: name,
+    email: email
+  };
+
+  console.log('[api/createRequester] Enviando payload:', payload);
+
+  try {
+    const response = await supabase.functions.invoke('create-requester', {
+      body: payload
+    });
+
+    console.log('[api/createRequester] Resposta bruta da função:', response);
+
+    if (response.error) {
+      console.error('[api/createRequester] Erro retornado pela Edge Function:', response.error);
+      return { success: false, error: response.error };
     }
-  });
 
-  if (error) {
-    console.error('Erro ao cadastrar requisitante via Edge Function:', error);
-    return { success: false, error };
+    return { success: true, data: response.data };
+  } catch (err: any) {
+    console.error('[api/createRequester] Erro de rede ou execução:', err);
+    return { success: false, error: err };
   }
-
-  return { success: true, data };
 }

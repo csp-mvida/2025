@@ -42,21 +42,24 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({ isOpen
       const result = await createRequester(fullName, emailAddr);
 
       if (result && result.success) {
-        // Exibe mensagem clara de sucesso
+        // SUCESSO REAL (2xx)
         toast.success('Requisitante cadastrado com sucesso!', {
           duration: 4000,
           position: 'top-center'
         });
-        // Fecha o modal imediatamente após o sucesso
+        // Fecha o modal e limpa campos apenas no sucesso
         handleClose();
       } else {
-        // Exibe mensagem clara de erro caso a função retorne falha
-        const errorMsg = result?.error?.message || 'Não foi possível cadastrar o requisitante.';
+        // FALHA REAL (Erro retornado pelo backend)
+        const errorMsg = result?.error?.message || 'Erro ao cadastrar requisitante.';
+        console.error('[UserManagementModal] Falha detectada:', result?.error);
         toast.error(errorMsg);
+        // NÃO fecha o modal para permitir correção
       }
     } catch (err: any) {
-      console.error('[UserManagement] Erro na chamada:', err);
-      toast.error('Erro de conexão ao tentar cadastrar.');
+      // FALHA DE CONEXÃO OU EXCEÇÃO INESPERADA
+      console.error('[UserManagementModal] Exceção no formulário:', err);
+      toast.error('Ocorreu um erro inesperado ao tentar cadastrar.');
     } finally {
       setIsSaving(false);
     }
