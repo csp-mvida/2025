@@ -18,7 +18,8 @@ export async function fetchPaymentAccounts() {
 }
 
 export async function createDraftRequest(deptId: string, authId: string, accountId: string) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const userResult = await supabase.auth.getUser();
+  const user = userResult.data.user;
   if (!user) return null;
   const protocol = crypto.randomUUID();
   const { error } = await supabase.from('payment_requests').insert({
@@ -59,30 +60,45 @@ export async function getRequestByProtocol(protocolId: string) {
  * Cadastra um novo requisitante via Edge Function
  */
 export async function createRequester(name: string, email: string) {
-  const payload = { full_name: name, email: email };
-  console.log('[api/createRequester] Enviando:', payload);
+  // O payload DEVE usar full_name conforme esperado pela Edge Function
+  const payload = { 
+    full_name: name, 
+    email: email 
+  };
+  
+  console.log('[api/createRequester] Enviando para Edge Function:', payload);
 
   try {
     const { data, error } = await supabase.functions.invoke('create-requester', {
       body: payload
     });
 
+    // O supabase-js v2 retorna o erro se o status for non-2xx
     if (error) {
-      // Tenta extrair a mensagem de erro real se o retorno for non-2xx
-      let message = error.message;
-      try {
-        // O supabase-js coloca o corpo da resposta de erro no context ou no message se for JSON
-        const errorBody = JSON.parse(error.message.replace('Edge Function returned a non-2xx status code: ', ''));
-        message = errorBody.error || message;
-      } catch (e) { /* fallback para a mensagem original */ }
+      console.error('[api/createRequester] Erro detectado no invoke:', error);
       
-      console.error('[api/createRequester] Falha:', message);
-      return { success: false, error: { message } };
+      // Tentativa de extrair a mensagem de erro do corpo JSON da resposta
+      // Se a função retornou 400 com { error: 'msg' }, o supabase-js as vezes coloca a string do JSON em error.message
+      let friendlyMessage = 'Erro ao processar o cadastro.';
+      
+      try {
+        // Remove o prefixo padrão do Supabase se ele existir para tentar dar parse no JSON real
+        const cleanJson = error.message.replace('Edge Function returned a non-2xx status code: ', '');
+        const errorData = JSON.parse(cleanJson);
+        friendlyMessage = errorData.error || errorData.message || friendlyMessage;
+      } catch (e) {
+        // Se não for JSON, usamos a mensagem de erro original
+        friendlyMessage = error.message || friendlyMessage;
+      }
+
+      return { success: false, error: { message: friendlyMessage } };
     }
 
+    console.log('[api/createRequester] Sucesso:', data);
     return { success: true, data };
+
   } catch (err: any) {
-    console.error('[api/createRequester] Exceção:', err);
+    console.error('[api/createRequester] Exceção de rede ou execução:', err);
     return { success: false, error: { message: 'Erro de conexão com o servidor.' } };
   }
 }
