@@ -1,5 +1,5 @@
 import { supabase as supabaseClient } from '../src/integrations/supabase/client';
-import { Department, CSPFormData, CSPRequest, RequestStatus } from './types';
+import { Department, CSPFormData, CSPRequest, RequestStatus } from '../types';
 
 export const supabase = supabaseClient;
 
@@ -212,8 +212,8 @@ export const submitRequest = async (data: CSPFormData, requestId: string, author
   return !error;
 };
 
-export const getRequestByProtocol = async (protocol: string): Promise<CSPRequest | null> => {
-  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at, payment_receipt_attachment_path, closed_at').eq('protocol', protocol.trim().toUpperCase()).single();
+export const getRequestByProtocol = async (protocolId: string): Promise<CSPRequest | null> => {
+  const { data, error } = await supabase.from(TABLE_NAME).select('*, rejection_reason, paid_at, payment_receipt_attachment_path, closed_at').eq('protocol', protocolId.trim().toUpperCase()).single();
   if (error || !data) return null;
 
   return {
@@ -321,7 +321,6 @@ export const closeRequest = async (id: string): Promise<boolean> => {
         .from(TABLE_NAME)
         .update({ 
             closed_at: new Date().toISOString(),
-            // closed_by poderia vir do auth.user() se estivéssemos usando RLS completo com sessões
         })
         .eq('protocol', id);
     return !error;
