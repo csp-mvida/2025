@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { supabase } from '../services/api';
+import { supabase } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { X, Lock, Mail, ChevronRight, AlertCircle, CheckCircle } from '../../components/ui/Icons';

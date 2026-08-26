@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { supabase } from '../services/api';
+import { supabase } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { BackgroundAnimation } from '../../components/BackgroundAnimation';

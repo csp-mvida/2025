@@ -1,7 +1,7 @@
 import React from 'react';
 import { BackgroundAnimation } from '../../components/BackgroundAnimation';
 import { PlusCircle, List, LogOut, FileText, CheckCircle, Clock, ChevronRight } from '../../components/ui/Icons';
-import { supabase } from '../services/api';
+import { supabase } from '../../services/api';
 
 interface RequesterDashboardProps {
   onNewRequest: () => void;

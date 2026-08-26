@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { X } from '../../components/ui/Icons';
-import { createRequester } from '../services/api';
+import { createRequester } from '../../services/api';
 
 interface UserManagementModalProps {
   isOpen: boolean;

@@ -325,3 +325,54 @@ export const closeRequest = async (id: string): Promise<boolean> => {
         .eq('protocol', id);
     return !error;
 };
+
+/**
+ * Cadastra um novo requisitante via Edge Function
+ * Extrai a mensagem real do erro enviada pelo servidor
+ */
+export async function createRequester(name: string, email: string) {
+  const payload = { 
+    full_name: name, 
+    email: email 
+  };
+  
+  console.log('[api/createRequester] Payload enviado:', payload);
+
+  try {
+    const { data, error } = await supabase.functions.invoke('create-requester', {
+      body: payload
+    });
+
+    if (error) {
+      console.error('[api/createRequester] Falha no invoke:', error);
+      
+      let friendlyMessage = 'Erro interno no servidor.';
+      
+      try {
+        const jsonMatch = error.message.match(/\{.*\}/);
+        if (jsonMatch) {
+          const errorData = JSON.parse(jsonMatch[0]);
+          friendlyMessage = errorData.error || errorData.message || friendlyMessage;
+        } else if (error.message.includes('non-2xx')) {
+          friendlyMessage = 'A função de cadastro falhou no servidor. Verifique os logs da Edge Function no Supabase para diagnosticar variáveis de ambiente.';
+        } else {
+          friendlyMessage = error.message;
+        }
+      } catch (e) {
+        friendlyMessage = error.message;
+      }
+
+      return { success: false, error: { message: friendlyMessage } };
+    }
+
+    if (data && data.success === false) {
+      return { success: false, error: { message: data.error || 'Erro desconhecido na criação.' } };
+    }
+
+    return { success: true, data };
+
+  } catch (err: any) {
+    console.error('[api/createRequester] Exceção crítica:', err);
+    return { success: false, error: { message: 'Não foi possível completar a requisição ao servidor.' } };
+  }
+}
